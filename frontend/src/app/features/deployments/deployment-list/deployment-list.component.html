@@ -1,0 +1,79 @@
+<div class="deployments-page container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <h2 class="page-title mb-0">{{ 'DEPLOYMENTS.TITLE' | translate }}</h2>
+    <a routerLink="/deployments/new" class="btn btn-primary btn-sm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      {{ 'DEPLOYMENTS.NEW_DEPLOYMENT' | translate }}
+    </a>
+  </div>
+
+  <!-- Status Filter Chips -->
+  <div class="chip-wrap mb-3">
+    <button class="chip" *ngFor="let f of statusFilters" [class.active]="activeFilter === f.value" (click)="setFilter(f.value)">
+      {{ f.label | translate }}
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="pg-card">
+    <app-loading-skeleton *ngIf="loading()" variant="table" [rows]="[1,2,3,4,5]"></app-loading-skeleton>
+
+    <app-empty-state *ngIf="!loading() && deployments().length === 0" icon="🚀"
+      title="No deployments" description="Create your first deployment to get started.">
+    </app-empty-state>
+
+    <div *ngIf="!loading() && deployments().length > 0" class="table-responsive">
+      <table class="table table-dark table-hover mb-0">
+        <thead>
+          <tr>
+            <th>{{ 'DEPLOYMENTS.NAME' | translate }}</th>
+            <th>{{ 'DEPLOYMENTS.STATUS' | translate }}</th>
+            <th>{{ 'DEPLOYMENTS.STRATEGY' | translate }}</th>
+            <th>{{ 'DEPLOYMENTS.PATCHES' | translate }}</th>
+            <th>{{ 'DEPLOYMENTS.DEVICES' | translate }}</th>
+            <th>{{ 'DEPLOYMENTS.PROGRESS' | translate }}</th>
+            <th>{{ 'DEPLOYMENTS.CREATED' | translate }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of deployments()">
+            <td>
+              <div class="fw-600 text-white">{{ d.name }}</div>
+              <div class="text-muted small" *ngIf="d.description">{{ d.description }}</div>
+            </td>
+            <td><app-status-badge [value]="d.status"></app-status-badge></td>
+            <td><span class="strategy-badge">{{ d.strategy || 'rolling' }}</span></td>
+            <td class="text-muted">{{ d.patch_count ?? 0 }}</td>
+            <td class="text-muted">{{ d.total_devices ?? 0 }}</td>
+            <td style="min-width:120px">
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height:6px; background:#374151;">
+                  <div class="progress-bar bg-primary" [style.width]="getProgress(d) + '%'" role="progressbar"></div>
+                </div>
+                <span class="text-muted small">{{ getProgress(d) }}%</span>
+              </div>
+            </td>
+            <td class="text-muted small">{{ d.created_at | relativeTime }}</td>
+            <td>
+              <a class="btn btn-xs btn-outline-secondary" [routerLink]="['/deployments', d.id]">View →</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="total() > pageSize" class="d-flex align-items-center justify-content-between px-3 py-3 border-top border-secondary border-opacity-25">
+      <span class="text-muted small">{{ total() }} deployments</span>
+      <div class="d-flex gap-1">
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page()-1)">← Prev</button>
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()" (click)="setPage(page()+1)">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>

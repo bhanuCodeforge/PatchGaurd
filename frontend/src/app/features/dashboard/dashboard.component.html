@@ -1,0 +1,215 @@
+<div class="container-fluid py-4" style="background:#0f172a; min-height:100%;">
+
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="page-title mb-0">{{ 'DASHBOARD.TITLE' | translate }}</h2>
+    <div class="d-flex align-items-center gap-3">
+      <span class="d-flex align-items-center gap-1 text-success small fw-semibold">
+        <span class="live-dot"></span>Live
+      </span>
+      <span class="text-muted small">Last sync: 2 min ago</span>
+      <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold" style="width:32px;height:32px;font-size:13px;">JD</div>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <app-loading-skeleton *ngIf="loading()" variant="kpi-row"></app-loading-skeleton>
+  <div *ngIf="!loading()" class="row g-3 mb-4">
+
+    <div class="col-xl-3 col-md-6">
+      <div class="kpi-card">
+        <div class="d-flex align-items-start gap-3">
+          <div class="kpi-icon kpi-icon--blue">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div>
+            <div class="kpi-value">{{ stats()?.total_devices ?? 0 | number }}</div>
+            <div class="kpi-label">{{ 'DASHBOARD.TOTAL_DEVICES' | translate }}</div>
+            <div class="kpi-sub text-success">+23 {{ 'DASHBOARD.THIS_WEEK' | translate }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="kpi-card">
+        <div class="d-flex align-items-start gap-3">
+          <div class="kpi-icon kpi-icon--green">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div>
+            <div class="kpi-value">{{ stats()?.online_devices ?? 0 | number }}</div>
+            <div class="kpi-label">{{ 'DASHBOARD.ONLINE_NOW' | translate }}</div>
+            <div class="kpi-sub text-muted">{{ onlinePercent() }}% {{ 'DASHBOARD.UPTIME' | translate }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="kpi-card">
+        <div class="d-flex align-items-start gap-3">
+          <div class="kpi-icon kpi-icon--teal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <div>
+            <div class="kpi-value">{{ complianceRate() }}%</div>
+            <div class="kpi-label">{{ 'DASHBOARD.COMPLIANCE_RATE' | translate }}</div>
+            <div class="kpi-sub text-success">+2.1% {{ 'DASHBOARD.FROM_LAST_WEEK' | translate }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="kpi-card">
+        <div class="d-flex align-items-start gap-3">
+          <div class="kpi-icon kpi-icon--red">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div>
+            <div class="kpi-value">{{ stats()?.pending_patches ?? 0 }}</div>
+            <div class="kpi-label">{{ 'DASHBOARD.CRITICAL_PENDING' | translate }}</div>
+            <div class="kpi-sub text-danger">4 {{ 'DASHBOARD.NEW_SINCE_YESTERDAY' | translate }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Middle Row -->
+  <div class="row g-3 mb-3">
+
+    <!-- Compliance Breakdown -->
+    <div class="col-xl-4 col-md-6">
+      <div class="pg-card h-100">
+        <div class="pg-card-header p-3 border-bottom border-secondary border-opacity-25">
+          <span class="pg-card-title">{{ 'DASHBOARD.COMPLIANCE_BREAKDOWN' | translate }}</span>
+          <span class="text-muted small">{{ 'DASHBOARD.LAST_30_DAYS' | translate }}</span>
+        </div>
+        <div class="p-3">
+          <div class="donut-wrapper">
+            <svg viewBox="0 0 120 120" class="donut-svg">
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#374151" stroke-width="14"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#22c55e" stroke-width="14" stroke-dasharray="271.9 30.2" stroke-linecap="round" transform="rotate(-90 60 60)"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#f59e0b" stroke-width="14" stroke-dasharray="67.9 234.2" stroke-linecap="round" transform="rotate(186 60 60)"/>
+              <circle cx="60" cy="60" r="48" fill="none" stroke="#ef4444" stroke-width="14" stroke-dasharray="27.8 274.3" stroke-linecap="round" transform="rotate(232 60 60)"/>
+              <text x="60" y="55" text-anchor="middle" class="donut-val">{{ complianceRate() }}%</text>
+              <text x="60" y="69" text-anchor="middle" class="donut-sub">compliant</text>
+            </svg>
+          </div>
+          <div class="donut-legend">
+            <div class="legend-item"><span class="legend-dot bg-success me-2"></span>{{ 'DASHBOARD.PATCHED' | translate }} <strong class="ms-auto">1,089</strong></div>
+            <div class="legend-item"><span class="legend-dot bg-warning me-2"></span>{{ 'DASHBOARD.PENDING' | translate }} <strong class="ms-auto">{{ stats()?.pending_patches ?? 0 }}</strong></div>
+            <div class="legend-item"><span class="legend-dot bg-danger me-2"></span>{{ 'DASHBOARD.FAILED' | translate }} <strong class="ms-auto">{{ stats()?.failed_count ?? 46 }}</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Devices by OS -->
+    <div class="col-xl-4 col-md-6">
+      <div class="pg-card h-100">
+        <div class="pg-card-header p-3 border-bottom border-secondary border-opacity-25">
+          <span class="pg-card-title">{{ 'DASHBOARD.DEVICES_BY_OS' | translate }}</span>
+        </div>
+        <div class="p-3">
+          <div class="os-bars">
+            <div *ngFor="let os of osBars">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="d-flex align-items-center gap-2 small text-light">
+                  <span class="os-icon">{{ os.icon }}</span>{{ os.name }}
+                </span>
+                <span class="os-count small">{{ os.count }}</span>
+              </div>
+              <div class="progress" style="height:8px; background:#374151;">
+                <div class="progress-bar" [style.width]="os.pct + '%'" [class]="os.color" role="progressbar"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Deployments -->
+    <div class="col-xl-4 col-12">
+      <div class="pg-card h-100">
+        <div class="pg-card-header p-3 border-bottom border-secondary border-opacity-25">
+          <span class="pg-card-title">
+            {{ 'DASHBOARD.ACTIVE_DEPLOYMENTS' | translate }}
+            <span class="badge bg-primary ms-2 small">{{ activeDeployments().length }}</span>
+          </span>
+          <a routerLink="/deployments" class="pg-link small">View all ?</a>
+        </div>
+        <div class="p-3">
+          <app-loading-skeleton *ngIf="deployLoading()" variant="table" [rows]="[1,2]"></app-loading-skeleton>
+          <div *ngIf="!deployLoading() && activeDeployments().length === 0" class="text-center text-muted py-4 small">No active deployments</div>
+          <div *ngFor="let d of activeDeployments()" class="deploy-item">
+            <div class="deploy-row">
+              <div class="deploy-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              </div>
+              <div class="flex-grow-1">
+                <div class="deploy-name">{{ d.name }}</div>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                  <span class="deploy-badge" [ngClass]="{
+                    'badge-progress':  d.status==='in_progress',
+                    'badge-canary':    d.strategy==='canary',
+                    'badge-scheduled': d.status==='scheduled',
+                    'badge-completed': d.status==='completed'
+                  }">{{ d.status | titlecase }}</span>
+                </div>
+                <div class="progress mt-2" style="height:4px; background:#374151; border-radius:2px;">
+                  <div class="progress-bar bg-primary" [style.width]="(d.progress_percentage||0)+'%'" role="progressbar"></div>
+                </div>
+                <div class="deploy-stats">{{ d.progress_percentage||0 }}% — {{ d.completed_devices||0 }}/{{ d.total_devices||0 }} devices</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Critical Patches -->
+  <div class="row">
+    <div class="col-12">
+      <div class="pg-card">
+        <div class="d-flex align-items-center justify-content-between p-3 border-bottom border-secondary border-opacity-25">
+          <h6 class="pg-card-title mb-0">
+            {{ 'DASHBOARD.CRITICAL_PATCHES_PENDING' | translate }}
+            <span class="badge bg-danger ms-2">{{ stats()?.pending_patches ?? 12 }}</span>
+          </h6>
+          <a routerLink="/patches" class="pg-link small">View all ?</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-dark table-hover crit-table mb-0">
+            <thead><tr>
+              <th>{{ 'DASHBOARD.PATCH' | translate }}</th>
+              <th>{{ 'DASHBOARD.SEVERITY' | translate }}</th>
+              <th>{{ 'DASHBOARD.AFFECTED' | translate }}</th>
+              <th>{{ 'DASHBOARD.AGE' | translate }}</th>
+            </tr></thead>
+            <tbody>
+              <tr *ngFor="let p of criticalPatches()">
+                <td>
+                  <div class="crit-cve">{{ p.cve_id }}</div>
+                  <div class="text-muted" style="font-size:11px;">{{ p.title }}</div>
+                </td>
+                <td><span class="severity-pill" [class]="'sev-' + p.severity">{{ p.severity }}</span></td>
+                <td class="fw-semibold">{{ p.affected_count ?? 0 }}</td>
+                <td class="text-muted small">{{ p.released_date | relativeTime }}</td>
+              </tr>
+              <tr *ngIf="criticalPatches().length === 0">
+                <td colspan="4" class="text-center text-muted py-3 small">No critical patches pending</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

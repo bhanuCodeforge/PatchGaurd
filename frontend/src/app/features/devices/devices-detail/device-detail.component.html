@@ -1,0 +1,75 @@
+<div class="flyout-overlay" (click)="onOverlay($event)">
+  <div class="flyout">
+    <div class="flyout-header">
+      <div class="d-flex align-items-center gap-2">
+        <div class="flyout-icon">🖥️</div>
+        <div>
+          <h5 class="flyout-title mb-0">{{ device?.hostname }}</h5>
+          <span class="text-muted small font-monospace">{{ device?.ip_address }}</span>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <app-status-badge [value]="device?.status" [dot]="true"></app-status-badge>
+        <span class="env-badge" [class]="'env-' + device?.environment">{{ device?.environment }}</span>
+        <button class="close-btn" (click)="close.emit()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="flyout-body">
+      <div class="info-group">
+        <h6 class="info-heading">System Information</h6>
+        <div class="info-grid">
+          <div class="info-row"><span class="key">OS Family</span><span class="val">{{ device?.os_family }}</span></div>
+          <div class="info-row"><span class="key">OS Version</span><span class="val">{{ device?.os_version || 'N/A' }}</span></div>
+          <div class="info-row"><span class="key">Architecture</span><span class="val">{{ device?.architecture || 'x86_64' }}</span></div>
+          <div class="info-row"><span class="key">Environment</span><span class="val">{{ device?.environment }}</span></div>
+          <div class="info-row"><span class="key">Agent Version</span><span class="val">{{ device?.agent_version || 'N/A' }}</span></div>
+          <div class="info-row"><span class="key">Last Seen</span><span class="val">{{ device?.last_seen | relativeTime }}</span></div>
+        </div>
+      </div>
+
+      <div class="info-group" *ngIf="device?.tags?.length">
+        <h6 class="info-heading">Tags</h6>
+        <div class="d-flex flex-wrap gap-1 mt-1">
+          <span class="device-tag" *ngFor="let t of device.tags">{{ t }}</span>
+        </div>
+      </div>
+
+      <div class="info-group">
+        <h6 class="info-heading">Compliance</h6>
+        <div class="compliance-bar-wrap">
+          <div class="d-flex justify-content-between mb-1">
+            <span class="text-muted small">Compliance Rate</span>
+            <span class="small fw-600" [class]="(device?.compliance_rate || 0) >= 90 ? 'text-success' : (device?.compliance_rate || 0) >= 70 ? 'text-warning' : 'text-danger'">
+              {{ device?.compliance_rate || 0 }}%
+            </span>
+          </div>
+          <div class="progress" style="height:8px; background:#374151;">
+            <div class="progress-bar" [class]="(device?.compliance_rate || 0) >= 90 ? 'bg-success' : (device?.compliance_rate || 0) >= 70 ? 'bg-warning' : 'bg-danger'"
+              [style.width]="(device?.compliance_rate || 0) + '%'" role="progressbar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flyout-footer">
+      <button class="btn btn-sm btn-outline-secondary" (click)="scan()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Scan Now
+      </button>
+      <button class="btn btn-sm btn-outline-warning" (click)="reboot()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+          <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Reboot
+      </button>
+      <button class="btn btn-sm btn-primary" [routerLink]="['/devices', device?.id]">View Full Details →</button>
+    </div>
+  </div>
+</div>

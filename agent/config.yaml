@@ -1,0 +1,7 @@
+# PatchGuard Agent Configuration
+# TODO: Implement agent config in Task 8.1
+
+server_url: "wss://patchmgr.internal.corp/ws/agent"
+api_key: "CHANGE_ME"
+heartbeat_interval: 60
+log_level: "info"

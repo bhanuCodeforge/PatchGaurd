@@ -1,0 +1,51 @@
+// Device-list specific (global: .pg-card, .page-title, .chip*, .search-wrap, .bulk-bar, .table.table-dark)
+.hostname-link { color: #60a5fa; text-decoration: none; font-weight: 500; &:hover { text-decoration: underline; } }
+.text-mono     { font-family: monospace; font-size: 12px; }
+.os-cell       { display: flex; align-items: center; gap: 6px; }
+
+.env-badge {
+  display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: capitalize;
+  &.env-production  { background: rgba(239,68,68,.15); color: #f87171; }
+  &.env-staging     { background: rgba(245,158,11,.15); color: #fbbf24; }
+  &.env-development { background: rgba(59,130,246,.15); color: #60a5fa; }
+  &.env-testing     { background: rgba(139,92,246,.15); color: #a78bfa; }
+}
+
+.compliance-wrap { display: flex; align-items: center; gap: 8px; }
+.compliance-pct  { font-size: 12px; color: #9ca3af; white-space: nowrap; }
+.device-tag { display: inline-block; padding: 2px 7px; margin-right: 3px; background: #374151; border-radius: 4px; font-size: 11px; color: #9ca3af; }
+.tag-more   { font-size: 11px; color: #6b7280; }
+
+// Add Device Modal
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 1040;
+}
+.modal-dialog-custom {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 1050; width: 460px; max-width: calc(100vw - 32px);
+  background: #1f2937; border: 1px solid #374151; border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.modal-header-custom {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid #374151;
+  h5 { display: flex; align-items: center; color: #f9fafb; font-size: 15px; }
+}
+.btn-close-custom {
+  background: none; border: none; color: #9ca3af; font-size: 16px; cursor: pointer;
+  &:hover { color: #f9fafb; }
+}
+.modal-body-custom {
+  padding: 20px;
+  .form-label { color: #d1d5db; font-size: 13px; margin-bottom: 6px; }
+  .form-control-dark, .form-select-dark {
+    background: #111827; border: 1px solid #374151; color: #f9fafb; border-radius: 6px;
+    font-size: 14px;
+    &:focus { background: #111827; color: #f9fafb; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.3); }
+    option { background: #1f2937; }
+  }
+}
+.modal-footer-custom {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 12px 20px; border-top: 1px solid #374151;
+}

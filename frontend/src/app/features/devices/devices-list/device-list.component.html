@@ -1,0 +1,206 @@
+<div class="devices-page container-fluid py-4">
+
+  <!-- Page Header -->
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+      <h2 class="page-title mb-0">
+        {{ 'DEVICES.TITLE' | translate }}
+        <span class="text-muted fw-normal fs-6" *ngIf="!loading()">({{ total() | number }})</span>
+      </h2>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        {{ 'DEVICES.BULK_ACTIONS' | translate }}
+      </button>
+      <button class="btn btn-primary btn-sm" (click)="openAddModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        {{ 'DEVICES.ADD_DEVICE' | translate }}
+      </button>
+      <button class="btn btn-outline-secondary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        {{ 'DEVICES.EXPORT' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Search + Filter Chips -->
+  <div class="filter-bar mb-3">
+    <div class="search-wrap me-3">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input class="search-input" [(ngModel)]="searchTerm" (ngModelChange)="onSearch($event)"
+        [placeholder]="'DEVICES.SEARCH_PLACEHOLDER' | translate" />
+      <button *ngIf="searchTerm" class="search-clear" (click)="clearSearch()">✕</button>
+    </div>
+
+    <div class="chip-wrap">
+      <button class="chip" *ngFor="let s of statusOptions" [class.active]="activeStatus === s.value" (click)="setStatus(s.value)">
+        {{ s.label | translate }}
+      </button>
+      <div class="chip-divider"></div>
+      <button class="chip" *ngFor="let os of osOptions" [class.active]="activeOs === (os === 'All' ? '' : os)" (click)="setOs(os)">
+        {{ os }}
+      </button>
+      <div class="chip-divider"></div>
+      <button class="chip" *ngFor="let env of envOptions" [class.active]="activeEnv === (env === 'All' ? '' : env.toLowerCase())" (click)="setEnv(env)">
+        {{ env }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Bulk Action Bar -->
+  <div class="bulk-bar mb-3" *ngIf="selectedIds().size > 0">
+    <span class="bulk-count">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      {{ selectedIds().size }} {{ 'DEVICES.SELECTED' | translate }}
+    </span>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-secondary">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+          <line x1="7" y1="7" x2="7.01" y2="7"/>
+        </svg>
+        {{ 'DEVICES.TAG' | translate }}
+      </button>
+      <button class="btn btn-sm btn-outline-secondary">{{ 'DEVICES.ASSIGN_GROUP' | translate }}</button>
+      <button class="btn btn-sm btn-outline-primary" (click)="bulkScan()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        {{ 'DEVICES.SCAN_NOW' | translate }}
+      </button>
+      <button class="btn btn-sm btn-outline-danger">{{ 'DEVICES.DECOMMISSION' | translate }}</button>
+      <button class="btn btn-sm btn-link text-muted" (click)="clearSelection()">✕</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="pg-card">
+    <app-loading-skeleton *ngIf="loading()" variant="table" [rows]="rows"></app-loading-skeleton>
+
+    <app-empty-state *ngIf="!loading() && devices().length === 0" icon="🖥️"
+      title="No devices found" description="No devices match your current filters.">
+    </app-empty-state>
+
+    <div *ngIf="!loading() && devices().length > 0" class="table-responsive">
+      <table class="table table-dark table-hover mb-0">
+        <thead>
+          <tr>
+            <th style="width:40px">
+              <input type="checkbox" class="form-check-input" (change)="toggleAll($event)" [checked]="allSelected()" />
+            </th>
+            <th class="sortable" (click)="sort('hostname')">{{ 'DEVICES.HOSTNAME' | translate }} <span>{{ sortIcon('hostname') }}</span></th>
+            <th>{{ 'DEVICES.IP_ADDRESS' | translate }}</th>
+            <th class="sortable" (click)="sort('os_family')">{{ 'DEVICES.OS' | translate }} <span>{{ sortIcon('os_family') }}</span></th>
+            <th>{{ 'DEVICES.ENVIRONMENT' | translate }}</th>
+            <th class="sortable" (click)="sort('status')">{{ 'DEVICES.STATUS' | translate }} <span>{{ sortIcon('status') }}</span></th>
+            <th>{{ 'DEVICES.COMPLIANCE' | translate }}</th>
+            <th>{{ 'DEVICES.TAGS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of devices()" [class.table-active]="selectedIds().has(d.id)" (click)="openDetail(d)" class="cursor-pointer">
+            <td (click)="$event.stopPropagation()">
+              <input type="checkbox" class="form-check-input" [checked]="selectedIds().has(d.id)" (change)="toggleSelect(d.id)" />
+            </td>
+            <td>
+              <a class="hostname-link" [routerLink]="['/devices', d.id]" (click)="$event.stopPropagation()">{{ d.hostname }}</a>
+            </td>
+            <td class="text-mono text-muted">{{ d.ip_address }}</td>
+            <td>
+              <span class="os-cell">
+                <span class="os-icon">{{ getOsIcon(d.os_family) }}</span> {{ d.os_family }}
+              </span>
+            </td>
+            <td>
+              <span class="env-badge" [class]="'env-' + d.environment">{{ d.environment }}</span>
+            </td>
+            <td>
+              <app-status-badge [value]="d.status" [dot]="true"></app-status-badge>
+            </td>
+            <td style="min-width:120px">
+              <div class="compliance-wrap">
+                <div class="progress compliance-bar" style="height:6px; background:#374151;">
+                  <div class="progress-bar" [class]="getComplianceColor(d.compliance_rate)" [style.width]="(d.compliance_rate || 0) + '%'"></div>
+                </div>
+                <span class="compliance-pct">{{ d.compliance_rate || 0 }}%</span>
+              </div>
+            </td>
+            <td>
+              <span *ngFor="let tag of (d.tags || []).slice(0, 2)" class="device-tag">{{ tag }}</span>
+              <span *ngIf="(d.tags || []).length > 2" class="tag-more">+{{ d.tags.length - 2 }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="total() > pageSize" class="d-flex align-items-center justify-content-between px-3 py-3 border-top border-secondary border-opacity-25">
+      <span class="text-muted small">
+        {{ 'DEVICES.SHOWING' | translate }} {{ (page()-1)*pageSize + 1 }}–{{ Math.min(page()*pageSize, total()) }} {{ 'DEVICES.OF' | translate }} {{ total() | number }} {{ 'DEVICES.DEVICES_COUNT' | translate }}
+      </span>
+      <div class="d-flex gap-1">
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page() - 1)">← Prev</button>
+        <button *ngFor="let p of pageNumbers()" class="btn btn-sm" [class.btn-primary]="p === page()" [class.btn-outline-secondary]="p !== page()" (click)="setPage(p)">{{ p }}</button>
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()" (click)="setPage(page() + 1)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Device Detail Flyout -->
+  <app-device-detail *ngIf="selectedDevice()" [device]="selectedDevice()" (close)="selectedDevice.set(null)"></app-device-detail>
+</div>
+
+<!-- Add Device Modal -->
+<div class="modal-backdrop" *ngIf="showAddModal()" (click)="closeAddModal()"></div>
+<div class="modal-dialog-custom" *ngIf="showAddModal()">
+  <div class="modal-header-custom">
+    <h5 class="mb-0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      {{ 'DEVICES.ADD_DEVICE' | translate }}
+    </h5>
+    <button class="btn-close-custom" (click)="closeAddModal()">&#x2715;</button>
+  </div>
+  <div class="modal-body-custom">
+    <div class="mb-3">
+      <label class="form-label">Hostname <span class="text-danger">*</span></label>
+      <input class="form-control form-control-dark" [(ngModel)]="addForm.hostname" placeholder="e.g. web-server-01" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">IP Address <span class="text-danger">*</span></label>
+      <input class="form-control form-control-dark" [(ngModel)]="addForm.ip_address" placeholder="e.g. 192.168.1.10" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">OS Family</label>
+      <select class="form-select form-select-dark" [(ngModel)]="addForm.os_family">
+        <option value="linux">Linux</option>
+        <option value="windows">Windows</option>
+        <option value="macos">macOS</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Environment</label>
+      <select class="form-select form-select-dark" [(ngModel)]="addForm.environment">
+        <option value="production">Production</option>
+        <option value="staging">Staging</option>
+        <option value="development">Development</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Agent Version</label>
+      <input class="form-control form-control-dark" [(ngModel)]="addForm.agent_version" placeholder="e.g. 1.0.0" />
+    </div>
+  </div>
+  <div class="modal-footer-custom">
+    <button class="btn btn-outline-secondary btn-sm" (click)="closeAddModal()">Cancel</button>
+    <button class="btn btn-primary btn-sm" (click)="submitAddDevice()" [disabled]="addLoading()">
+      <span *ngIf="addLoading()" class="spinner-border spinner-border-sm me-1"></span>
+      {{ addLoading() ? 'Adding...' : 'Add Device' }}
+    </button>
+  </div>
+</div>

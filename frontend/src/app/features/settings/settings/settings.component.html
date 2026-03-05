@@ -1,0 +1,86 @@
+<div class="settings-page container-fluid py-4">
+  <div class="d-flex gap-4">
+
+    <!-- Left Nav -->
+    <nav class="settings-nav">
+      <button *ngFor="let s of sections" class="nav-item" [class.active]="activeSection === s.id" (click)="activeSection = s.id">
+        <span class="nav-icon">{{ s.icon }}</span>
+        {{ s.label }}
+      </button>
+    </nav>
+
+    <!-- Content Panel -->
+    <div class="settings-content flex-grow-1">
+
+      <!-- Profile -->
+      <div *ngIf="activeSection === 'profile'" class="section">
+        <h3 class="section-title">{{ 'SETTINGS.PROFILE' | translate }}</h3>
+        <div class="row g-3" style="max-width:500px">
+          <div class="col-12">
+            <label class="form-label-sm">{{ 'SETTINGS.DISPLAY_NAME' | translate }}</label>
+            <input class="pg-input" [(ngModel)]="profile.name" />
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">{{ 'SETTINGS.EMAIL' | translate }}</label>
+            <input class="pg-input" type="email" [(ngModel)]="profile.email" />
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary btn-sm" (click)="saveProfile()">{{ 'SETTINGS.SAVE' | translate }}</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security -->
+      <div *ngIf="activeSection === 'security'" class="section">
+        <h3 class="section-title">{{ 'SETTINGS.SECURITY' | translate }}</h3>
+        <div class="row g-3" style="max-width:500px">
+          <div class="col-12">
+            <label class="form-label-sm">Current Password</label>
+            <input class="pg-input" type="password" [(ngModel)]="pwd.current" />
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">New Password</label>
+            <input class="pg-input" type="password" [(ngModel)]="pwd.new" />
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">Confirm Password</label>
+            <input class="pg-input" type="password" [(ngModel)]="pwd.confirm" />
+          </div>
+          <div class="col-12">
+            <button class="btn btn-danger btn-sm" (click)="changePassword()">Change Password</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div *ngIf="activeSection === 'notifications'" class="section">
+        <h3 class="section-title">{{ 'SETTINGS.NOTIFICATIONS' | translate }}</h3>
+        <div class="pref-list">
+          <div class="pref-row" *ngFor="let p of notifPrefs">
+            <div>
+              <div class="pref-label">{{ p.label }}</div>
+              <div class="pref-desc text-muted small">{{ p.desc }}</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" [(ngModel)]="p.enabled" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm mt-3" (click)="saveNotifPrefs()">{{ 'SETTINGS.SAVE' | translate }}</button>
+      </div>
+
+      <!-- System Info -->
+      <div *ngIf="activeSection === 'system'" class="section">
+        <h3 class="section-title">System Info</h3>
+        <div class="info-grid">
+          <div class="info-row" *ngFor="let info of sysInfo">
+            <span class="info-key">{{ info.key }}</span>
+            <span class="info-val">{{ info.value }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

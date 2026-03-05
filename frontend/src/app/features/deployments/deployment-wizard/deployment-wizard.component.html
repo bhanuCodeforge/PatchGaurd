@@ -1,0 +1,227 @@
+<div class="container-fluid py-4" style="background:#0f172a; min-height:100%;">
+
+  <!-- Header + Step Indicator -->
+  <div class="wizard-header mb-4">
+    <div>
+      <h2 class="page-title mb-0">{{ 'WIZARD.TITLE' | translate }}</h2>
+      <p class="text-muted small mb-0">{{ 'WIZARD.STEP' | translate }} {{ step() + 1 }} {{ 'WIZARD.OF' | translate }} {{ steps.length }}</p>
+    </div>
+    <div class="step-indicator">
+      <ng-container *ngFor="let s of steps; let i = index">
+        <div class="step-item" [class.active]="step() === i" [class.done]="step() > i">
+          <div class="step-dot">
+            <svg *ngIf="step() > i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            <span *ngIf="step() <= i">{{ i + 1 }}</span>
+          </div>
+          <span class="step-label">{{ s | translate }}</span>
+        </div>
+        <div *ngIf="i < steps.length - 1" class="step-line" [class.done]="step() > i"></div>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left: Step Content -->
+    <div class="col-xl-8">
+      <div class="pg-card p-4">
+
+        <!-- Step 0: Select Patches -->
+        <div *ngIf="step() === 0">
+          <h5 class="step-title mb-3">{{ 'WIZARD.SELECT_PATCHES' | translate }}</h5>
+          <div class="d-flex gap-2 mb-3">
+            <div class="search-wrap flex-grow-1">
+              <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input class="search-input w-100" [(ngModel)]="patchSearch" (ngModelChange)="filterPatches()" placeholder="Search patches..." />
+            </div>
+            <select class="pg-select" [(ngModel)]="patchSevFilter" (ngModelChange)="filterPatches()">
+              <option value="">All Severities</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+            </select>
+          </div>
+          <div class="select-list">
+            <div *ngFor="let p of filteredPatches()" class="select-item" [class.selected]="form.patch_ids.includes(p.id)" (click)="togglePatch(p.id)">
+              <input type="checkbox" class="form-check-input me-2" [checked]="form.patch_ids.includes(p.id)" (click)="$event.stopPropagation()" />
+              <div class="flex-grow-1">
+                <div class="item-title">{{ p.title }}</div>
+                <div class="item-sub">{{ p.cve_id || 'No CVE' }} &bull; {{ p.vendor || 'Unknown' }}</div>
+              </div>
+              <span class="severity-pill ms-2" [class]="'sev-' + p.severity">{{ p.severity }}</span>
+            </div>
+            <div *ngIf="filteredPatches().length === 0" class="text-center text-muted py-4 small">No approved patches available</div>
+          </div>
+          <div class="mt-2 text-muted small" *ngIf="form.patch_ids.length > 0">{{ form.patch_ids.length }} patch(es) selected</div>
+        </div>
+
+        <!-- Step 1: Select Targets -->
+        <div *ngIf="step() === 1">
+          <h5 class="step-title mb-3">{{ 'WIZARD.SELECT_TARGETS' | translate }}</h5>
+          <div class="search-wrap mb-3">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="search-input w-100" [(ngModel)]="deviceSearch" (ngModelChange)="filterDevices()" placeholder="Search groups or devices..." />
+          </div>
+          <div class="select-list">
+            <div *ngFor="let d of filteredDevices()" class="select-item" [class.selected]="form.target_device_ids.includes(d.id)" (click)="toggleDevice(d.id)">
+              <input type="checkbox" class="form-check-input me-2" [checked]="form.target_device_ids.includes(d.id)" (click)="$event.stopPropagation()" />
+              <div class="flex-grow-1">
+                <div class="item-title">{{ d.hostname }}</div>
+                <div class="item-sub">{{ d.ip_address }} &bull; {{ d.os_family }} &bull; {{ d.environment }}</div>
+              </div>
+              <div class="status-dot ms-2" [class]="d.status === 'online' ? 'dot-online' : 'dot-offline'"></div>
+            </div>
+            <div *ngIf="filteredDevices().length === 0" class="text-center text-muted py-4 small">No devices available</div>
+          </div>
+          <div class="mt-2 text-muted small" *ngIf="form.target_device_ids.length > 0">{{ form.target_device_ids.length }} device(s) selected</div>
+        </div>
+
+        <!-- Step 2: Configure Strategy -->
+        <div *ngIf="step() === 2">
+          <h5 class="step-title mb-3">{{ 'WIZARD.ROLLOUT_STRATEGY' | translate }}</h5>
+          <div class="strategy-cards mb-4">
+            <div *ngFor="let s of strategies" class="strategy-card" [class.selected]="form.strategy === s.value" (click)="form.strategy = s.value">
+              <div class="strategy-icon">{{ s.icon }}</div>
+              <div>
+                <div class="strategy-name">{{ s.label }}</div>
+                <div class="strategy-desc">{{ s.desc }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label-sm">{{ 'WIZARD.DEPLOYMENT_NAME' | translate }} *</label>
+              <input class="pg-input" [(ngModel)]="form.name" placeholder="e.g. CVE-2025-3891 critical fix" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label-sm">{{ 'WIZARD.SCHEDULED_FOR' | translate }}</label>
+              <input class="pg-input" type="datetime-local" [(ngModel)]="form.scheduled_at" />
+            </div>
+            <div class="col-md-4" *ngIf="form.strategy === 'canary' || form.strategy === 'rolling'">
+              <label class="form-label-sm">Canary size: {{ form.batch_size }}%</label>
+              <input type="range" class="form-range" [(ngModel)]="form.batch_size" min="1" max="20" />
+              <div class="d-flex justify-content-between" style="font-size:10px;color:#6b7280;"><span>1%</span><span>20%</span></div>
+            </div>
+            <div class="col-md-4" *ngIf="form.strategy === 'rolling'">
+              <label class="form-label-sm">Wave size: 50 devices</label>
+              <input type="range" class="form-range" min="10" max="200" value="50" />
+              <div class="d-flex justify-content-between" style="font-size:10px;color:#6b7280;"><span>10</span><span>200</span></div>
+            </div>
+            <div class="col-md-4" *ngIf="form.strategy !== 'immediate'">
+              <label class="form-label-sm">Max failure rate: 5%</label>
+              <input type="range" class="form-range" min="1" max="25" value="5" />
+              <div class="d-flex justify-content-between" style="font-size:10px;color:#6b7280;"><span>1%</span><span>25%</span></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label-sm">Wave delay</label>
+              <select class="pg-select w-100"><option>15 minutes</option><option>30 minutes</option><option>1 hour</option></select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label-sm">Maintenance window</label>
+              <select class="pg-select w-100"><option>Tonight 02:00–06:00</option><option>Tomorrow 02:00–06:00</option></select>
+            </div>
+            <div class="col-12">
+              <div class="d-flex gap-4">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" id="autoReboot" [(ngModel)]="form.auto_reboot" />
+                  <label class="form-check-label small" for="autoReboot">{{ 'WIZARD.AUTO_REBOOT' | translate }}</label>
+                </div>
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" id="autoRollback" [(ngModel)]="form.rollback_on_failure" />
+                  <label class="form-check-label small" for="autoRollback">{{ 'WIZARD.AUTO_ROLLBACK' | translate }}</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Review -->
+        <div *ngIf="step() === 3">
+          <h5 class="step-title mb-3">{{ 'WIZARD.REVIEW' | translate }}</h5>
+          <div class="review-section">
+            <div class="review-row"><span class="review-key">Deployment Name</span><span class="review-val">{{ form.name || '(untitled)' }}</span></div>
+            <div class="review-row"><span class="review-key">Strategy</span><span class="review-val">{{ form.strategy | titlecase }}</span></div>
+            <div class="review-row"><span class="review-key">Patches</span><span class="review-val">{{ form.patch_ids.length }} selected</span></div>
+            <div class="review-row"><span class="review-key">Target Devices</span><span class="review-val">{{ form.target_device_ids.length }}</span></div>
+            <div class="review-row"><span class="review-key">Batch Size</span><span class="review-val">{{ form.batch_size }}%</span></div>
+            <div class="review-row"><span class="review-key">Auto Reboot</span><span class="review-val">{{ form.auto_reboot ? 'Yes' : 'No' }}</span></div>
+            <div class="review-row"><span class="review-key">Auto Rollback</span><span class="review-val">{{ form.rollback_on_failure ? 'Yes' : 'No' }}</span></div>
+            <div class="review-row" *ngIf="form.scheduled_at"><span class="review-key">Scheduled At</span><span class="review-val">{{ form.scheduled_at }}</span></div>
+          </div>
+          <div *ngIf="form.auto_reboot" class="alert-warning-box mt-3">
+            ?? {{ 'WIZARD.REBOOT_WARNING' | translate }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right: Deployment Summary (always visible) -->
+    <div class="col-xl-4">
+      <div class="summary-panel">
+        <div class="summary-title">Deployment summary</div>
+
+        <div class="summary-row">
+          <span class="summary-key">Patches</span>
+          <div class="text-end">
+            <span class="summary-val">{{ form.patch_ids.length }} patches</span>
+            <div *ngIf="form.patch_ids.length > 0">
+              <div *ngFor="let id of form.patch_ids.slice(0,3)" class="d-flex align-items-center justify-content-end gap-1 mt-1">
+                <span class="text-light small" style="font-size:11px;">{{ getPatchTitle(id) }}</span>
+              </div>
+              <span *ngIf="form.patch_ids.length > 3" class="text-muted" style="font-size:11px;">+{{ form.patch_ids.length - 3 }} more</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-row">
+          <span class="summary-key">Target devices</span>
+          <span class="summary-val">{{ form.target_device_ids.length }}</span>
+        </div>
+
+        <div class="summary-row" *ngIf="form.strategy">
+          <span class="summary-key">Strategy</span>
+          <span class="strategy-badge">{{ form.strategy }}</span>
+        </div>
+
+        <div class="summary-row">
+          <span class="summary-key">Canary size</span>
+          <span class="summary-val">{{ form.batch_size }}%</span>
+        </div>
+
+        <div class="summary-row">
+          <span class="summary-key">Schedule</span>
+          <span class="summary-val text-end" style="font-size:12px;">{{ form.scheduled_at || 'Tonight 02:00 UTC' }}</span>
+        </div>
+
+        <div class="summary-row">
+          <span class="summary-key">Est. duration</span>
+          <span class="summary-val">~2.5 hours</span>
+        </div>
+
+        <div class="summary-row">
+          <span class="summary-key">Requires reboot</span>
+          <span class="summary-val" [class.text-warning]="form.auto_reboot">{{ form.auto_reboot ? 'Yes' : 'No' }}</span>
+        </div>
+
+        <div *ngIf="form.auto_reboot" class="alert-warning-box mt-3">
+          ?? This deployment will trigger a reboot. Ensure change approval is in place.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Buttons -->
+  <div class="wizard-footer mt-4 d-flex justify-content-between">
+    <button class="btn btn-outline-secondary" routerLink="/deployments">{{ 'WIZARD.CANCEL' | translate }}</button>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" *ngIf="step() > 0" (click)="prevStep()">? {{ 'WIZARD.BACK' | translate }}</button>
+      <button class="btn btn-primary" *ngIf="step() < steps.length - 1" (click)="nextStep()" [disabled]="!canNext()">
+        {{ step() === steps.length - 2 ? ('WIZARD.CONTINUE_REVIEW' | translate) : ('WIZARD.CONTINUE' | translate) }}
+      </button>
+      <button class="btn btn-success" *ngIf="step() === steps.length - 1" (click)="submit()" [disabled]="submitting()">
+        {{ submitting() ? ('WIZARD.CREATING' | translate) : ('WIZARD.CREATE' | translate) }}
+      </button>
+    </div>
+  </div>
+</div>

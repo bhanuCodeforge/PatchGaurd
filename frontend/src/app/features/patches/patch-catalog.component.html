@@ -1,0 +1,166 @@
+<div class="patches-page container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+      <h2 class="page-title mb-0">{{ 'PATCHES.TITLE' | translate }}</h2>
+      <p class="text-muted small mb-0 mt-1">
+        {{ 'PATCHES.LAST_SYNCED' | translate }}: 45 min ago {{ 'PATCHES.FROM_VENDOR_FEEDS' | translate }}
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-primary" *ngIf="selectedIds().size > 1" (click)="bulkApprove()">
+        Bulk Approve ({{ selectedIds().size }})
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="patch-tabs mb-3">
+    <button *ngFor="let t of tabs" class="patch-tab" [class.active]="activeTab === t.value" (click)="setTab(t.value)">
+      {{ t.label | translate }}
+      <span *ngIf="t.count > 0" class="tab-badge" [class.tab-badge--danger]="t.value === 'imported' || t.value === 'critical_sev'">{{ t.count }}</span>
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <div class="search-wrap">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input class="search-input" [(ngModel)]="searchTerm" (ngModelChange)="loadPatches()"
+        [placeholder]="'PATCHES.SEARCH_PLACEHOLDER' | translate" />
+    </div>
+    <select class="pg-select" [(ngModel)]="severityFilter" (ngModelChange)="loadPatches()">
+      <option value="">{{ 'PATCHES.ALL_SEVERITIES' | translate }}</option>
+      <option value="critical">Critical</option>
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+    </select>
+    <select class="pg-select" [(ngModel)]="vendorFilter" (ngModelChange)="loadPatches()">
+      <option value="">{{ 'PATCHES.ALL_VENDORS' | translate }}</option>
+      <option value="microsoft">Microsoft</option>
+      <option value="redhat">Red Hat</option>
+      <option value="ubuntu">Ubuntu</option>
+      <option value="apple">Apple</option>
+    </select>
+  </div>
+
+  <!-- Table card -->
+  <div class="pg-card">
+    <app-loading-skeleton *ngIf="loading()" variant="table" [rows]="rows"></app-loading-skeleton>
+
+    <app-empty-state *ngIf="!loading() && patches().length === 0" icon="📦"
+      title="No patches found" description="No patches match the current filter.">
+    </app-empty-state>
+
+    <div *ngIf="!loading() && patches().length > 0" class="table-responsive">
+      <table class="table table-dark table-hover mb-0">
+        <thead>
+          <tr>
+            <th style="width:40px">
+              <input type="checkbox" class="form-check-input" (change)="toggleAll($event)" />
+            </th>
+            <th>{{ 'PATCHES.CVE_PATCH' | translate }}</th>
+            <th>{{ 'PATCHES.SEVERITY' | translate }}</th>
+            <th>{{ 'PATCHES.STATUS' | translate }}</th>
+            <th>OS</th>
+            <th>{{ 'PATCHES.AFFECTED' | translate }}</th>
+            <th>{{ 'PATCHES.RELEASED' | translate }}</th>
+            <th>{{ 'PATCHES.ACTIONS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of patches()" [class.table-active]="selectedPatch()?.id === p.id" (click)="openPanel(p)" class="cursor-pointer">
+            <td (click)="$event.stopPropagation()">
+              <input type="checkbox" class="form-check-input" [checked]="selectedIds().has(p.id)" (change)="toggleSelect(p.id)" />
+            </td>
+            <td>
+              <div class="cve-id">{{ p.cve_id || '—' }}</div>
+              <div class="patch-title">{{ p.title }}</div>
+            </td>
+            <td>
+              <span class="severity-pill" [class]="'sev-' + p.severity">{{ p.severity }}</span>
+            </td>
+            <td>
+              <span class="status-pill" [class]="'st-' + p.status">{{ p.status }}</span>
+            </td>
+            <td>
+              <span class="os-tag" *ngIf="p.os_family">{{ p.os_family }}</span>
+            </td>
+            <td class="text-muted">{{ p.affected_count ?? 0 }}</td>
+            <td class="text-muted small">{{ p.released_date | relativeTime }}</td>
+            <td (click)="$event.stopPropagation()">
+              <button *ngIf="p.status !== 'approved'" class="btn btn-xs btn-outline-success me-1" (click)="approve(p)">
+                ✓ {{ 'PATCHES.APPROVE' | translate }}
+              </button>
+              <button class="btn btn-xs btn-outline-danger" (click)="reject(p)">✕</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="total() > pageSize" class="d-flex align-items-center justify-content-between px-3 py-3 border-top border-secondary border-opacity-25">
+      <span class="text-muted small">{{ total() | number }} patches</span>
+      <div class="d-flex gap-1">
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page()-1)">← Prev</button>
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()" (click)="setPage(page()+1)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Panel -->
+  <div class="detail-panel mt-3" *ngIf="selectedPatch()">
+    <div class="detail-header">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="cve-badge">{{ selectedPatch().cve_id || 'No CVE' }}</span>
+          <span class="severity-pill" [class]="'sev-' + selectedPatch().severity">{{ selectedPatch().severity }}</span>
+          <span class="text-muted small" *ngIf="selectedPatch().cvss_score">CVSS: {{ selectedPatch().cvss_score }}</span>
+        </div>
+        <h5 class="mb-0">{{ selectedPatch().title }}</h5>
+      </div>
+      <button class="close-btn" (click)="selectedPatch.set(null)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="detail-meta row g-3 mb-3">
+      <div class="col-auto"><span class="meta-key">Vendor:</span> <span class="meta-val">{{ selectedPatch().vendor || '—' }}</span></div>
+      <div class="col-auto"><span class="meta-key">Package:</span> <span class="meta-val">{{ selectedPatch().package_name || '—' }}</span></div>
+      <div class="col-auto"><span class="meta-key">Fix Version:</span> <span class="meta-val">{{ selectedPatch().fix_version || '—' }}</span></div>
+      <div class="col-auto">
+        <span class="badge" [class]="selectedPatch().requires_reboot ? 'bg-warning text-dark' : 'bg-secondary'">
+          {{ selectedPatch().requires_reboot ? '⚡ Reboot Required' : '✔ No Reboot' }}
+        </span>
+      </div>
+    </div>
+
+    <p class="text-muted small mb-3">{{ selectedPatch().description || 'No description available.' }}</p>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn btn-sm btn-success" (click)="approve(selectedPatch())" [disabled]="selectedPatch().status === 'approved'">
+        ✓ {{ 'PATCHES.APPROVE_PATCH' | translate }}
+      </button>
+      <button class="btn btn-sm btn-primary">
+        ↓ {{ 'PATCHES.APPROVE_DEPLOY' | translate }}
+      </button>
+      <button class="btn btn-sm btn-outline-danger" (click)="reject(selectedPatch())">{{ 'PATCHES.REJECT' | translate }}</button>
+      <button class="btn btn-sm btn-outline-secondary ms-auto" *ngIf="selectedPatch().kb_article_url">{{ 'PATCHES.VIEW_KB' | translate }} ↗</button>
+    </div>
+  </div>
+
+  <!-- Confirm Dialog -->
+  <app-confirm-dialog
+    *ngIf="confirmVisible()"
+    [message]="confirmMsg"
+    (confirmed)="doConfirm()"
+    (cancelled)="confirmVisible.set(false)"
+  ></app-confirm-dialog>
+</div>

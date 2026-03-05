@@ -1,0 +1,124 @@
+<div class="users-page container-fluid py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="page-title mb-0">{{ 'USERS.TITLE' | translate }}</h2>
+    <button class="btn btn-primary btn-sm" (click)="openNewUserPanel()">+ {{ 'USERS.INVITE' | translate }}</button>
+  </div>
+
+  <!-- Filter -->
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <div class="search-wrap flex-grow-1">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input class="search-input" [(ngModel)]="search" (ngModelChange)="applyFilter()" placeholder="{{ 'USERS.SEARCH_PLACEHOLDER' | translate }}" />
+    </div>
+    <select class="pg-select" [(ngModel)]="roleFilter" (ngModelChange)="applyFilter()">
+      <option value="">All Roles</option>
+      <option value="admin">Admin</option>
+      <option value="engineer">Engineer</option>
+      <option value="viewer">Viewer</option>
+    </select>
+  </div>
+
+  <!-- Loading / Empty -->
+  <app-loading-skeleton *ngIf="loading()" variant="table"></app-loading-skeleton>
+  <app-empty-state *ngIf="!loading() && filtered().length === 0" icon="👤" title="No users found" description="No users match your filter."></app-empty-state>
+
+  <!-- Table -->
+  <div class="pg-card" *ngIf="!loading() && filtered().length > 0">
+    <div class="table-responsive">
+      <table class="table table-dark table-hover table-sm mb-0">
+        <thead>
+          <tr>
+            <th>{{ 'USERS.USER' | translate }}</th>
+            <th>{{ 'USERS.ROLE' | translate }}</th>
+            <th>{{ 'USERS.STATUS' | translate }}</th>
+            <th>{{ 'USERS.LAST_LOGIN' | translate }}</th>
+            <th>{{ 'USERS.ACTIONS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of filtered()">
+            <td>
+              <div class="user-cell">
+                <div class="avatar">{{ initials(u) }}</div>
+                <div>
+                  <div class="username">{{ u.username }}</div>
+                  <div class="email text-muted small">{{ u.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <select class="role-select" [ngModel]="u.role" (ngModelChange)="changeRole(u, $event)">
+                <option value="admin">Admin</option>
+                <option value="engineer">Engineer</option>
+                <option value="viewer">Viewer</option>
+              </select>
+            </td>
+            <td>
+              <span class="status-pill" [class.pill-active]="!u.is_locked" [class.pill-locked]="u.is_locked">
+                {{ u.is_locked ? 'Locked' : 'Active' }}
+              </span>
+            </td>
+            <td class="text-muted small">{{ u.last_login | relativeTime }}</td>
+            <td>
+              <button *ngIf="u.is_locked" class="action-btn btn-unlock me-1" (click)="unlock(u)">Unlock</button>
+              <button class="action-btn btn-delete" (click)="confirmDel(u)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- New User Panel -->
+  <div class="panel-overlay" *ngIf="showNewPanel()" (click)="showNewPanel.set(false)">
+    <div class="panel" (click)="$event.stopPropagation()">
+      <div class="panel-header">
+        <h3>{{ 'USERS.CREATE_USER' | translate }}</h3>
+        <button class="close-btn" (click)="showNewPanel.set(false)">✕</button>
+      </div>
+      <div class="panel-body">
+        <div class="mb-3">
+          <label class="form-label-sm">Username *</label>
+          <input class="pg-input" [(ngModel)]="newUser.username" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label-sm">Email *</label>
+          <input class="pg-input" type="email" [(ngModel)]="newUser.email" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label-sm">Role</label>
+          <select class="pg-input" [(ngModel)]="newUser.role">
+            <option value="admin">Admin</option>
+            <option value="engineer">Engineer</option>
+            <option value="viewer">Viewer</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label-sm">Password *</label>
+          <input class="pg-input" type="password" [(ngModel)]="newUser.password" />
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+          <button class="btn btn-secondary btn-sm" (click)="showNewPanel.set(false)">Cancel</button>
+          <button class="btn btn-primary btn-sm" [disabled]="creating()" (click)="createUser()">
+            {{ creating() ? ('USERS.CREATING' | translate) : ('USERS.CREATE_USER' | translate) }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete -->
+  <app-confirm-dialog
+    [visible]="delVisible()"
+    title="Delete User"
+    [message]="'Permanently delete ' + (delTarget()?.username ?? '') + '?'"
+    confirmLabel="Delete"
+    severity="danger"
+    (confirm)="doDelete()"
+    (cancel)="delVisible.set(false)"
+  ></app-confirm-dialog>
+</div>

@@ -1,0 +1,153 @@
+<div class="container-fluid py-4" style="background:#0f172a; min-height:100%;">
+
+  <div *ngIf="loading()" class="text-center py-5 text-muted">Loading deployment...</div>
+
+  <ng-container *ngIf="!loading() && deployment()">
+    <!-- Breadcrumb + Header -->
+    <div class="mb-1" style="font-size:12px; color:#6b7280;">
+      <a routerLink="/deployments" class="breadcrumb-link">{{ 'DEPLOYMENTS.TITLE' | translate }}</a>
+      <span class="mx-1">/</span>
+      <span class="text-white">{{ deployment().name }}</span>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <h2 class="page-title mb-0">{{ deployment().name }}</h2>
+        <span class="live-badge" *ngIf="deployment().status === 'in_progress'">
+          <span class="live-dot"></span>Live
+        </span>
+        <app-status-badge [value]="deployment().status"></app-status-badge>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm" *ngIf="deployment().status === 'in_progress'" (click)="pause()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="me-1"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>Pause
+        </button>
+        <button class="btn btn-outline-danger btn-sm" *ngIf="deployment().status !== 'completed' && deployment().status !== 'cancelled'" (click)="cancel()">✕ Cancel</button>
+        <button class="btn btn-purple btn-sm" *ngIf="deployment().status === 'failed'" (click)="rollback()">↩ Rollback</button>
+      </div>
+    </div>
+
+    <!-- Overall Progress Card -->
+    <div class="pg-card p-4 mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="fw-semibold text-light">Overall progress</span>
+        <span style="font-size:28px; font-weight:700; color:#60a5fa;">{{ progressPct() }}%</span>
+      </div>
+      <div class="progress mb-3" style="height:14px; border-radius:999px; background:#374151;">
+        <div class="progress-bar bg-success" [style.width]="successPct() + '%'" role="progressbar"></div>
+        <div class="progress-bar bg-primary" [style.width]="'5%'" role="progressbar"></div>
+        <div class="progress-bar bg-danger" [style.width]="failedPct() + '%'" role="progressbar"></div>
+      </div>
+      <div class="row g-3 text-center">
+        <div class="col"><div class="kpi-mini"><div class="kpi-val">{{ stats().total }}</div><div class="kpi-lbl">Total devices</div></div></div>
+        <div class="col"><div class="kpi-mini"><div class="kpi-val text-success">{{ stats().success }}</div><div class="kpi-lbl">Completed</div></div></div>
+        <div class="col"><div class="kpi-mini"><div class="kpi-val text-primary">{{ stats().pending }}</div><div class="kpi-lbl">In progress</div></div></div>
+        <div class="col"><div class="kpi-mini"><div class="kpi-val text-danger">{{ stats().failed }}</div><div class="kpi-lbl">Failed</div></div></div>
+        <div class="col"><div class="kpi-mini"><div class="kpi-val text-muted">{{ stats().total - stats().success - stats().failed - stats().pending }}</div><div class="kpi-lbl">Queued</div></div></div>
+      </div>
+    </div>
+
+    <!-- Wave Progress + Device Map -->
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <div class="pg-card h-100">
+          <div class="card-header-sm d-flex justify-content-between">
+            <span>Wave progress</span>
+            <span class="text-muted small">Wave 3 of 4 active</span>
+          </div>
+          <div class="p-3">
+            <div class="wave-row">
+              <div class="wave-label"><span class="badge bg-secondary me-1">C</span>Canary</div>
+              <div class="flex-grow-1"><div class="progress" style="height:8px; background:#374151;"><div class="progress-bar bg-success" style="width:100%"></div></div></div>
+              <div class="wave-count text-muted">56/56</div>
+            </div>
+            <div class="wave-row">
+              <div class="wave-label"><span class="badge bg-secondary me-1">1</span>Wave 1</div>
+              <div class="flex-grow-1"><div class="progress" style="height:8px; background:#374151;"><div class="progress-bar bg-success" style="width:100%"></div></div></div>
+              <div class="wave-count text-muted">350/350</div>
+            </div>
+            <div class="wave-row">
+              <div class="wave-label"><span class="badge bg-secondary me-1">2</span>Wave 2</div>
+              <div class="flex-grow-1"><div class="progress" style="height:8px; background:#374151;"><div class="progress-bar bg-success" style="width:98%"></div></div></div>
+              <div class="wave-count text-muted">346/350</div>
+            </div>
+            <div class="wave-row active-wave">
+              <div class="wave-label"><span class="badge bg-primary me-1">3</span>Wave 3</div>
+              <div class="flex-grow-1"><div class="progress" style="height:8px; background:#374151;"><div class="progress-bar bg-primary" style="width:16%"></div></div></div>
+              <div class="wave-count text-muted">56/350</div>
+            </div>
+            <div class="wave-row" style="opacity:.4;">
+              <div class="wave-label"><span class="badge bg-dark border border-secondary me-1">4</span>Wave 4</div>
+              <div class="flex-grow-1"><div class="progress" style="height:8px; background:#374151;"></div></div>
+              <div class="wave-count text-muted">0/17</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="pg-card h-100">
+          <div class="card-header-sm d-flex justify-content-between">
+            <span>Device map</span>
+            <span class="text-muted small">Each square = 1 device</span>
+          </div>
+          <div class="heatmap">
+            <div *ngFor="let t of targets()" class="heat-cell" [style.background]="heatColor(t.status)" [title]="t.device_hostname + ' — ' + t.status"></div>
+            <div *ngIf="targets().length === 0" class="text-center text-muted py-3 w-100 small">No target data yet</div>
+          </div>
+          <div class="d-flex gap-3 px-3 pb-3 small text-muted">
+            <span><span class="legend-dot me-1" style="background:#22c55e;"></span>Patched</span>
+            <span><span class="legend-dot me-1" style="background:#3b82f6;"></span>Installing</span>
+            <span><span class="legend-dot me-1" style="background:#ef4444;"></span>Failed</span>
+            <span><span class="legend-dot me-1" style="background:#374151;"></span>Queued</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Event Log -->
+    <div class="pg-card mb-3">
+      <div class="card-header-sm d-flex justify-content-between align-items-center">
+        <span>Live event log</span>
+        <span class="d-flex align-items-center gap-1 text-muted small"><span class="live-dot"></span>Auto-updating</span>
+      </div>
+      <div class="event-log">
+        <div *ngFor="let ev of events()" class="event-row" [class.event-error]="ev.level === 'error'">
+          <span class="event-time">{{ ev.ts | relativeTime }}</span>
+          <span class="event-msg">{{ ev.message }}</span>
+        </div>
+        <div *ngIf="events().length === 0" class="text-center text-muted py-3 small">Waiting for events...</div>
+      </div>
+    </div>
+
+    <!-- Targets Table -->
+    <div class="pg-card">
+      <div class="card-header-sm">Target Devices</div>
+      <div class="table-responsive">
+        <table class="table table-dark table-hover table-sm mb-0">
+          <thead>
+            <tr>
+              <th>Device</th>
+              <th>Status</th>
+              <th>Started</th>
+              <th>Finished</th>
+              <th>Error</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of targets()">
+              <td>{{ t.device_hostname }}</td>
+              <td><app-status-badge [value]="t.status"></app-status-badge></td>
+              <td class="text-muted small">{{ t.started_at | relativeTime }}</td>
+              <td class="text-muted small">{{ t.finished_at | relativeTime }}</td>
+              <td class="text-danger small">{{ t.error_message }}</td>
+            </tr>
+            <tr *ngIf="targets().length === 0">
+              <td colspan="5" class="text-center text-muted py-3">No targets yet</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </ng-container>
+</div>

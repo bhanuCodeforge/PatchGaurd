@@ -1,0 +1,80 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="logo-section">
+      <div class="shield-icon"></div>
+      <h1>PatchGuard</h1>
+      <p>Secure Enterprise Device Management</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      
+      <div class="auth-toggle">
+        <label>
+          <input type="radio" formControlName="authType" value="local">
+          Local DB
+        </label>
+        <label>
+          <input type="radio" formControlName="authType" value="ldap">
+          Active Directory
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input 
+          type="text" 
+          id="username" 
+          formControlName="username" 
+          placeholder="admin@patchguard.internal"
+          autocomplete="username"
+        >
+        <span class="error-text" *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched">
+          Valid username is required
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          formControlName="password" 
+          placeholder="••••••••••••"
+          autocomplete="current-password"
+        >
+        <span class="error-text" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+          Password is required
+        </span>
+      </div>
+
+      <div class="form-actions">
+        <label class="checkbox-wrapper">
+          <input type="checkbox" formControlName="remember">
+          <span>Remember this device</span>
+        </label>
+        <a href="javascript:void(0)" (click)="notificationService.info('Support', 'Contact your AD Administrator to reset passwords.')">Forgot password?</a>
+      </div>
+
+      <button type="submit" class="submit-btn" [disabled]="loginForm.invalid || isLoading()">
+        <span *ngIf="!isLoading()">Sign In Securely</span>
+        <div *ngIf="isLoading()" class="spinner"></div>
+      </button>
+      
+    </form>
+
+    <div class="footer">
+      <div class="tls-badge">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        TLS 1.3
+      </div>
+      <span>v1.0.0-rc2</span>
+    </div>
+
+    <div style="text-align:center; margin-top:1rem;">
+      <span style="color:#9ca3af; font-size:0.875rem;">
+        No account?&nbsp;
+        <a routerLink="/register" style="color:#60a5fa;">Create one</a>
+      </span>
+    </div>
+  </div>
+</div>

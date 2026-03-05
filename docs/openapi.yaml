@@ -1,0 +1,3854 @@
+openapi: 3.0.3
+info:
+  title: PatchGuard API
+  version: 1.0.0
+  description: "Enterprise Patch Management System. WebSocket API available at ws://<host>/ws/
+    \n\nWebSocket Protocol: Connect to endpoints with JWT token and listen to dynamic
+    event broadcast messages (Deployments, Discovery, Auth signals)."
+  contact:
+    name: Dev Team
+    email: dev@patchguard.internal
+  license:
+    name: Proprietary
+paths:
+  /api/auth/change-password/:
+    post:
+      operationId: auth_change_password_create
+      tags:
+      - Auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainRequest'
+        required: true
+      responses:
+        '200':
+          description: No response body
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      tags:
+      - Auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/profile/:
+    get:
+      operationId: auth_profile_retrieve
+      tags:
+      - Auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: auth_profile_partial_update
+      tags:
+      - Auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/refresh/:
+    post:
+      operationId: auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/deployments/:
+    get:
+      operationId: v1_deployments_list
+      parameters:
+      - in: query
+        name: created_by
+        schema:
+          type: string
+          format: uuid
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - cancelled
+          - completed
+          - draft
+          - failed
+          - in_progress
+          - paused
+          - rolling_back
+          - scheduled
+        description: |-
+          * `draft` - Draft
+          * `scheduled` - Scheduled
+          * `in_progress` - In Progress
+          * `paused` - Paused
+          * `completed` - Completed
+          * `failed` - Failed
+          * `cancelled` - Cancelled
+          * `rolling_back` - Rolling Back
+      - in: query
+        name: strategy
+        schema:
+          type: string
+          enum:
+          - canary
+          - immediate
+          - maintenance
+          - rolling
+        description: |-
+          * `immediate` - Immediate
+          * `canary` - Canary
+          * `rolling` - Rolling
+          * `maintenance` - Maintenance Window
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDeploymentListList'
+          description: ''
+    post:
+      operationId: v1_deployments_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeploymentCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeploymentCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeploymentCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentCreate'
+          description: ''
+  /api/v1/deployments/{id}/:
+    get:
+      operationId: v1_deployments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this deployment.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentDetail'
+          description: ''
+    put:
+      operationId: v1_deployments_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this deployment.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeploymentCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeploymentCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeploymentCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentCreate'
+          description: ''
+    patch:
+      operationId: v1_deployments_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this deployment.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDeploymentCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDeploymentCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDeploymentCreateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentCreate'
+          description: ''
+    delete:
+      operationId: v1_deployments_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this deployment.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/deployments/{id}/approve/:
+    post:
+      operationId: v1_deployments_approve_create
+      summary: Approve deployment
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this deployment.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentDetail'
+          description: ''
+  /api/v1/deployments/{id}/cancel/:
+    post:
+      operationId: v1_deployments_cancel_create
+      summary: Cancel deployment
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this deployment.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentDetail'
+          description: ''
+  /api/v1/deployments/{id}/execute/:
+    post:
+      operationId: v1_deployments_execute_create
+      summary: Execute deployment immediately
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this deployment.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentDetail'
+          description: ''
+  /api/v1/deployments/{id}/pause/:
+    post:
+      operationId: v1_deployments_pause_create
+      summary: Pause deployment
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this deployment.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentDetail'
+          description: ''
+  /api/v1/deployments/{id}/resume/:
+    post:
+      operationId: v1_deployments_resume_create
+      summary: Resume deployment
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this deployment.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentDetail'
+          description: ''
+  /api/v1/deployments/{id}/rollback/:
+    post:
+      operationId: v1_deployments_rollback_create
+      summary: Rollback deployment
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this deployment.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeploymentDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentDetail'
+          description: ''
+  /api/v1/deployments/{id}/targets/:
+    get:
+      operationId: v1_deployments_targets_list
+      summary: Get progress targets
+      parameters:
+      - in: query
+        name: created_by
+        schema:
+          type: string
+          format: uuid
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this deployment.
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - cancelled
+          - completed
+          - draft
+          - failed
+          - in_progress
+          - paused
+          - rolling_back
+          - scheduled
+        description: |-
+          * `draft` - Draft
+          * `scheduled` - Scheduled
+          * `in_progress` - In Progress
+          * `paused` - Paused
+          * `completed` - Completed
+          * `failed` - Failed
+          * `cancelled` - Cancelled
+          * `rolling_back` - Rolling Back
+      - in: query
+        name: strategy
+        schema:
+          type: string
+          enum:
+          - canary
+          - immediate
+          - maintenance
+          - rolling
+        description: |-
+          * `immediate` - Immediate
+          * `canary` - Canary
+          * `rolling` - Rolling
+          * `maintenance` - Maintenance Window
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDeploymentTargetList'
+          description: ''
+  /api/v1/devices/:
+    get:
+      operationId: v1_devices_list
+      parameters:
+      - in: query
+        name: agent_version
+        schema:
+          type: string
+      - in: query
+        name: compliance_below
+        schema:
+          type: number
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: environment
+        schema:
+          type: string
+          enum:
+          - development
+          - production
+          - staging
+          - test
+        description: |-
+          * `production` - Production
+          * `staging` - Staging
+          * `development` - Development
+          * `test` - Test
+      - in: query
+        name: group
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: hostname
+        schema:
+          type: string
+      - in: query
+        name: last_seen_after
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: last_seen_before
+        schema:
+          type: string
+          format: date-time
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: query
+        name: os_family
+        schema:
+          type: string
+          enum:
+          - linux
+          - macos
+          - windows
+        description: |-
+          * `linux` - Linux
+          * `windows` - Windows
+          * `macos` - macOS
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - decommissioned
+          - maintenance
+          - offline
+          - online
+        description: |-
+          * `online` - Online
+          * `offline` - Offline
+          * `maintenance` - Maintenance
+          * `decommissioned` - Decommissioned
+      - in: query
+        name: tag
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDeviceListList'
+          description: ''
+    post:
+      operationId: v1_devices_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeviceCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeviceCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceCreate'
+          description: ''
+  /api/v1/devices/{id}/:
+    get:
+      operationId: v1_devices_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+          description: ''
+    put:
+      operationId: v1_devices_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeviceCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeviceCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceCreate'
+          description: ''
+    patch:
+      operationId: v1_devices_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDeviceCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDeviceCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDeviceCreateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceCreate'
+          description: ''
+    delete:
+      operationId: v1_devices_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/devices/{id}/compliance/:
+    get:
+      operationId: v1_devices_compliance_retrieve
+      description: Detailed compliance breakdown for a single device.
+      summary: Get device compliance
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+          description: ''
+  /api/v1/devices/{id}/deployments/:
+    get:
+      operationId: v1_devices_deployments_retrieve
+      description: List recent DeploymentTargets for this device.
+      summary: List deployments
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+          description: ''
+  /api/v1/devices/{id}/patches/:
+    get:
+      operationId: v1_devices_patches_retrieve
+      description: List all DevicePatchStatus for this device.
+      summary: List patches
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+          description: ''
+  /api/v1/devices/{id}/reboot/:
+    post:
+      operationId: v1_devices_reboot_create
+      description: Send reboot command via Redis pub/sub.
+      summary: Trigger reboot
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeviceDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeviceDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+          description: ''
+  /api/v1/devices/{id}/scan/:
+    post:
+      operationId: v1_devices_scan_create
+      description: Enqueue Celery task to scan for missing patches.
+      summary: Trigger patch scan
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeviceDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeviceDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+          description: ''
+  /api/v1/devices/bulk_group/:
+    post:
+      operationId: v1_devices_bulk_group_create
+      description: Bulk add devices to a group.
+      summary: Bulk group devices
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeviceDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeviceDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+          description: ''
+  /api/v1/devices/bulk_tag/:
+    post:
+      operationId: v1_devices_bulk_tag_create
+      description: Bulk add/remove tags on multiple devices.
+      summary: Bulk tag devices
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceBulkTagRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeviceBulkTagRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeviceBulkTagRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+          description: ''
+  /api/v1/devices/groups/:
+    get:
+      operationId: v1_devices_groups_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDeviceGroupList'
+          description: ''
+    post:
+      operationId: v1_devices_groups_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceGroupCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeviceGroupCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeviceGroupCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceGroupCreate'
+          description: ''
+  /api/v1/devices/groups/{id}/:
+    get:
+      operationId: v1_devices_groups_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device group.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceGroup'
+          description: ''
+    put:
+      operationId: v1_devices_groups_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device group.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceGroupCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeviceGroupCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeviceGroupCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceGroupCreate'
+          description: ''
+    patch:
+      operationId: v1_devices_groups_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device group.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDeviceGroupCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDeviceGroupCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDeviceGroupCreateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceGroupCreate'
+          description: ''
+    delete:
+      operationId: v1_devices_groups_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device group.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/devices/groups/{id}/devices/:
+    get:
+      operationId: v1_devices_groups_devices_retrieve
+      description: List devices in this group (respects dynamic rules).
+      summary: List group devices
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device group.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceGroup'
+          description: ''
+  /api/v1/devices/stats/:
+    get:
+      operationId: v1_devices_stats_retrieve
+      description: Aggregate stats across entire fleet.
+      summary: Device Statistics
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceDetail'
+          description: ''
+  /api/v1/patches/:
+    get:
+      operationId: v1_patches_list
+      parameters:
+      - in: query
+        name: applicable_os
+        schema:
+          type: string
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: cve_id
+        schema:
+          type: string
+      - in: query
+        name: has_active_exploitation
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: released_after
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: released_before
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: requires_reboot
+        schema:
+          type: boolean
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: severity
+        schema:
+          type: string
+          enum:
+          - critical
+          - high
+          - low
+          - medium
+        description: |-
+          * `critical` - Critical
+          * `high` - High
+          * `medium` - Medium
+          * `low` - Low
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - approved
+          - imported
+          - rejected
+          - reviewed
+          - superseded
+        description: |-
+          * `imported` - Imported
+          * `reviewed` - Reviewed
+          * `approved` - Approved
+          * `rejected` - Rejected
+          * `superseded` - Superseded
+      - in: query
+        name: vendor
+        schema:
+          type: string
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPatchListList'
+          description: ''
+    post:
+      operationId: v1_patches_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchCreate'
+          description: ''
+  /api/v1/patches/{id}/:
+    get:
+      operationId: v1_patches_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this patch.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchDetail'
+          description: ''
+    put:
+      operationId: v1_patches_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this patch.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchCreate'
+          description: ''
+    patch:
+      operationId: v1_patches_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this patch.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPatchCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPatchCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPatchCreateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchCreate'
+          description: ''
+    delete:
+      operationId: v1_patches_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this patch.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/patches/{id}/affected_devices/:
+    get:
+      operationId: v1_patches_affected_devices_retrieve
+      description: List devices missing this patch.
+      summary: Affected devices
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this patch.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchDetail'
+          description: ''
+  /api/v1/patches/{id}/approve/:
+    post:
+      operationId: v1_patches_approve_create
+      description: Transition to approved state.
+      summary: Approve patch
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this patch.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchApprovalRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchApprovalRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchApprovalRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchDetail'
+          description: ''
+  /api/v1/patches/{id}/reject/:
+    post:
+      operationId: v1_patches_reject_create
+      description: Transition to rejected state.
+      summary: Reject patch
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this patch.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchApprovalRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchApprovalRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchApprovalRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchDetail'
+          description: ''
+  /api/v1/patches/{id}/review/:
+    post:
+      operationId: v1_patches_review_create
+      description: Transition to reviewed state.
+      summary: Review patch
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this patch.
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchDetail'
+          description: ''
+  /api/v1/patches/bulk_approve/:
+    post:
+      operationId: v1_patches_bulk_approve_create
+      description: Approve multiple patches at once.
+      summary: Bulk approve patches
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchDetailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchDetailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchDetail'
+          description: ''
+  /api/v1/patches/compliance_summary/:
+    get:
+      operationId: v1_patches_compliance_summary_retrieve
+      description: Overall compliance rate across all devices.
+      summary: Overall compliance summary
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchDetail'
+          description: ''
+  /api/v1/patches/stats/:
+    get:
+      operationId: v1_patches_stats_retrieve
+      description: Aggregate stats for the patch catalog.
+      summary: Patch statistics
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchDetail'
+          description: ''
+  /api/v1/patches/status/:
+    get:
+      operationId: v1_patches_status_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: device
+        schema:
+          type: string
+          format: uuid
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: patch
+        schema:
+          type: string
+          format: uuid
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: state
+        schema:
+          type: string
+          enum:
+          - downloading
+          - failed
+          - installed
+          - installing
+          - missing
+          - not_applicable
+          - pending
+          - rolled_back
+        description: |-
+          * `not_applicable` - Not Applicable
+          * `missing` - Missing
+          * `pending` - Pending
+          * `downloading` - Downloading
+          * `installing` - Installing
+          * `installed` - Installed
+          * `failed` - Failed
+          * `rolled_back` - Rolled Back
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDevicePatchStatusList'
+          description: ''
+  /api/v1/patches/status/{id}/:
+    get:
+      operationId: v1_patches_status_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this device patch status.
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevicePatchStatus'
+          description: ''
+  /api/v1/reports/compliance/:
+    get:
+      operationId: v1_reports_compliance_retrieve
+      description: Detailed compliance report generation.
+      summary: Compliance Report
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/reports/dashboard-stats/:
+    get:
+      operationId: v1_reports_dashboard_stats_retrieve
+      description: Global reporting stats for dashboard caching.
+      summary: Dashboard Stats
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/users/:
+    get:
+      operationId: v1_users_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: is_ldap_user
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: role
+        schema:
+          type: string
+          enum:
+          - admin
+          - agent
+          - operator
+          - viewer
+        description: |-
+          * `admin` - Admin
+          * `operator` - Operator
+          * `viewer` - Viewer
+          * `agent` - Agent
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+    post:
+      operationId: v1_users_create
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreate'
+          description: ''
+  /api/v1/users/{id}/:
+    get:
+      operationId: v1_users_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - Users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    put:
+      operationId: v1_users_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: v1_users_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    delete:
+      operationId: v1_users_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - Users
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/users/{id}/change_role/:
+    post:
+      operationId: v1_users_change_role_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/users/{id}/lock/:
+    post:
+      operationId: v1_users_lock_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/users/{id}/reset_password/:
+    post:
+      operationId: v1_users_reset_password_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/users/{id}/unlock/:
+    post:
+      operationId: v1_users_unlock_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this user.
+        required: true
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/users/me/:
+    get:
+      operationId: v1_users_me_retrieve
+      tags:
+      - Users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+components:
+  schemas:
+    ActionEnum:
+      enum:
+      - add
+      - remove
+      type: string
+      description: |-
+        * `add` - add
+        * `remove` - remove
+    CustomTokenObtainRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    DeploymentCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        strategy:
+          $ref: '#/components/schemas/StrategyEnum'
+        canary_percentage:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        wave_size:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        wave_delay_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        max_failure_percentage:
+          type: number
+          format: double
+        requires_reboot:
+          type: boolean
+        maintenance_window_start:
+          type: string
+          format: time
+          nullable: true
+        maintenance_window_end:
+          type: string
+          format: time
+          nullable: true
+        scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+        patches:
+          type: array
+          items:
+            type: string
+            format: uuid
+        target_groups:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+      - name
+      - patches
+      - target_groups
+    DeploymentCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        strategy:
+          $ref: '#/components/schemas/StrategyEnum'
+        canary_percentage:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        wave_size:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        wave_delay_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        max_failure_percentage:
+          type: number
+          format: double
+        requires_reboot:
+          type: boolean
+        maintenance_window_start:
+          type: string
+          format: time
+          nullable: true
+        maintenance_window_end:
+          type: string
+          format: time
+          nullable: true
+        scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+        patches:
+          type: array
+          items:
+            type: string
+            format: uuid
+        target_groups:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+      - name
+      - patches
+      - target_groups
+    DeploymentDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        patches:
+          type: array
+          items:
+            $ref: '#/components/schemas/PatchList'
+          readOnly: true
+        target_groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceGroup'
+          readOnly: true
+        progress_percentage:
+          type: string
+          readOnly: true
+        failure_rate:
+          type: string
+          readOnly: true
+        wave_summary:
+          type: string
+          readOnly: true
+        target_breakdown:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status280Enum'
+        strategy:
+          $ref: '#/components/schemas/StrategyEnum'
+        canary_percentage:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        wave_size:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        wave_delay_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        max_failure_percentage:
+          type: number
+          format: double
+        requires_reboot:
+          type: boolean
+        maintenance_window_start:
+          type: string
+          format: time
+          nullable: true
+        maintenance_window_end:
+          type: string
+          format: time
+          nullable: true
+        total_devices:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        completed_devices:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        failed_devices:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        current_wave:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by:
+          type: string
+          format: uuid
+          nullable: true
+        approved_by:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - created_at
+      - failure_rate
+      - id
+      - name
+      - patches
+      - progress_percentage
+      - target_breakdown
+      - target_groups
+      - updated_at
+      - wave_summary
+    DeploymentDetailRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status280Enum'
+        strategy:
+          $ref: '#/components/schemas/StrategyEnum'
+        canary_percentage:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        wave_size:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        wave_delay_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        max_failure_percentage:
+          type: number
+          format: double
+        requires_reboot:
+          type: boolean
+        maintenance_window_start:
+          type: string
+          format: time
+          nullable: true
+        maintenance_window_end:
+          type: string
+          format: time
+          nullable: true
+        total_devices:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        completed_devices:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        failed_devices:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        current_wave:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_by:
+          type: string
+          format: uuid
+          nullable: true
+        approved_by:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - name
+    DeploymentList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        status:
+          $ref: '#/components/schemas/Status280Enum'
+        strategy:
+          $ref: '#/components/schemas/StrategyEnum'
+        total_devices:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        completed_devices:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        failed_devices:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        current_wave:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        created_by_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        progress_percentage:
+          type: string
+          readOnly: true
+        failure_rate:
+          type: string
+          readOnly: true
+      required:
+      - created_at
+      - created_by_name
+      - failure_rate
+      - id
+      - name
+      - progress_percentage
+    DeploymentTarget:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        device:
+          type: string
+          format: uuid
+        device_hostname:
+          type: string
+          readOnly: true
+        wave_number:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        status:
+          $ref: '#/components/schemas/DeploymentTargetStatusEnum'
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        error_log:
+          type: string
+      required:
+      - device
+      - device_hostname
+      - id
+    DeploymentTargetStatusEnum:
+      enum:
+      - queued
+      - in_progress
+      - completed
+      - failed
+      - skipped
+      - rolled_back
+      type: string
+      description: |-
+        * `queued` - Queued
+        * `in_progress` - In Progress
+        * `completed` - Completed
+        * `failed` - Failed
+        * `skipped` - Skipped
+        * `rolled_back` - Rolled Back
+    DeviceBulkTagRequest:
+      type: object
+      properties:
+        device_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        tags:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+      required:
+      - action
+      - device_ids
+      - tags
+    DeviceCreate:
+      type: object
+      properties:
+        hostname:
+          type: string
+          maxLength: 255
+        ip_address:
+          type: string
+        os_family:
+          $ref: '#/components/schemas/DeviceOSFamilyEnum'
+        os_version:
+          type: string
+          maxLength: 100
+        mac_address:
+          type: string
+          maxLength: 17
+        os_arch:
+          type: string
+          maxLength: 20
+        environment:
+          $ref: '#/components/schemas/DeviceEnvironmentEnum'
+        status:
+          $ref: '#/components/schemas/DeviceStatusEnum'
+        tags: {}
+      required:
+      - hostname
+      - ip_address
+      - os_family
+      - os_version
+    DeviceCreateRequest:
+      type: object
+      properties:
+        hostname:
+          type: string
+          minLength: 1
+          maxLength: 255
+        ip_address:
+          type: string
+          minLength: 1
+        os_family:
+          $ref: '#/components/schemas/DeviceOSFamilyEnum'
+        os_version:
+          type: string
+          minLength: 1
+          maxLength: 100
+        mac_address:
+          type: string
+          maxLength: 17
+        os_arch:
+          type: string
+          minLength: 1
+          maxLength: 20
+        environment:
+          $ref: '#/components/schemas/DeviceEnvironmentEnum'
+        status:
+          $ref: '#/components/schemas/DeviceStatusEnum'
+        tags: {}
+      required:
+      - hostname
+      - ip_address
+      - os_family
+      - os_version
+    DeviceDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceGroup'
+          readOnly: true
+        compliance_summary:
+          type: string
+          readOnly: true
+        patch_stats:
+          type: string
+          readOnly: true
+        hostname:
+          type: string
+          maxLength: 255
+        ip_address:
+          type: string
+        mac_address:
+          type: string
+          maxLength: 17
+        os_family:
+          $ref: '#/components/schemas/DeviceOSFamilyEnum'
+        os_version:
+          type: string
+          maxLength: 100
+        os_arch:
+          type: string
+          maxLength: 20
+        agent_version:
+          type: string
+          maxLength: 20
+        environment:
+          $ref: '#/components/schemas/DeviceEnvironmentEnum'
+        status:
+          $ref: '#/components/schemas/DeviceStatusEnum'
+        tags: {}
+        metadata: {}
+        agent_api_key:
+          type: string
+          maxLength: 64
+        last_seen:
+          type: string
+          format: date-time
+          nullable: true
+        last_checkin_ip:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - agent_api_key
+      - compliance_summary
+      - created_at
+      - groups
+      - hostname
+      - id
+      - ip_address
+      - os_family
+      - os_version
+      - patch_stats
+      - updated_at
+    DeviceDetailRequest:
+      type: object
+      properties:
+        hostname:
+          type: string
+          minLength: 1
+          maxLength: 255
+        ip_address:
+          type: string
+          minLength: 1
+        mac_address:
+          type: string
+          maxLength: 17
+        os_family:
+          $ref: '#/components/schemas/DeviceOSFamilyEnum'
+        os_version:
+          type: string
+          minLength: 1
+          maxLength: 100
+        os_arch:
+          type: string
+          minLength: 1
+          maxLength: 20
+        agent_version:
+          type: string
+          maxLength: 20
+        environment:
+          $ref: '#/components/schemas/DeviceEnvironmentEnum'
+        status:
+          $ref: '#/components/schemas/DeviceStatusEnum'
+        tags: {}
+        metadata: {}
+        agent_api_key:
+          type: string
+          minLength: 1
+          maxLength: 64
+        last_seen:
+          type: string
+          format: date-time
+          nullable: true
+        last_checkin_ip:
+          type: string
+          nullable: true
+          minLength: 1
+      required:
+      - agent_api_key
+      - hostname
+      - ip_address
+      - os_family
+      - os_version
+    DeviceEnvironmentEnum:
+      enum:
+      - production
+      - staging
+      - development
+      - test
+      type: string
+      description: |-
+        * `production` - Production
+        * `staging` - Staging
+        * `development` - Development
+        * `test` - Test
+    DeviceGroup:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        dynamic_rules: {}
+        is_dynamic:
+          type: boolean
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+        parent_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        device_count:
+          type: string
+          readOnly: true
+      required:
+      - created_at
+      - device_count
+      - id
+      - name
+      - parent_name
+      - updated_at
+    DeviceGroupCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        is_dynamic:
+          type: boolean
+        dynamic_rules: {}
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - name
+    DeviceGroupCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        is_dynamic:
+          type: boolean
+        dynamic_rules: {}
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - name
+    DeviceGroupRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        dynamic_rules: {}
+        is_dynamic:
+          type: boolean
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - name
+    DeviceList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        hostname:
+          type: string
+          maxLength: 255
+        ip_address:
+          type: string
+        os_family:
+          $ref: '#/components/schemas/DeviceOSFamilyEnum'
+        os_version:
+          type: string
+          maxLength: 100
+        environment:
+          $ref: '#/components/schemas/DeviceEnvironmentEnum'
+        status:
+          $ref: '#/components/schemas/DeviceStatusEnum'
+        tags: {}
+        agent_version:
+          type: string
+          maxLength: 20
+        last_seen:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - hostname
+      - id
+      - ip_address
+      - os_family
+      - os_version
+    DeviceOSFamilyEnum:
+      enum:
+      - linux
+      - windows
+      - macos
+      type: string
+      description: |-
+        * `linux` - Linux
+        * `windows` - Windows
+        * `macos` - macOS
+    DevicePatchStateEnum:
+      enum:
+      - not_applicable
+      - missing
+      - pending
+      - downloading
+      - installing
+      - installed
+      - failed
+      - rolled_back
+      type: string
+      description: |-
+        * `not_applicable` - Not Applicable
+        * `missing` - Missing
+        * `pending` - Pending
+        * `downloading` - Downloading
+        * `installing` - Installing
+        * `installed` - Installed
+        * `failed` - Failed
+        * `rolled_back` - Rolled Back
+    DevicePatchStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        device_hostname:
+          type: string
+          readOnly: true
+        patch_vendor_id:
+          type: string
+          readOnly: true
+        patch_title:
+          type: string
+          readOnly: true
+        state:
+          $ref: '#/components/schemas/DevicePatchStateEnum'
+        installed_at:
+          type: string
+          format: date-time
+          nullable: true
+        error_message:
+          type: string
+        retry_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        last_attempt:
+          type: string
+          format: date-time
+          nullable: true
+        device:
+          type: string
+          format: uuid
+        patch:
+          type: string
+          format: uuid
+      required:
+      - device
+      - device_hostname
+      - id
+      - patch
+      - patch_title
+      - patch_vendor_id
+    DeviceStatusEnum:
+      enum:
+      - online
+      - offline
+      - maintenance
+      - decommissioned
+      type: string
+      description: |-
+        * `online` - Online
+        * `offline` - Offline
+        * `maintenance` - Maintenance
+        * `decommissioned` - Decommissioned
+    PaginatedDeploymentListList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeploymentList'
+    PaginatedDeploymentTargetList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeploymentTarget'
+    PaginatedDeviceGroupList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceGroup'
+    PaginatedDeviceListList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceList'
+    PaginatedDevicePatchStatusList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DevicePatchStatus'
+    PaginatedPatchListList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PatchList'
+    PaginatedUserList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    PatchApprovalRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+    PatchCreate:
+      type: object
+      properties:
+        vendor_id:
+          type: string
+          maxLength: 100
+        title:
+          type: string
+          maxLength: 500
+        severity:
+          $ref: '#/components/schemas/PatchSeverityEnum'
+        vendor:
+          type: string
+          maxLength: 100
+        applicable_os: {}
+        description:
+          type: string
+        cve_ids: {}
+        requires_reboot:
+          type: boolean
+      required:
+      - severity
+      - title
+      - vendor
+      - vendor_id
+    PatchCreateRequest:
+      type: object
+      properties:
+        vendor_id:
+          type: string
+          minLength: 1
+          maxLength: 100
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        severity:
+          $ref: '#/components/schemas/PatchSeverityEnum'
+        vendor:
+          type: string
+          minLength: 1
+          maxLength: 100
+        applicable_os: {}
+        description:
+          type: string
+        cve_ids: {}
+        requires_reboot:
+          type: boolean
+      required:
+      - severity
+      - title
+      - vendor
+      - vendor_id
+    PatchDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        affected_device_count:
+          type: string
+          readOnly: true
+        device_status_breakdown:
+          type: string
+          readOnly: true
+        supersedes_name:
+          type: string
+          readOnly: true
+        superseded_by_names:
+          type: string
+          readOnly: true
+        vendor_id:
+          type: string
+          maxLength: 100
+        title:
+          type: string
+          maxLength: 500
+        description:
+          type: string
+        severity:
+          $ref: '#/components/schemas/PatchSeverityEnum'
+        status:
+          $ref: '#/components/schemas/PatchStatusEnum'
+        vendor:
+          type: string
+          maxLength: 100
+        kb_article:
+          type: string
+          format: uri
+          maxLength: 200
+        cve_ids: {}
+        applicable_os: {}
+        package_name:
+          type: string
+          maxLength: 200
+        package_version:
+          type: string
+          maxLength: 100
+        file_url:
+          type: string
+          format: uri
+          maxLength: 200
+        file_hash_sha256:
+          type: string
+          maxLength: 64
+        file_size_bytes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+        requires_reboot:
+          type: boolean
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        released_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        supersedes:
+          type: string
+          format: uuid
+          nullable: true
+        approved_by:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - affected_device_count
+      - created_at
+      - device_status_breakdown
+      - id
+      - severity
+      - superseded_by_names
+      - supersedes_name
+      - title
+      - updated_at
+      - vendor
+      - vendor_id
+    PatchDetailRequest:
+      type: object
+      properties:
+        vendor_id:
+          type: string
+          minLength: 1
+          maxLength: 100
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        description:
+          type: string
+        severity:
+          $ref: '#/components/schemas/PatchSeverityEnum'
+        status:
+          $ref: '#/components/schemas/PatchStatusEnum'
+        vendor:
+          type: string
+          minLength: 1
+          maxLength: 100
+        kb_article:
+          type: string
+          format: uri
+          maxLength: 200
+        cve_ids: {}
+        applicable_os: {}
+        package_name:
+          type: string
+          maxLength: 200
+        package_version:
+          type: string
+          maxLength: 100
+        file_url:
+          type: string
+          format: uri
+          maxLength: 200
+        file_hash_sha256:
+          type: string
+          maxLength: 64
+        file_size_bytes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+        requires_reboot:
+          type: boolean
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        released_at:
+          type: string
+          format: date-time
+          nullable: true
+        supersedes:
+          type: string
+          format: uuid
+          nullable: true
+        approved_by:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - severity
+      - title
+      - vendor
+      - vendor_id
+    PatchList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        vendor_id:
+          type: string
+          maxLength: 100
+        title:
+          type: string
+          maxLength: 500
+        severity:
+          $ref: '#/components/schemas/PatchSeverityEnum'
+        status:
+          $ref: '#/components/schemas/PatchStatusEnum'
+        vendor:
+          type: string
+          maxLength: 100
+        cve_ids: {}
+        applicable_os: {}
+        requires_reboot:
+          type: boolean
+        released_at:
+          type: string
+          format: date-time
+          nullable: true
+        affected_device_count:
+          type: string
+          readOnly: true
+      required:
+      - affected_device_count
+      - id
+      - severity
+      - title
+      - vendor
+      - vendor_id
+    PatchListRequest:
+      type: object
+      properties:
+        vendor_id:
+          type: string
+          minLength: 1
+          maxLength: 100
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        severity:
+          $ref: '#/components/schemas/PatchSeverityEnum'
+        status:
+          $ref: '#/components/schemas/PatchStatusEnum'
+        vendor:
+          type: string
+          minLength: 1
+          maxLength: 100
+        cve_ids: {}
+        applicable_os: {}
+        requires_reboot:
+          type: boolean
+        released_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - severity
+      - title
+      - vendor
+      - vendor_id
+    PatchSeverityEnum:
+      enum:
+      - critical
+      - high
+      - medium
+      - low
+      type: string
+      description: |-
+        * `critical` - Critical
+        * `high` - High
+        * `medium` - Medium
+        * `low` - Low
+    PatchStatusEnum:
+      enum:
+      - imported
+      - reviewed
+      - approved
+      - rejected
+      - superseded
+      type: string
+      description: |-
+        * `imported` - Imported
+        * `reviewed` - Reviewed
+        * `approved` - Approved
+        * `rejected` - Rejected
+        * `superseded` - Superseded
+    PatchedDeploymentCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        strategy:
+          $ref: '#/components/schemas/StrategyEnum'
+        canary_percentage:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        wave_size:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        wave_delay_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        max_failure_percentage:
+          type: number
+          format: double
+        requires_reboot:
+          type: boolean
+        maintenance_window_start:
+          type: string
+          format: time
+          nullable: true
+        maintenance_window_end:
+          type: string
+          format: time
+          nullable: true
+        scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+        patches:
+          type: array
+          items:
+            type: string
+            format: uuid
+        target_groups:
+          type: array
+          items:
+            type: string
+            format: uuid
+    PatchedDeviceCreateRequest:
+      type: object
+      properties:
+        hostname:
+          type: string
+          minLength: 1
+          maxLength: 255
+        ip_address:
+          type: string
+          minLength: 1
+        os_family:
+          $ref: '#/components/schemas/DeviceOSFamilyEnum'
+        os_version:
+          type: string
+          minLength: 1
+          maxLength: 100
+        mac_address:
+          type: string
+          maxLength: 17
+        os_arch:
+          type: string
+          minLength: 1
+          maxLength: 20
+        environment:
+          $ref: '#/components/schemas/DeviceEnvironmentEnum'
+        status:
+          $ref: '#/components/schemas/DeviceStatusEnum'
+        tags: {}
+    PatchedDeviceGroupCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        is_dynamic:
+          type: boolean
+        dynamic_rules: {}
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+    PatchedPatchCreateRequest:
+      type: object
+      properties:
+        vendor_id:
+          type: string
+          minLength: 1
+          maxLength: 100
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        severity:
+          $ref: '#/components/schemas/PatchSeverityEnum'
+        vendor:
+          type: string
+          minLength: 1
+          maxLength: 100
+        applicable_os: {}
+        description:
+          type: string
+        cve_ids: {}
+        requires_reboot:
+          type: boolean
+    PatchedUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        department:
+          type: string
+          maxLength: 100
+        is_active:
+          type: boolean
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        is_ldap_user:
+          type: boolean
+    RoleEnum:
+      enum:
+      - admin
+      - operator
+      - viewer
+      - agent
+      type: string
+      description: |-
+        * `admin` - Admin
+        * `operator` - Operator
+        * `viewer` - Viewer
+        * `agent` - Agent
+    Status280Enum:
+      enum:
+      - draft
+      - scheduled
+      - in_progress
+      - paused
+      - completed
+      - failed
+      - cancelled
+      - rolling_back
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `scheduled` - Scheduled
+        * `in_progress` - In Progress
+        * `paused` - Paused
+        * `completed` - Completed
+        * `failed` - Failed
+        * `cancelled` - Cancelled
+        * `rolling_back` - Rolling Back
+    StrategyEnum:
+      enum:
+      - immediate
+      - canary
+      - rolling
+      - maintenance
+      type: string
+      description: |-
+        * `immediate` - Immediate
+        * `canary` - Canary
+        * `rolling` - Rolling
+        * `maintenance` - Maintenance Window
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        department:
+          type: string
+          maxLength: 100
+        is_active:
+          type: boolean
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        is_ldap_user:
+          type: boolean
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - date_joined
+      - id
+      - last_login
+      - username
+    UserCreate:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        department:
+          type: string
+          maxLength: 100
+      required:
+      - username
+    UserCreateRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 12
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        department:
+          type: string
+          maxLength: 100
+      required:
+      - password
+      - username
+    UserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        department:
+          type: string
+          maxLength: 100
+        is_active:
+          type: boolean
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        is_ldap_user:
+          type: boolean
+      required:
+      - username
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+tags:
+- name: Auth
+  description: Authentication and JWT endpoints
+- name: Users
+  description: User operations
+- name: Devices
+  description: Inventory and device groups
+- name: Patches
+  description: Patch catalog and workflows
+- name: Deployments
+  description: Deployment orchestration
+- name: Reports
+  description: Compliance and audit reports
+- name: Health
+  description: System health

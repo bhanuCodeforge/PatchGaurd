@@ -1,0 +1,54 @@
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🛡️</div>
+    <div class="logo-text">
+      <span class="logo-name">PatchGuard</span>
+      <span class="logo-sub">Enterprise</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <span class="nav-label">{{ 'NAV.OVERVIEW' | translate }}</span>
+      <a *ngFor="let item of overviewItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon" [innerHTML]="item.icon"></span>
+        <span class="nav-text">{{ item.label | translate }}</span>
+        <span *ngIf="item.badge" class="nav-badge">{{ item.badge }}</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-label">{{ 'NAV.MANAGE' | translate }}</span>
+      <a *ngFor="let item of manageItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon" [innerHTML]="item.icon"></span>
+        <span class="nav-text">{{ item.label | translate }}</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-label">{{ 'NAV.REPORTS' | translate }}</span>
+      <a *ngFor="let item of reportItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon" [innerHTML]="item.icon"></span>
+        <span class="nav-text">{{ item.label | translate }}</span>
+      </a>
+    </div>
+
+    <div class="nav-section" *ngIf="isAdmin()">
+      <span class="nav-label">{{ 'NAV.SYSTEM' | translate }}</span>
+      <a *ngFor="let item of systemItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon" [innerHTML]="item.icon"></span>
+        <span class="nav-text">{{ item.label | translate }}</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar">{{ initials() }}</div>
+      <div class="user-meta">
+        <span class="user-name">{{ userName() }}</span>
+        <span class="user-role">{{ userRole() }}</span>
+      </div>
+    </div>
+  </div>
+</aside>

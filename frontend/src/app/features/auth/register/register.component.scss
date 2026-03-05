@@ -1,0 +1,13 @@
+// All styles inherited from global styles.scss
+// Register-specific overrides:
+
+// Allow wider card on register page
+.login-card { max-width: 420px; }
+
+// Inline name row
+.name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  .form-group { margin-bottom: 0; }
+}

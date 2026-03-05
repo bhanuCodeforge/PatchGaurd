@@ -1,0 +1,100 @@
+<div class="compliance-page container-fluid py-4">
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3" *ngFor="let k of kpis()">
+      <div class="kpi-card text-center">
+        <div class="kpi-val" [style.color]="k.color">{{ k.value }}</div>
+        <div class="kpi-lbl">{{ k.label }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="row g-3 mb-4">
+    <!-- Donut -->
+    <div class="col-md-4 col-xl-3">
+      <div class="pg-card p-4 text-center h-100">
+        <div class="card-label mb-3">Overall Compliance</div>
+        <svg class="donut-svg mx-auto d-block" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="38" fill="none" stroke="#374151" stroke-width="12"/>
+          <circle cx="50" cy="50" r="38" fill="none" stroke="#22c55e" stroke-width="12"
+                  stroke-dasharray="239" [attr.stroke-dashoffset]="239 - (239 * compliancePct() / 100)"
+                  stroke-linecap="round" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .6s;"/>
+          <text x="50" y="54" text-anchor="middle" fill="#f9fafb" font-size="18" font-weight="700">{{ compliancePct() }}%</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Severity Breakdown -->
+    <div class="col-md-8 col-xl-9">
+      <div class="pg-card p-4 h-100">
+        <div class="card-label mb-3">Patch Coverage by Severity</div>
+        <div class="sev-bars">
+          <div class="sev-row" *ngFor="let s of sevData()">
+            <div class="sev-label">{{ s.label }}</div>
+            <div class="sev-track flex-grow-1">
+              <div class="sev-fill" [style.width]="s.pct + '%'" [style.background]="s.color"></div>
+            </div>
+            <span class="sev-pct">{{ s.pct | number:'1.0-0' }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Device Table -->
+  <div class="pg-card">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom border-dark">
+      <h6 class="mb-0 text-white">Device Compliance</h6>
+      <div class="d-flex gap-2">
+        <select class="pg-select" [(ngModel)]="osFilter" (ngModelChange)="loadDevices()">
+          <option value="">All OS</option>
+          <option value="Linux">Linux</option>
+          <option value="Windows">Windows</option>
+          <option value="macOS">macOS</option>
+        </select>
+        <select class="pg-select" [(ngModel)]="compFilter" (ngModelChange)="filterTable()">
+          <option value="">All</option>
+          <option value="compliant">Compliant (≥90%)</option>
+          <option value="non_compliant">Non-Compliant</option>
+        </select>
+      </div>
+    </div>
+
+    <app-loading-skeleton *ngIf="loading()" variant="table"></app-loading-skeleton>
+    <app-empty-state *ngIf="!loading() && rows().length === 0" icon="🛡️" title="No Data" description="No compliance data available."></app-empty-state>
+
+    <div class="table-responsive" *ngIf="!loading() && rows().length > 0">
+      <table class="table table-dark table-hover table-sm mb-0">
+        <thead>
+          <tr>
+            <th>Device</th>
+            <th>OS</th>
+            <th>Compliance</th>
+            <th class="text-center">Patched</th>
+            <th class="text-center">Missing</th>
+            <th>Last Scan</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of filteredRows()">
+            <td class="fw-medium">{{ row.hostname }}</td>
+            <td class="text-muted small">{{ row.os_name }}</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="comp-track flex-grow-1">
+                  <div class="comp-fill" [style.width]="row.compliance_rate + '%'" [style.background]="complianceColor(row.compliance_rate)"></div>
+                </div>
+                <span class="small" [style.color]="complianceColor(row.compliance_rate)">{{ row.compliance_rate }}%</span>
+              </div>
+            </td>
+            <td class="text-success text-center">{{ row.patched_count }}</td>
+            <td class="text-danger text-center">{{ row.missing_count }}</td>
+            <td class="text-muted small">{{ row.last_scan | relativeTime }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
