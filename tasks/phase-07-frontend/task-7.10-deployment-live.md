@@ -2,8 +2,8 @@
 
 **Time**: 3 hours  
 **Dependencies**: 7.9, 7.2  
-**Status**: ⬜ Not Started  
-**Files**: `frontend/src/app/features/deployments/deployment-live.component.ts`
+**Status**: ✅ Completed
+**Files**: `frontend/src/app/features/deployments/deployment-live/`
 
 ---
 
@@ -25,19 +25,20 @@ Route: /deployments/:id
 
 ## Acceptance Criteria
 
-- [ ] Progress bar updates in real time
-- [ ] Wave tracker shows correct states
-- [ ] Device heatmap renders and updates
-- [ ] Event log streams new events
-- [ ] Pause/cancel buttons work
-- [ ] WebSocket subscription works
-- [ ] Poll fallback activates on WS disconnect
+- [x] Progress bar updates in real time
+- [x] Wave tracker shows correct states
+- [x] Device heatmap renders and updates
+- [x] Event log streams new events
+- [x] Pause/cancel buttons work
+- [x] WebSocket subscription works
+- [x] Poll fallback activates on WS disconnect
 
 ## Files Created/Modified
 
-- [ ] `frontend/src/app/features/deployments/deployment-live.component.ts`
-- [ ] `frontend/src/app/features/deployments/deployment-live.component.scss`
+- [x] `frontend/src/app/features/deployments/deployment-live/deployment-live.component.ts`
+- [x] `frontend/src/app/features/deployments/deployment-live/deployment-live.component.html`
+- [x] `frontend/src/app/features/deployments/deployment-live/deployment-live.component.scss`
 
 ## Completion Log
 
-<!-- Record completion date, notes, and any deviations -->
+- **2026-04-05**: Live Deployment Monitor implemented with real-time WebSocket data streaming. Features a high-fidelity progress heatmap, segmented progress bars, and an auto-scrolling event log. Polling fallback and lifecycle actions (Pause, Cancel) are fully functional.

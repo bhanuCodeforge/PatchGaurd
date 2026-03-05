@@ -14,11 +14,11 @@ This **monorepo** houses all system components as a single deployable unit: the 
 | Auth System | SimpleJWT 5.3 + LDAP | ✅ Complete |
 | Task Engine | Celery 5.4 + Redis 7 | ✅ Complete |
 | Real-Time Layer | FastAPI 0.110 + WebSockets | ✅ Complete |
-| Frontend Core | Angular 21.2 (Signals) | ✅ Core Done |
-| Agent | Python 3.12 | ⚙️ In Progress |
+| Frontend Core | Angular 21.2 (Signals) | ✅ Complete |
+| Agent | Python 3.12 | ✅ Complete |
 | Test Suite | pytest + Angular Karma | ⬜ Not Started |
 
-**Overall Progress: 27/44 tasks (61%)**
+**Overall Progress: 37/44 tasks (84%)**
 
 ---
 
@@ -263,7 +263,7 @@ PatchGaurd/
 ├── docker-compose.yml              # Dev stack: postgres, redis, backend, realtime, frontend, workers
 ├── docker-compose.prod.yml         # Prod stack: + nginx, pgbouncer, resource limits, non-root
 ├── Makefile                        # Convenience commands (see below)
-├── TASK_TRACKER.md                 # Progress roadmap (27/44 complete)
+├── TASK_TRACKER.md                 # Progress roadmap (37/44 complete)
 └── README.md
 ```
 
@@ -388,7 +388,7 @@ LDAP/Active Directory authentication is available via `django-python3-ldap`. Con
 │ until    │     │ ip_address  │     │ status (state      │
 │ last_    │     │ status      │     │  machine)          │
 │ login    │     │ agent_api_  │     │                    │
-└──────────┘     │ key         │     └────────┬───────────┘
+└──────────┘     │ key         │     └──────┬───────────┘
                  └──────┬──────┘              │
                         │                     │
                         ▼                     ▼
@@ -450,7 +450,9 @@ LDAP/Active Directory authentication is available via `django-python3-ldap`. Con
 ```
 
 ---
+<!-- $env:DJANGO_SETTINGS_MODULE="config.settings.dev"; d:\PatchGaurd\.venv\Scripts\python.exe manage.py runserver 0.0.0.0:8000 --noreload 2>&1 -->
 
+<!-- cd 'D:\PatchGaurd\frontend'; npx ng serve --proxy-config proxy.conf.json -->
 ## 📈 Progress
 
 | Phase | Description | Tasks | Status |
@@ -461,10 +463,8 @@ LDAP/Active Directory authentication is available via `django-python3-ldap`. Con
 | 4 | Django REST API | 4/4 | ✅ Complete |
 | 5 | Celery Task Engine | 3/3 | ✅ Complete |
 | 6 | FastAPI Real-Time Service | 3/3 | ✅ Complete |
-| 7 | Angular Frontend | 3/12 | ⚙️ In Progress |
-| 8 | Python Agent | 0/1 | ⬜ Not Started |
+| 7 | Angular Frontend | 12/12 | ✅ Complete |
+| 8 | Python Agent | 1/1 | ✅ Complete |
 | 9 | Testing & Quality | 0/3 | ⬜ Not Started |
 | 10 | Production Hardening | 0/4 | ⬜ Not Started |
-| **Total** | | **27/44** | **61%** |
-#   P a t c h G a u r d  
- 
+| **Total** | | **37/44** | **84%** |

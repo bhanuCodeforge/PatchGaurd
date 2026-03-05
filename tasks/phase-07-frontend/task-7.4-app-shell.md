@@ -2,7 +2,7 @@
 
 **Time**: 2 hours  
 **Dependencies**: 7.1  
-**Status**: ⬜ Not Started  
+**Status**: ✅ Completed
 **Files**: `frontend/src/app/layout/`
 
 ---
@@ -23,21 +23,21 @@ App routing: /login (no shell), all other routes wrapped in AppShellComponent.
 
 ## Acceptance Criteria
 
-- [ ] Sidebar renders with all navigation items
-- [ ] Active route is highlighted
-- [ ] Badge counts update from API
-- [ ] Top bar shows connection status
-- [ ] User menu with logout works
-- [ ] Router outlet renders correct component
-- [ ] Admin-only routes hidden for non-admins
+- [x] Sidebar renders with all navigation items
+- [x] Active route is highlighted
+- [x] Badge counts update from API
+- [x] Top bar shows connection status
+- [x] User menu with logout works
+- [x] Router outlet renders correct component
+- [x] Admin-only routes hidden for non-admins
 
 ## Files Created/Modified
 
-- [ ] `frontend/src/app/layout/app-shell.component.ts`
-- [ ] `frontend/src/app/layout/sidebar.component.ts`
-- [ ] `frontend/src/app/layout/topbar.component.ts`
-- [ ] `frontend/src/app/app.routes.ts`
+- [x] `frontend/src/app/layout/app-shell/app-shell.component.ts`
+- [x] `frontend/src/app/layout/sidebar/sidebar.component.ts`
+- [x] `frontend/src/app/layout/topbar/topbar.component.ts`
+- [x] `frontend/src/app/app.routes.ts`
 
 ## Completion Log
 
-<!-- Record completion date, notes, and any deviations -->
+- **2026-04-05**: Verified full implementation of App Shell components. Navigation, admin route protection, and top-bar status integration are fully functional.

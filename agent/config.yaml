@@ -1,7 +1,9 @@
 # PatchGuard Agent Configuration
-# TODO: Implement agent config in Task 8.1
-
-server_url: "wss://patchmgr.internal.corp/ws/agent"
-api_key: "CHANGE_ME"
+server_url: "ws://localhost:8001/ws/agents"
+api_key: "AGENT_SECRET_KEY_PLACEHOLDER"
+device_id_override: null
 heartbeat_interval: 60
 log_level: "info"
+tags:
+  - "production"
+  - "web-server"

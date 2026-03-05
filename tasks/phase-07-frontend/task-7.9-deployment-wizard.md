@@ -2,8 +2,8 @@
 
 **Time**: 4 hours  
 **Dependencies**: 7.4, 7.2  
-**Status**: ⬜ Not Started  
-**Files**: `frontend/src/app/features/deployments/`
+**Status**: ✅ Completed
+**Files**: `frontend/src/app/features/deployments/deployment-wizard/`
 
 ---
 
@@ -26,19 +26,20 @@ Route: /deployments/new
 
 ## Acceptance Criteria
 
-- [ ] All 4 steps render correctly
-- [ ] Step navigation with validation works
-- [ ] Strategy cards are selectable
-- [ ] Sliders update summary in real time
-- [ ] Warning banner shows for production + reboot
-- [ ] Submit creates deployment via API
-- [ ] Cancel with confirmation dialog
+- [x] All 4 steps render correctly
+- [x] Step navigation with validation works
+- [x] Strategy cards are selectable
+- [x] Sliders update summary in real time
+- [x] Warning banner shows for production + reboot
+- [x] Submit creates deployment via API
+- [x] Cancel with confirmation dialog
 
 ## Files Created/Modified
 
-- [ ] `frontend/src/app/features/deployments/deployment-wizard.component.ts`
-- [ ] `frontend/src/app/features/deployments/steps/` (step components)
+- [x] `frontend/src/app/features/deployments/deployment-wizard/deployment-wizard.component.ts`
+- [x] `frontend/src/app/features/deployments/deployment-wizard/deployment-wizard.component.html`
+- [x] `frontend/src/app/features/deployments/deployment-wizard/deployment-wizard.component.scss`
 
 ## Completion Log
 
-<!-- Record completion date, notes, and any deviations -->
+- **2026-04-05**: Deployment Wizard fully implemented as a multi-step Signal-based form. Includes patch selection, target grouping, and strategy configuration (Canary, Rolling) with real-time validation and reboot warnings.
