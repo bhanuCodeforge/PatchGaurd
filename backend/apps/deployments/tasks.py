@@ -117,12 +117,25 @@ def execute_deployment(self, deployment_id: str):
             deployment.save(update_fields=['current_wave'])
             publish_progress(deployment)
 
+            # Collect patch vendor IDs to send to agent
+            patch_ids = list(deployment.patches.values_list('vendor_id', flat=True))
+
             targets = DeploymentTarget.objects.filter(deployment=deployment, wave_number=w, status=DeploymentTarget.Status.QUEUED)
             for t in targets:
                 t.status = DeploymentTarget.Status.IN_PROGRESS
                 t.started_at = timezone.now()
                 t.save()
-                RedisPublisher.publish_agent_command(str(t.device.agent_api_key), "START_DEPLOYMENT", {"deployment_id": str(deployment_id), "target_id": str(t.id)})
+                # FIX: use device.id (UUID), not agent_api_key — realtime ws_manager
+                # stores agents by device_id
+                RedisPublisher.publish_agent_command(
+                    str(t.device.id),
+                    "START_DEPLOYMENT",
+                    {
+                        "deployment_id": str(deployment_id),
+                        "target_id": str(t.id),
+                        "patches": patch_ids,
+                    },
+                )
 
             # In a real app we'd spawn target polling tasks. For now, simulate asynchronous execution polling.
             logger.info(f"Deployed Wave {w}. Waiting for completion tracking via agent webhooks.")
@@ -147,7 +160,11 @@ def cancel_deployment_task(deployment_id: str):
             for t in targets:
                 t.status = DeploymentTarget.Status.SKIPPED
                 if t.status == DeploymentTarget.Status.IN_PROGRESS:
-                     RedisPublisher.publish_agent_command(str(t.device.agent_api_key), "CANCEL_DEPLOYMENT", {"deployment_id": str(deployment_id)})
+                    RedisPublisher.publish_agent_command(
+                        str(t.device.id),  # FIX: was agent_api_key
+                        "CANCEL_DEPLOYMENT",
+                        {"deployment_id": str(deployment_id)},
+                    )
                 t.save()
             publish_progress(deployment)
     except Deployment.DoesNotExist:

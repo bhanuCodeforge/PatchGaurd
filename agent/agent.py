@@ -357,7 +357,7 @@ class PatchAgent:
             async for message in self.ws:
                 try:
                     data = json.loads(message)
-                    command = data.get("command")
+                    command = data.get("command") or data.get("event")
                     payload = data.get("payload", {})
                     logger.info(f"Received command: {command}")
 
@@ -365,6 +365,10 @@ class PatchAgent:
                         await self.run_scan()
                     elif command == "EXECUTE_PATCH":
                         await self.run_patch(payload.get("patch_id"))
+                    elif command == "START_DEPLOYMENT":
+                        await self.run_deployment(payload)
+                    elif command == "CANCEL_DEPLOYMENT":
+                        logger.info(f"Deployment {payload.get('deployment_id')} cancelled by server.")
                     elif command == "REBOOT":
                         self.plugin.reboot()
                     elif command == "PING":
@@ -396,6 +400,37 @@ class PatchAgent:
                 "patches": patches,
             }
         })
+
+    async def run_deployment(self, payload: dict):
+        deployment_id = payload.get("deployment_id", "")
+        target_id = payload.get("target_id", "")
+        patch_ids = payload.get("patches", [])
+
+        logger.info(f"Running deployment {deployment_id} ({len(patch_ids)} patches) for target {target_id}")
+        failed = []
+        for pid in patch_ids:
+            try:
+                success = self.plugin.install_patch(pid)
+                if not success:
+                    failed.append(pid)
+            except Exception as e:
+                logger.error(f"Patch {pid} install error: {e}")
+                failed.append(pid)
+
+        result_status = "failed" if failed else "completed"
+        await self.send_json({
+            "event": "patch_result",
+            "payload": {
+                "device_id": self.device_id,
+                "deployment_id": deployment_id,
+                "target_id": target_id,
+                "status": result_status,
+                "patches_installed": len(patch_ids) - len(failed),
+                "patches_failed": failed,
+                "timestamp": time.time(),
+            }
+        })
+        logger.info(f"Deployment {deployment_id} result: {result_status} ({len(failed)} failed patches)")
 
     async def run_patch(self, patch_id: str):
         if not patch_id:

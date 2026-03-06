@@ -31,17 +31,36 @@ class WindowsPlugin(OSPlugin):
         }
 
     def scan_patches(self) -> List[Dict[str, Any]]:
+        """
+        Returns installed hotfixes via Get-HotFix, formatted for process_scan_results.
+        Each entry uses: vendor_id, title, installed, severity, vendor.
+        """
         patches = []
+        if not self.powershell:
+            return patches
         try:
-            # Using PowerShell to list missing updates (this is a simplified mock)
-            # In real usage, this would call Windows Update API or WSUS.
-            cmd = ["Get-HotFix", "|", "Select-Object", "HotFixID", "Description", "InstalledOn"]
-            res = subprocess.run([self.powershell, "-Command", " ".join(cmd)], capture_output=True, text=True)
-            for line in res.stdout.splitlines()[2:]:
-                if line.strip():
-                    parts = line.split()
-                    if len(parts) >= 1:
-                        patches.append({"id": parts[0], "name": f"KB{parts[0]}", "severity": "important"})
+            script = "Get-HotFix | Select-Object HotFixID, Description | ConvertTo-Json -Compress"
+            res = subprocess.run(
+                [self.powershell, "-NoProfile", "-NonInteractive", "-Command", script],
+                capture_output=True, text=True, timeout=60
+            )
+            if res.returncode == 0 and res.stdout.strip():
+                import json as _json
+                data = _json.loads(res.stdout)
+                if isinstance(data, dict):
+                    data = [data]
+                for item in data:
+                    hotfix_id = (item.get("HotFixID") or "").strip()
+                    if not hotfix_id:
+                        continue
+                    patches.append({
+                        "vendor_id": hotfix_id,
+                        "title": (item.get("Description") or hotfix_id).strip(),
+                        "installed": True,
+                        "severity": "medium",
+                        "vendor": "microsoft",
+                        "package_name": hotfix_id,
+                    })
         except Exception as e:
             print(f"Windows scan error: {e}")
         return patches

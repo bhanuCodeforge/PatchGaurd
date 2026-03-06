@@ -49,7 +49,7 @@
   },
   "DEVICES": {
     "TITLE": "उपकरण",
-    "ADD_DEVICE": "+ उपकरण जोड़ें",
+    "ADD_DEVICE": "उपकरण जोड़ें",
     "EXPORT": "निर्यात",
     "BULK_ACTIONS": "बल्क क्रियाएं",
     "SEARCH_PLACEHOLDER": "होस्टनाम, IP, टैग खोजें...",
@@ -108,7 +108,7 @@
   },
   "DEPLOYMENTS": {
     "TITLE": "परिनियोजन",
-    "NEW_DEPLOYMENT": "+ नया परिनियोजन",
+    "NEW_DEPLOYMENT": "नया परिनियोजन",
     "ALL": "सभी",
     "IN_PROGRESS": "प्रगति में",
     "PENDING": "लंबित",
@@ -244,7 +244,7 @@
   },
   "USERS": {
     "TITLE": "उपयोगकर्ता प्रबंधन",
-    "INVITE": "+ उपयोगकर्ता आमंत्रित करें",
+    "INVITE": "उपयोगकर्ता आमंत्रित करें",
     "SEARCH_PLACEHOLDER": "उपयोगकर्ता नाम, ईमेल खोजें...",
     "ALL_ROLES": "सभी भूमिकाएं",
     "USER": "उपयोगकर्ता",

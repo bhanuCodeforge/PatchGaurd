@@ -16,11 +16,15 @@ def _patch_django_setup():
     _original = _django.setup
 
     def _safe_setup(**kwargs):
-        _old = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        try:
+        import threading
+        if threading.current_thread() is threading.main_thread():
+            _old = signal.signal(signal.SIGINT, signal.SIG_IGN)
+            try:
+                _original(**kwargs)
+            finally:
+                signal.signal(signal.SIGINT, _old)
+        else:
             _original(**kwargs)
-        finally:
-            signal.signal(signal.SIGINT, _old)
 
     _django.setup = _safe_setup
 

@@ -5,6 +5,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { WebsocketService } from '../../core/services/websocket.service';
+import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-topbar',
@@ -16,6 +17,7 @@ import { WebsocketService } from '../../core/services/websocket.service';
 export class TopbarComponent implements OnInit, OnDestroy {
   @Input() title = 'Dashboard';
   auth = inject(AuthService);
+  themeSvc = inject(ThemeService);
   private wsService = inject(WebsocketService);
   private translate = inject(TranslateService);
   private wsSub?: Subscription;

@@ -1,16 +1,20 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils import timezone
-from apps.accounts.permissions import ReadOnlyForViewers, IsOperatorOrAbove, IsAdmin
+from apps.accounts.permissions import ReadOnlyForViewers, IsOperatorOrAbove, IsAdmin, IsAgentOrOperatorOrAbove
+from common.agent_auth import AgentAPIKeyAuthentication
 from .models import Deployment, DeploymentTarget
 from .serializers import (
-    DeploymentListSerializer, DeploymentDetailSerializer, 
+    DeploymentListSerializer, DeploymentDetailSerializer,
     DeploymentCreateSerializer, DeploymentTargetSerializer
 )
 from drf_spectacular.utils import extend_schema
 
 from .filters import DeploymentFilter
+
+_AGENT_AUTH = [AgentAPIKeyAuthentication, JWTAuthentication]
 
 class DeploymentViewSet(viewsets.ModelViewSet):
     filterset_class = DeploymentFilter
@@ -22,6 +26,8 @@ class DeploymentViewSet(viewsets.ModelViewSet):
             return [IsAdmin()]
         elif self.action in ['create', 'update', 'partial_update', 'approve', 'execute', 'pause', 'resume', 'cancel', 'rollback']:
             return [IsOperatorOrAbove()]
+        elif self.action == 'ingest_patch_result':
+            return [IsAgentOrOperatorOrAbove()]
         return [ReadOnlyForViewers()]
 
     def get_serializer_class(self):
@@ -32,7 +38,20 @@ class DeploymentViewSet(viewsets.ModelViewSet):
         return DeploymentDetailSerializer
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        target_device_ids = serializer.validated_data.pop('target_device_ids', None)
+        deployment = serializer.save(created_by=self.request.user)
+
+        # If frontend sent individual device IDs, create an ad-hoc group
+        if target_device_ids:
+            from apps.inventory.models import Device, DeviceGroup
+            group = DeviceGroup.objects.create(
+                name=f"_deploy_{deployment.id}",
+                description=f"Auto-created group for deployment '{deployment.name}'",
+            )
+            devices = Device.objects.filter(id__in=target_device_ids)
+            for dev in devices:
+                dev.groups.add(group)
+            deployment.target_groups.add(group)
 
     @extend_schema(summary="Approve deployment")
     @action(detail=True, methods=["post"])
@@ -104,6 +123,62 @@ class DeploymentViewSet(viewsets.ModelViewSet):
         deployment.status = Deployment.Status.ROLLING_BACK
         deployment.save()
         return Response({"status": "Deployment rollback initiated."})
+
+    @extend_schema(
+        summary="Ingest patch result from agent",
+        description="Called by realtime service after agent reports patch_result. Updates DeploymentTarget status and advances deployment when all targets are complete.",
+    )
+    @action(
+        detail=True, methods=["post"],
+        authentication_classes=_AGENT_AUTH,
+        permission_classes=[IsAgentOrOperatorOrAbove],
+        url_path="ingest_patch_result",
+    )
+    def ingest_patch_result(self, request, pk=None):
+        deployment = self.get_object()
+        target_id = request.data.get("target_id")
+        result_status = request.data.get("status")  # "completed" or "failed"
+        error = request.data.get("error", "")
+
+        if not target_id:
+            return Response({"error": "target_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            target = DeploymentTarget.objects.get(id=target_id, deployment=deployment)
+        except DeploymentTarget.DoesNotExist:
+            return Response({"error": "Target not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if target.status in (DeploymentTarget.Status.COMPLETED, DeploymentTarget.Status.FAILED):
+            return Response({"status": "already finalized", "target_id": target_id})
+
+        if result_status == "completed":
+            target.status = DeploymentTarget.Status.COMPLETED
+        else:
+            target.status = DeploymentTarget.Status.FAILED
+            target.error_log = error
+        target.completed_at = timezone.now()
+        target.save()
+
+        from .tasks import update_deployment_counters, publish_progress
+        update_deployment_counters(deployment)
+        deployment.refresh_from_db()
+        publish_progress(deployment)
+
+        # Mark deployment complete/failed when all targets are finalized
+        pending = DeploymentTarget.objects.filter(
+            deployment=deployment,
+            status__in=[DeploymentTarget.Status.QUEUED, DeploymentTarget.Status.IN_PROGRESS],
+        ).exists()
+        if not pending and deployment.status == Deployment.Status.IN_PROGRESS:
+            if deployment.failure_rate > deployment.max_failure_percentage:
+                deployment.status = Deployment.Status.FAILED
+            else:
+                deployment.status = Deployment.Status.COMPLETED
+            deployment.completed_at = timezone.now()
+            deployment.save(update_fields=["status", "completed_at"])
+            publish_progress(deployment)
+
+        return Response({"status": "patch result ingested", "target_id": target_id})
 
     @extend_schema(summary="Get progress targets", responses=DeploymentTargetSerializer(many=True))
     @action(detail=True, methods=["get"])

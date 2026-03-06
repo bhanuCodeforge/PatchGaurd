@@ -47,8 +47,8 @@ async def redis_subscriber():
         try:
             redis_conn = await aioredis.from_url(
                 REDIS_URL,
-                socket_connect_timeout=5,  # fail fast if Redis is down
                 decode_responses=False,
+                health_check_interval=30,   # keep-alive ping every 30s
             )
             pubsub = redis_conn.pubsub()
 

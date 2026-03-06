@@ -1,7 +1,7 @@
 .topbar {
   height: 56px;
-  background: #111827;
-  border-bottom: 1px solid #1f2937;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -10,12 +10,13 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: background .2s, border-color .2s;
 }
 
 .page-title {
   font-size: 16px;
   font-weight: 600;
-  color: #f9fafb;
+  color: var(--text);
   margin: 0;
 }
 
@@ -30,89 +31,71 @@
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  background: #1f2937;
+  background: var(--bg);
   border-radius: 999px;
-  border: 1px solid #374151;
+  border: 1px solid var(--border);
+  transition: background .2s, border-color .2s;
 
   .live-dot {
-    width: 7px;
-    height: 7px;
+    width: 6px; height: 6px;
     border-radius: 50%;
-    background: #6b7280;
+    background: var(--muted2);
   }
-
-  .live-text {
-    font-size: 12px;
-    color: #9ca3af;
-    font-weight: 600;
-  }
-
-  .sync-text {
-    font-size: 11px;
-    color: #6b7280;
-  }
+  .live-text { font-size: 11px; color: var(--muted2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .sync-text { font-size: 11px; color: var(--muted2); opacity: 0.8; }
 
   &.connected {
-    border-color: rgba(34, 197, 94, 0.3);
-    .live-dot {
-      background: #22c55e;
-      box-shadow: 0 0 6px #22c55e;
-      animation: pulse 2s infinite;
-    }
-    .live-text { color: #22c55e; }
+    border-color: rgba(34,197,94,.3);
+    .live-dot { background: #22c55e; box-shadow: 0 0 6px #22c55e; animation: pulse 2s infinite; }
+    .live-text { color: #16a34a; }
+    [data-theme="dark"] & .live-text { color: #22c55e; }
   }
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
 
 .lang-switcher {
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: #1f2937;
-  border: 1px solid #374151;
+  gap: 2px;
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 3px 8px;
+  padding: 2px 6px;
+  transition: background .2s;
 }
 
 .lang-btn {
   background: none;
   border: none;
-  color: #6b7280;
-  font-size: 11px;
-  font-weight: 600;
+  color: var(--muted2);
+  font-size: 10px;
+  font-weight: 700;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 4px 6px;
   border-radius: 4px;
-  transition: all 0.15s;
-
-  &.active {
-    background: #3b82f6;
-    color: white;
-  }
-
-  &:hover:not(.active) { color: #d1d5db; }
+  transition: all .15s;
+  &.active { background: #3b82f6; color: #fff; }
+  &:hover:not(.active) { color: var(--text); background: var(--bg-hover); }
 }
 
-.lang-divider { color: #374151; font-size: 12px; }
+.lang-divider { color: var(--border); font-size: 10px; margin: 0 2px; opacity: 0.6; }
 
 .icon-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--muted);
   padding: 6px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
-
-  &:hover { background: #1f2937; color: #d1d5db; }
+  transition: all .15s;
+  &:hover { background: var(--bg); color: var(--text-secondary); }
 }
+
+.theme-toggle { transition: transform .2s; &:active { transform: rotate(20deg); } }
 
 .user-menu {
   display: flex;
@@ -123,95 +106,52 @@
   border-radius: 8px;
   position: relative;
   user-select: none;
-  color: #d1d5db;
-  transition: background 0.15s;
-
-  &:hover { background: #1f2937; }
+  color: var(--text-secondary);
+  transition: background .15s;
+  &:hover { background: var(--bg); }
 }
 
 .user-avatar {
-  width: 28px;
-  height: 28px;
+  width: 28px; height: 28px;
   background: #3b82f6;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  color: white;
-  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
 }
 
-.user-name {
-  font-size: 13px;
-  color: #d1d5db;
-  font-weight: 500;
-}
+.user-name { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
 
 .dropdown {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  background: #1f2937;
-  border: 1px solid #374151;
+  background: var(--dropdown-bg);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 6px;
   min-width: 200px;
   z-index: 200;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 40px var(--shadow);
+  transition: background .2s;
 }
 
 .dropdown-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px;
-
+  display: flex; align-items: center; gap: 10px; padding: 8px;
   .dh-avatar {
-    width: 36px;
-    height: 36px;
-    background: #3b82f6;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    font-weight: 700;
-    color: white;
-    flex-shrink: 0;
+    width: 36px; height: 36px; background: #3b82f6; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
   }
-
-  .dh-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: #f9fafb;
-  }
-
-  .dh-role {
-    font-size: 11px;
-    color: #6b7280;
-    text-transform: capitalize;
-  }
+  .dh-name  { font-size: 13px; font-weight: 600; color: var(--text); }
+  .dh-role  { font-size: 11px; color: var(--muted); text-transform: capitalize; }
 }
 
-.dropdown-divider {
-  height: 1px;
-  background: #374151;
-  margin: 4px 0;
-}
+.dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
 
 .dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 10px;
-  font-size: 13px;
-  color: #d1d5db;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.15s;
-
-  &:hover { background: #374151; }
-  &.text-danger { color: #f87171; }
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 10px; font-size: 13px; color: var(--text-secondary);
+  border-radius: 6px; cursor: pointer; transition: background .15s;
+  &:hover { background: var(--bg); }
+  &.text-danger { color: #ef4444; }
 }

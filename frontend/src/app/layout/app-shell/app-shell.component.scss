@@ -2,7 +2,7 @@
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background: #0f172a;
+  background: var(--bg);
 }
 
 .app-main {
@@ -16,5 +16,6 @@
 .app-content {
   flex: 1;
   overflow-y: auto;
-  background: #0f172a;
+  background: var(--bg);
+  transition: background .2s;
 }

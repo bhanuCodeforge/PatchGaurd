@@ -49,7 +49,7 @@
   },
   "DEVICES": {
     "TITLE": "Devices",
-    "ADD_DEVICE": "+ Add device",
+    "ADD_DEVICE": "Add device",
     "EXPORT": "Export",
     "BULK_ACTIONS": "Bulk actions",
     "SEARCH_PLACEHOLDER": "Search hostname, IP, tag...",
@@ -108,7 +108,7 @@
   },
   "DEPLOYMENTS": {
     "TITLE": "Deployments",
-    "NEW_DEPLOYMENT": "+ New Deployment",
+    "NEW_DEPLOYMENT": "New Deployment",
     "ALL": "All",
     "IN_PROGRESS": "In Progress",
     "PENDING": "Pending",
@@ -244,7 +244,7 @@
   },
   "USERS": {
     "TITLE": "User Management",
-    "INVITE": "+ Invite User",
+    "INVITE": "Invite User",
     "SEARCH_PLACEHOLDER": "Search username, email...",
     "ALL_ROLES": "All Roles",
     "USER": "User",

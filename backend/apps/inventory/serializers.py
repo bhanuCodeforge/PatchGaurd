@@ -31,7 +31,7 @@ class DeviceDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Device
-        fields = '__all__'
+        exclude = ['agent_api_key']
 
     def get_compliance_summary(self, obj):
         from apps.patches.models import DevicePatchStatus
@@ -54,12 +54,13 @@ class DeviceDetailSerializer(serializers.ModelSerializer):
         }
 
 class DeviceCreateSerializer(serializers.ModelSerializer):
-    # os_version is optional from the UI; defaults to empty string
-    os_version = serializers.CharField(required=False, default='', allow_blank=True)
+    # os_version and agent_version are optional from the UI
+    os_version    = serializers.CharField(required=False, default='', allow_blank=True)
+    agent_version = serializers.CharField(required=False, default='', allow_blank=True)
 
     class Meta:
         model = Device
-        fields = ['hostname', 'ip_address', 'os_family', 'os_version', 'mac_address', 'os_arch', 'environment', 'status', 'tags']
+        fields = ['hostname', 'ip_address', 'os_family', 'os_version', 'mac_address', 'os_arch', 'environment', 'status', 'tags', 'agent_version']
 
     def create(self, validated_data):
         alphabet = string.ascii_letters + string.digits

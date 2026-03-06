@@ -31,3 +31,10 @@ class IsOwnerOrAdmin(BasePermission):
 class IsAgentServiceAccount(BasePermission):
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated and request.user.role == "agent")
+
+class IsAgentOrOperatorOrAbove(BasePermission):
+    """Allows agents (via API key) AND human operators/admins (via JWT)."""
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        return getattr(request.user, "role", None) in ("admin", "operator", "agent")

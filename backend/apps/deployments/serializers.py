@@ -57,20 +57,33 @@ class DeploymentDetailSerializer(serializers.ModelSerializer):
         }
 
 class DeploymentCreateSerializer(serializers.ModelSerializer):
+    target_device_ids = serializers.ListField(
+        child=serializers.UUIDField(), required=False, write_only=True,
+        help_text="Direct device UUIDs (alternative to target_groups)."
+    )
+
     class Meta:
         model = Deployment
         fields = [
             'name', 'description', 'strategy', 'canary_percentage', 'wave_size', 
             'wave_delay_minutes', 'max_failure_percentage', 'requires_reboot', 
             'maintenance_window_start', 'maintenance_window_end', 'scheduled_at',
-            'patches', 'target_groups'
+            'patches', 'target_groups', 'target_device_ids'
         ]
+        extra_kwargs = {
+            'target_groups': {'required': False},
+        }
 
     def validate(self, attrs):
         if 'patches' in attrs and not attrs['patches']:
             raise serializers.ValidationError({"patches": "At least one patch is required."})
-        if 'target_groups' in attrs and not attrs['target_groups']:
-            raise serializers.ValidationError({"target_groups": "At least one target group is required."})
+
+        has_groups = bool(attrs.get('target_groups'))
+        has_devices = bool(attrs.get('target_device_ids'))
+        if not has_groups and not has_devices:
+            raise serializers.ValidationError(
+                {"target_groups": "Either target_groups or target_device_ids is required."}
+            )
         
         # Validate patches are approved
         from apps.patches.models import Patch
