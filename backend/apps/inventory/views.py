@@ -26,9 +26,18 @@ class DeviceViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list':
             return DeviceListSerializer
-        elif self.action in ['create', 'update', 'partial_update']:
+        elif self.action in ['update', 'partial_update']:
             return DeviceCreateSerializer
         return DeviceDetailSerializer
+
+    def create(self, request, *args, **kwargs):
+        """Override create to return full device detail (including api_key) on 201."""
+        serializer = DeviceCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        device = serializer.save()
+        # Return full detail so the UI can show the generated api_key
+        out = DeviceDetailSerializer(device, context={'request': request})
+        return Response(out.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(summary="Get device compliance", description="Detailed compliance breakdown for a single device.")
     @action(detail=True, methods=["get"])
@@ -113,6 +122,24 @@ class DeviceViewSet(viewsets.ModelViewSet):
             return Response({"status": f"Added {len(devices)} devices to group {group.name}"})
         except DeviceGroup.DoesNotExist:
             return Response({"error": "Group not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    @extend_schema(summary="Agent Heartbeat", description="Agent calls this to update last_seen and status.")
+    @action(detail=True, methods=["post"])
+    def heartbeat(self, request, pk=None):
+        from django.utils import timezone
+        device = self.get_object()
+        device.last_seen = timezone.now()
+        device.status = Device.Status.ONLINE
+        meta = request.data.get("payload", request.data)
+        if meta:
+            existing = device.metadata or {}
+            existing.update({
+                k: meta[k] for k in ("cpu_usage", "ram_usage", "disk_usage", "agent_version")
+                if k in meta
+            })
+            device.metadata = existing
+        device.save(update_fields=["last_seen", "status", "metadata"])
+        return Response({"status": "heartbeat received", "device_id": str(device.id)})
 
     @extend_schema(summary="Device Statistics", description="Aggregate stats across entire fleet.")
     @action(detail=False, methods=["get"])

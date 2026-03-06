@@ -38,43 +38,76 @@ if DB_DSN.startswith("sqlite"):
     DB_DSN = None
 
 async def redis_subscriber():
-    """Background task to listen to Redis Pub/Sub channels from Django Celery."""
-    redis_conn = await aioredis.from_url(REDIS_URL)
-    pubsub = redis_conn.pubsub()
-    
-    # Subscribe to relevant backend system broadcast channels
-    await pubsub.subscribe("deployment:progress", "system:notification", "system:compliance_alert")
-    
-    # Subscribe to agent command patterns (e.g. agent:command:*)
-    await pubsub.psubscribe("agent:command:*")
-    
-    logger.info("Started Redis Pub/Sub asynchronous loop.")
-    try:
-        async for message in pubsub.listen():
-            if message["type"] in ("message", "pmessage"):
-                channel = message["channel"].decode() if isinstance(message["channel"], bytes) else message["channel"]
-                data = message["data"].decode() if isinstance(message["data"], bytes) else message["data"]
-                
-                # Routing Logic
-                if channel == "deployment:progress":
-                    env = json.loads(data)
-                    dep_id = env["payload"].get("deployment_id")
-                    if dep_id:
-                        await manager.broadcast_to_deployment(dep_id, data)
-                
-                elif channel.startswith("system:"):
-                    # Broadcast generic notifications to all dashboards
-                    await manager.broadcast_to_dashboard(data)
+    """Background task to listen to Redis Pub/Sub channels from Django Celery.
+    Gracefully retries with backoff if Redis is unavailable — never crashes the worker.
+    """
+    backoff = 2
+    while True:
+        redis_conn = None
+        try:
+            redis_conn = await aioredis.from_url(
+                REDIS_URL,
+                socket_connect_timeout=5,  # fail fast if Redis is down
+                decode_responses=False,
+            )
+            pubsub = redis_conn.pubsub()
 
-                elif channel.startswith("agent:command:"):
-                    # Extract agent_id from channel specifically
-                    agent_id = channel.split(":")[-1]
-                    await manager.send_to_agent(agent_id, data)
-                    
-    except asyncio.CancelledError:
-        pass
-    except Exception as e:
-        logger.error(f"Redis sub loop crashed: {e}")
+            await pubsub.subscribe(
+                "deployment:progress", "system:notification", "system:compliance_alert"
+            )
+            await pubsub.psubscribe("agent:command:*")
+
+            logger.info("Redis Pub/Sub connected — listening for events.")
+            backoff = 2  # reset after successful connect
+
+            async for message in pubsub.listen():
+                if message["type"] not in ("message", "pmessage"):
+                    continue
+                try:
+                    channel = (
+                        message["channel"].decode()
+                        if isinstance(message["channel"], bytes)
+                        else message["channel"]
+                    )
+                    data = (
+                        message["data"].decode()
+                        if isinstance(message["data"], bytes)
+                        else message["data"]
+                    )
+
+                    if channel == "deployment:progress":
+                        env = json.loads(data)
+                        dep_id = env.get("payload", {}).get("deployment_id")
+                        if dep_id:
+                            await manager.broadcast_to_deployment(dep_id, data)
+
+                    elif channel.startswith("system:"):
+                        await manager.broadcast_to_dashboard(data)
+
+                    elif channel.startswith("agent:command:"):
+                        agent_id = channel.split(":")[-1]
+                        await manager.send_to_agent(agent_id, data)
+
+                except Exception as msg_err:
+                    logger.error(f"Redis message handling error: {msg_err}")
+
+        except asyncio.CancelledError:
+            logger.info("Redis subscriber task cancelled.")
+            return
+        except Exception as e:
+            logger.warning(
+                f"Redis unavailable ({e.__class__.__name__}: {e}). "
+                f"Retrying in {backoff}s... (WebSocket server continues normally)"
+            )
+        finally:
+            if redis_conn:
+                try:
+                    await redis_conn.aclose()
+                except Exception:
+                    pass
+
+        await asyncio.sleep(backoff)
+        backoff = min(backoff * 2, 60)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

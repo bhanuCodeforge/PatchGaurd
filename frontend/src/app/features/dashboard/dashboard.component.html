@@ -140,7 +140,7 @@
             {{ 'DASHBOARD.ACTIVE_DEPLOYMENTS' | translate }}
             <span class="badge bg-primary ms-2 small">{{ activeDeployments().length }}</span>
           </span>
-          <a routerLink="/deployments" class="pg-link small">View all ?</a>
+          <a routerLink="/deployments" class="pg-link small">View all &#x2192;</a>
         </div>
         <div class="p-3">
           <app-loading-skeleton *ngIf="deployLoading()" variant="table" [rows]="[1,2]"></app-loading-skeleton>
@@ -163,7 +163,7 @@
                 <div class="progress mt-2" style="height:4px; background:#374151; border-radius:2px;">
                   <div class="progress-bar bg-primary" [style.width]="(d.progress_percentage||0)+'%'" role="progressbar"></div>
                 </div>
-                <div class="deploy-stats">{{ d.progress_percentage||0 }}% — {{ d.completed_devices||0 }}/{{ d.total_devices||0 }} devices</div>
+                <div class="deploy-stats">{{ d.progress_percentage||0 }}% &middot; {{ d.completed_devices||0 }}/{{ d.total_devices||0 }} devices</div>
               </div>
             </div>
           </div>

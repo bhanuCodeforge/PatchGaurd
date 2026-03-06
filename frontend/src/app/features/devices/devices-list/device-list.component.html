@@ -9,9 +9,9 @@
       </h2>
     </div>
     <div class="d-flex gap-2">
-      <button class="btn btn-outline-secondary btn-sm">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        {{ 'DEVICES.BULK_ACTIONS' | translate }}
+      <button class="btn btn-outline-secondary btn-sm" *ngIf="selectedIds().size > 0" (click)="showTagModal.set(true)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        Tag ({{ selectedIds().size }})
       </button>
       <button class="btn btn-primary btn-sm" (click)="openAddModal()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -66,7 +66,7 @@
         </svg>
         {{ 'DEVICES.TAG' | translate }}
       </button>
-      <button class="btn btn-sm btn-outline-secondary">{{ 'DEVICES.ASSIGN_GROUP' | translate }}</button>
+      <button class="btn btn-sm btn-outline-secondary" (click)="showGroupModal.set(true)">{{ 'DEVICES.ASSIGN_GROUP' | translate }}</button>
       <button class="btn btn-sm btn-outline-primary" (click)="bulkScan()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -166,7 +166,30 @@
     </h5>
     <button class="btn-close-custom" (click)="closeAddModal()">&#x2715;</button>
   </div>
-  <div class="modal-body-custom">
+  <!-- Success state: show API key -->
+  <div *ngIf="createdDevice()" class="modal-body-custom">
+    <div class="alert-success-custom mb-3">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><polyline points="20 6 9 17 4 12"/></svg>
+      Device <strong>{{ createdDevice().hostname }}</strong> added successfully!
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Agent API Key <span class="text-muted small">(copy now — shown only once)</span></label>
+      <div class="input-group">
+        <input class="form-control form-control-dark font-monospace" [value]="createdDevice().agent_api_key" readonly style="font-size:12px;" />
+        <button class="btn btn-outline-secondary btn-sm" (click)="copyToClipboard(createdDevice().agent_api_key)" title="Copy to clipboard">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+      <p class="text-muted small mt-2">Use this key in your agent config (<code>api_key</code> field). It cannot be retrieved later.</p>
+    </div>
+    <div class="mb-2">
+      <span class="me-3"><span class="text-muted small">Device ID:</span> <code class="text-info small">{{ createdDevice().id }}</code></span>
+      <span><span class="text-muted small">Status:</span> <span class="ms-1 badge bg-secondary">{{ createdDevice().status }}</span></span>
+    </div>
+  </div>
+
+  <!-- Form state -->
+  <div *ngIf="!createdDevice()" class="modal-body-custom">
     <div class="mb-3">
       <label class="form-label">Hostname <span class="text-danger">*</span></label>
       <input class="form-control form-control-dark" [(ngModel)]="addForm.hostname" placeholder="e.g. web-server-01" />
@@ -196,11 +219,74 @@
       <input class="form-control form-control-dark" [(ngModel)]="addForm.agent_version" placeholder="e.g. 1.0.0" />
     </div>
   </div>
+
   <div class="modal-footer-custom">
-    <button class="btn btn-outline-secondary btn-sm" (click)="closeAddModal()">Cancel</button>
-    <button class="btn btn-primary btn-sm" (click)="submitAddDevice()" [disabled]="addLoading()">
+    <button class="btn btn-outline-secondary btn-sm" (click)="closeAddModal()">
+      {{ createdDevice() ? 'Close' : 'Cancel' }}
+    </button>
+    <button *ngIf="!createdDevice()" class="btn btn-primary btn-sm" (click)="submitAddDevice()" [disabled]="addLoading()">
       <span *ngIf="addLoading()" class="spinner-border spinner-border-sm me-1"></span>
       {{ addLoading() ? 'Adding...' : 'Add Device' }}
+    </button>
+    <button *ngIf="createdDevice()" class="btn btn-primary btn-sm" (click)="openAddModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Another
+    </button>
+  </div>
+</div>
+
+<!-- Bulk Tag Modal -->
+<div class="modal-backdrop" *ngIf="showTagModal()" (click)="showTagModal.set(false)"></div>
+<div class="modal-dialog-custom" *ngIf="showTagModal()">
+  <div class="modal-header-custom">
+    <h5 class="mb-0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      Tag {{ selectedIds().size }} Device(s)
+    </h5>
+    <button class="btn-close-custom" (click)="showTagModal.set(false)">&#x2715;</button>
+  </div>
+  <div class="modal-body-custom">
+    <div class="mb-3">
+      <label class="form-label">Tags <span class="text-muted small">(comma-separated)</span></label>
+      <input class="form-control form-control-dark" [(ngModel)]="tagInput"
+        placeholder="e.g. production, critical, web-tier"
+        (keydown.enter)="bulkTag()" />
+      <div class="form-text text-muted">Tags will be added to all {{ selectedIds().size }} selected device(s).</div>
+    </div>
+  </div>
+  <div class="modal-footer-custom">
+    <button class="btn btn-outline-secondary btn-sm" (click)="showTagModal.set(false)">Cancel</button>
+    <button class="btn btn-primary btn-sm" (click)="bulkTag()" [disabled]="!tagInput.trim()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="20 6 9 17 4 12"/></svg>
+      Apply Tags
+    </button>
+  </div>
+</div>
+
+<!-- Bulk Group Modal -->
+<div class="modal-backdrop" *ngIf="showGroupModal()" (click)="showGroupModal.set(false)"></div>
+<div class="modal-dialog-custom" *ngIf="showGroupModal()">
+  <div class="modal-header-custom">
+    <h5 class="mb-0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Assign Group — {{ selectedIds().size }} Device(s)
+    </h5>
+    <button class="btn-close-custom" (click)="showGroupModal.set(false)">&#x2715;</button>
+  </div>
+  <div class="modal-body-custom">
+    <div class="mb-3">
+      <label class="form-label">Group ID <span class="text-danger">*</span></label>
+      <input class="form-control form-control-dark" [(ngModel)]="groupInput"
+        placeholder="e.g. grp-web-servers"
+        (keydown.enter)="bulkGroup()" />
+      <div class="form-text text-muted">All {{ selectedIds().size }} selected device(s) will be assigned to this group.</div>
+    </div>
+  </div>
+  <div class="modal-footer-custom">
+    <button class="btn btn-outline-secondary btn-sm" (click)="showGroupModal.set(false)">Cancel</button>
+    <button class="btn btn-primary btn-sm" (click)="bulkGroup()" [disabled]="!groupInput.trim()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="20 6 9 17 4 12"/></svg>
+      Assign Group
     </button>
   </div>
 </div>

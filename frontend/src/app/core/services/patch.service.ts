@@ -32,4 +32,16 @@ export class PatchService {
   getStats(): Observable<any> {
     return this.api.get<any>('/patches/stats/');
   }
+
+  getPatchStats(): Observable<any> {
+    return this.getStats();
+  }
+
+  reviewPatch(id: string): Observable<any> {
+    return this.api.post<any>(`/patches/${id}/review/`, {});
+  }
+
+  getComplianceSummary(): Observable<any> {
+    return this.api.get<any>('/patches/compliance_summary/');
+  }
 }

@@ -54,6 +54,9 @@ class DeviceDetailSerializer(serializers.ModelSerializer):
         }
 
 class DeviceCreateSerializer(serializers.ModelSerializer):
+    # os_version is optional from the UI; defaults to empty string
+    os_version = serializers.CharField(required=False, default='', allow_blank=True)
+
     class Meta:
         model = Device
         fields = ['hostname', 'ip_address', 'os_family', 'os_version', 'mac_address', 'os_arch', 'environment', 'status', 'tags']

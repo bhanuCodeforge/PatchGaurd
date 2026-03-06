@@ -49,6 +49,7 @@ export class DeviceListComponent implements OnInit {
   // Add Device modal state
   showAddModal = signal(false);
   addLoading = signal(false);
+  createdDevice = signal<any>(null);   // holds the newly created device to display its api_key
   addForm: { hostname: string; ip_address: string; os_family: string; environment: 'production' | 'staging' | 'development'; agent_version: string } = {
     hostname: '',
     ip_address: '',
@@ -56,6 +57,14 @@ export class DeviceListComponent implements OnInit {
     environment: 'production',
     agent_version: '',
   };
+
+  // Bulk tag modal state
+  showTagModal = signal(false);
+  tagInput = '';
+
+  // Bulk group modal state
+  showGroupModal = signal(false);
+  groupInput = '';
 
   searchTerm = '';
   activeStatus = '';
@@ -205,11 +214,13 @@ export class DeviceListComponent implements OnInit {
 
   openAddModal() {
     this.addForm = { hostname: '', ip_address: '', os_family: 'linux', environment: 'production' as const, agent_version: '' };
+    this.createdDevice.set(null);
     this.showAddModal.set(true);
   }
 
   closeAddModal() {
     this.showAddModal.set(false);
+    this.createdDevice.set(null);
   }
 
   submitAddDevice() {
@@ -219,10 +230,9 @@ export class DeviceListComponent implements OnInit {
     }
     this.addLoading.set(true);
     this.deviceSvc.createDevice(this.addForm).subscribe({
-      next: () => {
+      next: (device: any) => {
         this.addLoading.set(false);
-        this.showAddModal.set(false);
-        this.ns.success('Device Added', `${this.addForm.hostname} was registered successfully.`);
+        this.createdDevice.set(device);   // show the api_key to the user
         this.loadDevices();
       },
       error: (err: any) => {
@@ -230,6 +240,43 @@ export class DeviceListComponent implements OnInit {
         const detail = err?.error?.detail ?? err?.error?.hostname?.[0] ?? 'Failed to add device.';
         this.ns.error('Add Device Failed', typeof detail === 'string' ? detail : JSON.stringify(detail));
       },
+    });
+  }
+
+  copyToClipboard(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      this.ns.success('Copied', 'API key copied to clipboard.');
+    });
+  }
+
+  bulkTag() {
+    const tags = this.tagInput.split(',').map(t => t.trim()).filter(Boolean);
+    if (!tags.length) { this.ns.error('Error', 'Enter at least one tag.'); return; }
+    const ids = Array.from(this.selectedIds());
+    this.deviceSvc.bulkTag(ids, tags, 'add').subscribe({
+      next: () => {
+        this.ns.success('Tags Applied', `Tags added to ${ids.length} device(s).`);
+        this.showTagModal.set(false);
+        this.tagInput = '';
+        this.clearSelection();
+        this.loadDevices();
+      },
+      error: () => this.ns.error('Error', 'Bulk tag failed.'),
+    });
+  }
+
+  bulkGroup() {
+    const groupId = this.groupInput.trim();
+    if (!groupId) { this.ns.error('Error', 'Enter a group ID.'); return; }
+    const ids = Array.from(this.selectedIds());
+    this.deviceSvc.bulkGroup(ids, groupId).subscribe({
+      next: () => {
+        this.ns.success('Group Assigned', `${ids.length} device(s) added to group.`);
+        this.showGroupModal.set(false);
+        this.groupInput = '';
+        this.clearSelection();
+      },
+      error: () => this.ns.error('Error', 'Bulk group assignment failed.'),
     });
   }
 }

@@ -52,4 +52,12 @@ export class DeviceService {
   getDevicePatches(id: string, params: any = {}): Observable<PaginatedResponse<any>> {
     return this.api.get<PaginatedResponse<any>>(`/devices/${id}/patches/`, params);
   }
+
+  bulkGroup(deviceIds: string[], groupId: string): Observable<any> {
+    return this.api.post<any>('/devices/bulk_group/', { device_ids: deviceIds, group_id: groupId });
+  }
+
+  heartbeat(id: string, payload: any): Observable<any> {
+    return this.api.post<any>(`/devices/${id}/heartbeat/`, payload);
+  }
 }

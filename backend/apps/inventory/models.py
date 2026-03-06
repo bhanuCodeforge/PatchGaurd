@@ -67,7 +67,7 @@ class Device(models.Model):
     ip_address = models.GenericIPAddressField(db_index=True)
     mac_address = models.CharField(max_length=17, blank=True)
     os_family = models.CharField(max_length=20, choices=OSFamily.choices)
-    os_version = models.CharField(max_length=100)
+    os_version = models.CharField(max_length=100, blank=True, default='')
     os_arch = models.CharField(max_length=20, default="x86_64")
     agent_version = models.CharField(max_length=20, blank=True)
     environment = models.CharField(max_length=20, choices=Environment.choices, default=Environment.PRODUCTION)

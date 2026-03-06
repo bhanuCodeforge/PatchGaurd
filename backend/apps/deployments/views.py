@@ -124,13 +124,35 @@ class DashboardStatsView(APIView):
     @extend_schema(summary="Dashboard Stats", description="Global reporting stats for dashboard caching.")
     def get(self, request):
         from apps.inventory.models import Device
-        from apps.patches.models import Patch
-        
+        from apps.patches.models import Patch, DevicePatchStatus
+        from django.db.models import Count
+
+        total_devices = Device.objects.count()
+        online_devices = Device.objects.filter(status=Device.Status.ONLINE).count()
+
+        # Compliance: devices with ALL applicable patches installed
+        # Simplified: count MISSING patch statuses vs total
+        total_statuses = DevicePatchStatus.objects.count()
+        missing = DevicePatchStatus.objects.filter(state=DevicePatchStatus.State.MISSING).count()
+        compliance_rate = round(((total_statuses - missing) / total_statuses * 100), 1) if total_statuses else 100.0
+
+        # OS breakdown
+        by_os = {
+            row["os_family"]: row["count"]
+            for row in Device.objects.values("os_family").annotate(count=Count("id"))
+        }
+
         return Response({
-            "total_devices": Device.objects.count(),
-            "online_devices": Device.objects.filter(status=Device.Status.ONLINE).count(),
+            "total_devices": total_devices,
+            "online_devices": online_devices,
             "active_deployments": Deployment.objects.filter(status__in=[Deployment.Status.SCHEDULED, Deployment.Status.IN_PROGRESS]).count(),
-            "pending_patches": Patch.objects.filter(status=Patch.Status.IMPORTED).count()
+            "pending_patches": Patch.objects.filter(status=Patch.Status.IMPORTED).count(),
+            "critical_patches": Patch.objects.filter(severity=Patch.Severity.CRITICAL, status__in=[Patch.Status.IMPORTED, Patch.Status.APPROVED]).count(),
+            "compliance_rate": compliance_rate,
+            "missing_patches": missing,
+            "by_os": by_os,
+            "offline_devices": Device.objects.filter(status=Device.Status.OFFLINE).count(),
+            "maintenance_devices": Device.objects.filter(status=Device.Status.MAINTENANCE).count(),
         })
 
 class ComplianceReportView(APIView):

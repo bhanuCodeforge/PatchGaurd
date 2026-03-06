@@ -1,9 +1,17 @@
 # PatchGuard Agent Configuration
-server_url: "ws://localhost:8001/ws/agents"
+server_url: "ws://localhost:8001/ws/agent"
+rest_url: "http://localhost:8000/api/v1"   # REST API base (for heartbeat + auto-register)
 api_key: "AGENT_SECRET_KEY_PLACEHOLDER"
 device_id_override: null
 heartbeat_interval: 60
+rest_heartbeat_interval: 300               # POST heartbeat to REST every N seconds (0 = disabled)
 log_level: "info"
 tags:
   - "production"
   - "web-server"
+
+# Auto-register settings (used when api_key is a placeholder or blank)
+auto_register: false
+auto_register_hostname: null              # defaults to socket.gethostname()
+auto_register_os_family: null            # defaults to detected OS
+auto_register_environment: "production"  # production | staging | development

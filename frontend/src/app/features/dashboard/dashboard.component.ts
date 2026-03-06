@@ -52,9 +52,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   });
 
   osBars = [
-    { icon: '??', name: 'Linux', count: 0, pct: 0, color: 'bg-primary' },
-    { icon: '??', name: 'Windows', count: 0, pct: 0, color: 'bg-info' },
-    { icon: '??', name: 'macOS', count: 0, pct: 0, color: 'bg-secondary' },
+    { icon: '\u{1F427}', name: 'Linux',   count: 0, pct: 0, color: 'bg-primary' },
+    { icon: '\u{1F5A5}', name: 'Windows', count: 0, pct: 0, color: 'bg-info' },
+    { icon: '\u{1F34E}', name: 'macOS',   count: 0, pct: 0, color: 'bg-secondary' },
   ];
 
   private subs: Subscription[] = [];
@@ -71,7 +71,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           entry = {
             level: 'info',
             type: 'DEPLOY_PROGRESS',
-            message: `Deployment ${msg.payload?.status} � ${msg.payload?.progress_percentage ?? 0}%`,
+            message: `Deployment ${msg.payload?.status} \u2014 ${msg.payload?.progress_percentage ?? 0}%`,
             time: now,
           };
           this.loadDeployments();
@@ -79,7 +79,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           entry = {
             level: msg.payload?.status === 'offline' ? 'warning' : 'info',
             type: 'DEVICE_STATUS',
-            message: `${msg.payload?.hostname} ? ${msg.payload?.status}`,
+            message: `${msg.payload?.hostname} \u2192 ${msg.payload?.status}`,
             time: now,
           };
         } else if (msg.event === 'notification') {

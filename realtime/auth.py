@@ -29,10 +29,14 @@ async def verify_ws_token(token: str) -> dict:
 
 async def verify_agent_key(db_pool, api_key: str) -> Optional[str]:
     """Look up an agent's device ID by matching Api Key directly via asyncpg."""
+    if db_pool is None:
+        import logging
+        logging.warning("verify_agent_key: DB pool unavailable — rejecting agent connection.")
+        return None
     try:
         async with db_pool.acquire() as conn:
             row = await conn.fetchrow(
-                "SELECT id FROM inventory_device WHERE agent_api_key = $1 AND status != 'decommissioned'",
+                "SELECT id FROM device WHERE agent_api_key = $1 AND status != 'decommissioned'",
                 api_key
             )
             if row:

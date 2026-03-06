@@ -34,32 +34,48 @@ class Command(BaseCommand):
             AuditLog.objects.all().delete()
 
         self.stdout.write(self.style.SUCCESS("Starting database seed..."))
-        
+
         # 1. Create Users
         self.stdout.write("Creating standard users...")
+
+        # Ensure the primary admin superuser exists with correct role
+        admin_su, _ = User.objects.get_or_create(
+            username="admin",
+            defaults={"email": "admin@patchguard.local", "role": "admin",
+                      "is_staff": True, "is_superuser": True},
+        )
+        admin_su.role = "admin"
+        admin_su.is_staff = True
+        admin_su.is_superuser = True
+        admin_su.set_password("Admin@123456")
+        admin_su.save(update_fields=["password", "role", "is_superuser", "is_staff"])
+
         admin_user, _ = User.objects.get_or_create(
             username="jdoe",
             email="jdoe@internal.corp",
             defaults={"role": "admin", "department": "IT Operations", "is_staff": True}
         )
+        admin_user.role = "admin"
         admin_user.set_password("admin")
-        admin_user.save()
+        admin_user.save(update_fields=["password", "role", "is_staff"])
 
         operator_user, _ = User.objects.get_or_create(
             username="mrodriguez",
             email="mrodriguez@internal.corp",
             defaults={"role": "operator", "department": "Security Team"}
         )
+        operator_user.role = "operator"
         operator_user.set_password("operator")
-        operator_user.save()
+        operator_user.save(update_fields=["password", "role"])
 
         viewer_user, _ = User.objects.get_or_create(
             username="lpark",
             email="lpark@internal.corp",
             defaults={"role": "viewer", "department": "Compliance"}
         )
+        viewer_user.role = "viewer"
         viewer_user.set_password("viewer")
-        viewer_user.save()
+        viewer_user.save(update_fields=["password", "role"])
 
         # 2. Create Device Groups
         group_names = [
