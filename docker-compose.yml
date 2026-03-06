@@ -41,6 +41,13 @@ services:
     restart: unless-stopped
     command: python manage.py runserver 0.0.0.0:8000
     env_file: .env
+    environment:
+      # Override localhost URLs with Docker service hostnames
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-vector_db}
+      REDIS_URL: redis://redis:6379/0
+      REDIS_CACHE_URL: redis://redis:6379/1
+      CELERY_BROKER_URL: redis://redis:6379/0
+      LOG_DIR: /app/logs
     volumes:
       - ./backend:/app
     ports:
@@ -59,6 +66,12 @@ services:
     restart: unless-stopped
     command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
     env_file: .env
+    environment:
+      # Override localhost URLs with Docker service hostnames
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-vector_db}
+      REDIS_URL: redis://redis:6379/0
+      BACKEND_URL: http://django:8000/api/v1
+      LOG_DIR: /app/logs
     volumes:
       - ./realtime:/app
     ports:
@@ -68,6 +81,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      django:
+        condition: service_started
 
   celery-worker:
     build:
@@ -77,6 +92,11 @@ services:
     restart: unless-stopped
     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A config.celery_app worker --loglevel=info -Q critical,default,reporting --concurrency=4
     env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-vector_db}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      LOG_DIR: /app/logs
     volumes:
       - ./backend:/app
     depends_on:
@@ -93,9 +113,18 @@ services:
     restart: unless-stopped
     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A config.celery_app beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-vector_db}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      LOG_DIR: /app/logs
     volumes:
       - ./backend:/app
     depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       django:
         condition: service_started
 
@@ -105,13 +134,17 @@ services:
       dockerfile: Dockerfile
     container_name: patchguard-frontend
     restart: unless-stopped
-    command: npm start
+    # Pass proxy config so /api → django:8000 and /ws → fastapi:8001 are forwarded correctly
+    command: npx ng serve --proxy-config proxy.conf.json --host 0.0.0.0 --port 4200 --poll 1000
     env_file: .env
     volumes:
       - ./frontend:/app
       - /app/node_modules
     ports:
       - "4200:4200"
+    depends_on:
+      - django
+      - fastapi
 
 volumes:
   postgres_data:

@@ -39,6 +39,8 @@ This monorepo houses all system components: Django REST API, FastAPI WebSocket l
 - [Core Design Decisions](#core-design-decisions)
 - [Progress](#progress)
 
+> For a concise how-to guide covering setup, common workflows, and contributing, see [DEVELOPER.md](DEVELOPER.md).
+
 ---
 
 ## System Architecture

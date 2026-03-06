@@ -9,7 +9,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
-    # Internal network only
+    # Internal network only — no port mapping
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
@@ -27,16 +27,16 @@ services:
     restart: always
     env_file: .env
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      - POOL_MODE=transaction
-      - MAX_CLIENT_CONN=200
-      - DEFAULT_POOL_SIZE=25
-      - MIN_POOL_SIZE=5
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: "200"
+      DEFAULT_POOL_SIZE: "25"
+      MIN_POOL_SIZE: "5"
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "pg_isready", "-h", "localhost", "-p", "6432", "-U", "${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 6432 -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -45,12 +45,19 @@ services:
     image: redis:7-alpine
     container_name: patchguard-redis
     restart: always
-    command: redis-server --requirepass "${REDIS_PASSWORD}" --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    # REDIS_PASSWORD must be set in .env for production
+    command: >
+      sh -c "if [ -n '$$REDIS_PASSWORD' ];
+             then redis-server --requirepass $$REDIS_PASSWORD --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru;
+             else redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru;
+             fi"
     env_file: .env
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: >
+        ["CMD-SHELL",
+         "if [ -n '$$REDIS_PASSWORD' ]; then redis-cli -a $$REDIS_PASSWORD ping; else redis-cli ping; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -69,7 +76,10 @@ services:
     command: gunicorn config.wsgi:application --workers 4 --threads 2 --timeout 120 --bind 0.0.0.0:8000 --access-logfile - --error-logfile -
     env_file: .env
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      LOG_DIR: /app/logs
     volumes:
       - static_files:/app/staticfiles
       - media_files:/app/media
@@ -98,11 +108,17 @@ services:
     command: uvicorn main:app --host 0.0.0.0 --port 8001 --workers 4 --loop uvloop --http httptools
     env_file: .env
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+      # Point FastAPI back-channel at the internal Django service
+      BACKEND_URL: http://django:8000/api/v1
+      LOG_DIR: /app/logs
     depends_on:
       pgbouncer:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      django:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
@@ -124,7 +140,10 @@ services:
     command: celery -A config.celery_app worker --loglevel=info --concurrency=${CELERY_CONCURRENCY:-8} --max-tasks-per-child=1000 -Ofair -Q critical,default,reporting
     env_file: .env
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      LOG_DIR: /app/logs
     depends_on:
       pgbouncer:
         condition: service_healthy
@@ -145,10 +164,17 @@ services:
     command: celery -A config.celery_app beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     env_file: .env
     environment:
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:6432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      LOG_DIR: /app/logs
     depends_on:
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       django:
-        condition: service_started
+        condition: service_healthy
 
   nginx:
     image: nginx:1.25-alpine
@@ -164,8 +190,15 @@ services:
       - media_files:/usr/share/nginx/html/media:ro
       - ./frontend/dist/frontend/browser:/usr/share/nginx/html:ro
     depends_on:
-      - django
-      - fastapi
+      django:
+        condition: service_healthy
+      fastapi:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 volumes:
   pg_data:
