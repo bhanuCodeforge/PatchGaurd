@@ -15,8 +15,12 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 from routes import health, agents, events
 from ws_manager import manager
+from logging_utils import trace
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=getattr(logging, os.getenv("REALTIME_LOG_LEVEL", "INFO").upper()),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 REDIS_URL = os.getenv("CELERY_BROKER_URL", os.getenv("REDIS_URL", "redis://localhost:6379/0"))
@@ -37,6 +41,7 @@ else:
 if DB_DSN.startswith("sqlite"):
     DB_DSN = None
 
+@trace
 async def redis_subscriber():
     """Background task to listen to Redis Pub/Sub channels from Django Celery.
     Gracefully retries with backoff if Redis is unavailable — never crashes the worker.
@@ -86,7 +91,12 @@ async def redis_subscriber():
 
                     elif channel.startswith("agent:command:"):
                         agent_id = channel.split(":")[-1]
-                        await manager.send_to_agent(agent_id, data)
+                        logger.info(f"Command received for Agent {agent_id} via Redis.")
+                        delivered = await manager.send_to_agent(agent_id, data)
+                        if delivered:
+                            logger.info(f"Command successfully delivered to Agent {agent_id}.")
+                        else:
+                            logger.warning(f"Failed to deliver command: Agent {agent_id} is not connected via WebSocket.")
 
                 except Exception as msg_err:
                     logger.error(f"Redis message handling error: {msg_err}")

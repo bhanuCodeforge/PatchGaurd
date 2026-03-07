@@ -34,6 +34,7 @@ class Patch(models.Model):
     requires_reboot = models.BooleanField(default=False)
     approved_by = models.ForeignKey("accounts.User", on_delete=models.SET_NULL, null=True, blank=True)
     approved_at = models.DateTimeField(null=True, blank=True)
+    status_notes = models.TextField(blank=True)
     released_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

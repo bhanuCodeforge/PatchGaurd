@@ -99,6 +99,21 @@ async def websocket_agent(websocket: WebSocket, api_key: str = Query(...)):
                         "payload": {**env.payload, "device_id": device_id}
                     }))
 
+                elif env.event == "inventory_info":
+                    # 1. Broadcast to dashboards
+                    await manager.broadcast_to_dashboard(json.dumps({
+                        "event": "agent_inventory_info",
+                        "payload": {**env.payload, "device_id": device_id}
+                    }))
+                    # 2. Persist to backend
+                    asyncio.create_task(
+                        _post_to_backend(
+                            f"/devices/{device_id}/ingest_inventory/",
+                            env.payload,
+                            api_key,
+                        )
+                    )
+
                 elif env.event == "scan_results":
                     # 1. Broadcast live update to all dashboards
                     await manager.broadcast_to_dashboard(json.dumps({

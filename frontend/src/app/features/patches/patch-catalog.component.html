@@ -172,73 +172,114 @@
     </div>
   </div>
 
-  <!-- Detail Panel -->
-  <div class="detail-panel mt-3" *ngIf="selectedPatch()">
-    <div class="detail-header">
-      <div>
-        <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-          <span class="cve-badge">{{ getCveLabel(selectedPatch()) }}</span>
+  <!-- Patch Detail Flyout -->
+  <div class="flyout-overlay" *ngIf="selectedPatch()" (click)="selectedPatch.set(null)">
+    <div class="flyout" (click)="$event.stopPropagation()">
+      <div class="flyout-header">
+        <div class="d-flex align-items-center gap-2">
+          <div class="flyout-icon">📦</div>
+          <div>
+            <h5 class="flyout-title mb-0">{{ getCveLabel(selectedPatch()) }}</h5>
+            <span class="text-muted small">{{ selectedPatch().vendor || 'Generic' }}</span>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
           <span class="severity-pill" [class]="'sev-' + selectedPatch().severity">{{ selectedPatch().severity }}</span>
           <span class="status-pill" [class]="'st-' + selectedPatch().status">{{ selectedPatch().status }}</span>
-          <span *ngIf="selectedPatch().requires_reboot" class="badge bg-warning text-dark">
-            &#x26A1; Reboot Required
-          </span>
+          <button class="close-btn" (click)="selectedPatch.set(null)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
-        <h5 class="mb-0">{{ selectedPatch().title }}</h5>
       </div>
-      <button class="close-btn" (click)="selectedPatch.set(null)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>
 
-    <div class="detail-meta row g-2 mb-3">
-      <div class="col-auto"><span class="meta-key">Vendor:</span> <span class="meta-val">{{ selectedPatch().vendor || '—' }}</span></div>
-      <div class="col-auto"><span class="meta-key">Released:</span> <span class="meta-val">{{ selectedPatch().released_at | relativeTime }}</span></div>
-      <div class="col-auto"><span class="meta-key">Package:</span> <span class="meta-val">{{ selectedPatch().package_name || '—' }}</span></div>
-      <div class="col-auto"><span class="meta-key">Version:</span> <span class="meta-val">{{ selectedPatch().package_version || '—' }}</span></div>
-      <div class="col-auto"><span class="meta-key">Affects:</span>
-        <span class="meta-val">{{ getOsLabel(selectedPatch()) }}</span>
+      <div class="flyout-body">
+        <div class="info-group">
+          <h6 class="info-heading">Patch Details</h6>
+          <p class="text-white fw-500 mb-3">{{ selectedPatch().title }}</p>
+          
+          <div class="info-grid">
+            <div class="info-row"><span class="key">Package Name</span><span class="val font-monospace">{{ selectedPatch().package_name || 'N/A' }}</span></div>
+            <div class="info-row"><span class="key">Package Version</span><span class="val font-monospace">{{ selectedPatch().package_version || 'N/A' }}</span></div>
+            <div class="info-row"><span class="key">Released</span><span class="val">{{ selectedPatch().released_at | relativeTime }}</span></div>
+            <div class="info-row"><span class="key">Reboot Required</span><span class="val">{{ selectedPatch().requires_reboot ? 'Yes' : 'No' }}</span></div>
+            <div class="info-row"><span class="key">OS Target</span><span class="val">{{ getOsLabel(selectedPatch()) }}</span></div>
+          </div>
+        </div>
+
+        <div class="info-group" *ngIf="selectedPatch().cve_ids?.length">
+          <h6 class="info-heading">CVE Identifiers</h6>
+          <div class="d-flex flex-wrap gap-1 mt-1">
+            <span class="cve-badge" *ngFor="let cve of selectedPatch().cve_ids">{{ cve }}</span>
+          </div>
+        </div>
+
+        <div class="info-group">
+          <h6 class="info-heading">Description</h6>
+          <div class="description-text">{{ selectedPatch().description || 'No description available for this patch.' }}</div>
+        </div>
+
+        <!-- Approval / Rejection Audit -->
+        <div class="info-group border-top border-secondary border-opacity-25 pt-3" *ngIf="selectedPatch().status !== 'imported'">
+          <h6 class="info-heading d-flex align-items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            Status & Approval
+          </h6>
+          <div class="audit-card mt-2">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted small">Current Status</span>
+              <span class="status-pill mini" [class]="'st-' + selectedPatch().status">{{ selectedPatch().status }}</span>
+            </div>
+            <div class="audit-item" *ngIf="selectedPatch().approved_by_name">
+              <div class="audit-meta">
+                <strong>{{ selectedPatch().approved_by_name }}</strong>
+                <span class="text-muted ms-1">{{ selectedPatch().approved_at | relativeTime }}</span>
+              </div>
+              <div class="audit-note mt-1" *ngIf="selectedPatch().status_notes">
+                "{{ selectedPatch().status_notes }}"
+              </div>
+            </div>
+            <div class="audit-item" *ngIf="!selectedPatch().approved_by_name && selectedPatch().status_notes">
+              <div class="audit-note">
+                "{{ selectedPatch().status_notes }}"
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- CVE list -->
-    <div *ngIf="selectedPatch().cve_ids?.length" class="mb-3">
-      <span class="meta-key me-2">CVEs:</span>
-      <span *ngFor="let cve of selectedPatch().cve_ids" class="cve-badge me-1">{{ cve }}</span>
-    </div>
-
-    <p class="text-muted small mb-3">{{ selectedPatch().description || 'No description available.' }}</p>
-
-    <div class="d-flex gap-2 flex-wrap" *ngIf="canWrite()">
-      <button class="btn btn-sm btn-success"
-        (click)="approve(selectedPatch())"
-        [disabled]="selectedPatch().status === 'approved' || selectedPatch().status === 'rejected'">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="20 6 9 17 4 12"/></svg>
-        {{ 'PATCHES.APPROVE_PATCH' | translate }}
-      </button>
-      <button class="btn btn-sm btn-outline-info"
-        (click)="markReview(selectedPatch())"
-        [disabled]="selectedPatch().status !== 'imported'">
-        Mark Reviewed
-      </button>
-      <button class="btn btn-sm btn-outline-danger" (click)="reject(selectedPatch())"
-        [disabled]="selectedPatch().status === 'rejected'">
-        {{ 'PATCHES.REJECT' | translate }}
-      </button>
-      <a *ngIf="selectedPatch().kb_article" [href]="selectedPatch().kb_article" target="_blank"
-        class="btn btn-sm btn-outline-secondary ms-auto">
-        {{ 'PATCHES.VIEW_KB' | translate }} &#x2197;
-      </a>
+      <div class="flyout-footer flex-wrap" *ngIf="canWrite()">
+        <button class="btn btn-sm btn-success"
+          (click)="approve(selectedPatch())"
+          [disabled]="selectedPatch().status === 'approved' || selectedPatch().status === 'rejected'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="20 6 9 17 4 12"/></svg>
+          {{ 'PATCHES.APPROVE_PATCH' | translate }}
+        </button>
+        <button class="btn btn-sm btn-outline-info"
+          (click)="markReview(selectedPatch())"
+          [disabled]="selectedPatch().status !== 'imported'">
+          Mark Reviewed
+        </button>
+        <button class="btn btn-sm btn-outline-danger" (click)="reject(selectedPatch())"
+          [disabled]="selectedPatch().status === 'rejected'">
+          {{ 'PATCHES.REJECT' | translate }}
+        </button>
+        <a *ngIf="selectedPatch().kb_article" [href]="selectedPatch().kb_article" target="_blank"
+          class="btn btn-sm btn-outline-secondary ms-auto">
+          {{ 'PATCHES.VIEW_KB' | translate }} &#x2197;
+        </a>
+      </div>
     </div>
   </div>
 
-  <!-- Confirm Dialog -->
-  <app-confirm-dialog
+  <!-- Approval Modal -->
+  <app-patch-approval-modal
     *ngIf="confirmVisible()"
-    [message]="confirmMsg"
-    (confirmed)="doConfirm()"
-    (cancelled)="confirmVisible.set(false)">
-  </app-confirm-dialog>
+    [action]="confirmAction"
+    (confirmed)="doConfirm($event)"
+    (cancel)="confirmVisible.set(false)">
+  </app-patch-approval-modal>
 </div>

@@ -10,6 +10,10 @@ import yaml
 import websockets
 import psutil
 from typing import Dict, Any, Optional
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 try:
     import aiohttp
@@ -20,6 +24,7 @@ except ImportError:
 from plugins.linux import LinuxPlugin
 from plugins.windows import WindowsPlugin
 from plugins.macos import MacOSPlugin
+from logging_utils import trace
 
 # Configure Logging
 logging.basicConfig(
@@ -62,7 +67,7 @@ class PatchAgent:
             return yaml.safe_load(f)
 
     def _set_log_level(self):
-        level_str = self.config.get("log_level", "info").upper()
+        level_str = os.getenv("AGENT_LOG_LEVEL", self.config.get("log_level", "info")).upper()
         level = getattr(logging, level_str, logging.INFO)
         logging.getLogger().setLevel(level)
         logger.setLevel(level)
@@ -247,6 +252,7 @@ class PatchAgent:
     # WebSocket connection                                                 #
     # ------------------------------------------------------------------ #
 
+    @trace
     async def connect(self):
         # Auto-register before connecting, if configured
         await self.maybe_auto_register()
@@ -266,6 +272,9 @@ class PatchAgent:
                     backoff = 1  # reset on success
 
                     await self.send_system_info()
+                    await self.send_inventory()
+                    # Trigger initial scan to sync patch state immediately
+                    asyncio.create_task(self.run_scan())
 
                     await asyncio.gather(
                         self.heartbeat_loop(),
@@ -325,6 +334,21 @@ class PatchAgent:
             }
         })
 
+    async def send_inventory(self):
+        try:
+            logger.info("Collecting detailed inventory...")
+            inv = self.plugin.get_inventory()
+            await self.send_json({
+                "event": "inventory_info",
+                "payload": {
+                    "device_id": self.device_id,
+                    "inventory": inv
+                }
+            })
+        except Exception as e:
+            logger.error(f"Failed to send inventory: {e}")
+
+    @trace
     async def heartbeat_loop(self):
         interval = self.config.get("heartbeat_interval", 60)
         while self._connected:
@@ -357,8 +381,14 @@ class PatchAgent:
             async for message in self.ws:
                 try:
                     data = json.loads(message)
+                    # Enveloped message: { "event": "...", "payload": { ... } }
                     command = data.get("command") or data.get("event")
                     payload = data.get("payload", {})
+                    
+                    if not command:
+                        logger.warning(f"Received malformed message (no command/event): {message}")
+                        continue
+                        
                     logger.info(f"Received command: {command}")
 
                     if command == "START_SCAN":
@@ -378,6 +408,15 @@ class PatchAgent:
                         }})
                     elif command == "GET_SYSTEM_INFO":
                         await self.send_system_info()
+                    elif command == "CONFIG_UPDATE":
+                        new_cfg = payload.get("config", {})
+                        if new_cfg:
+                            logger.info(f"Applying remote config update: {new_cfg}")
+                            self.config.update(new_cfg)
+                            self._persist_config()
+                            if "log_level" in new_cfg:
+                                self._set_log_level()
+                            self.ns.info("Config Updated", "Agent configuration updated from server.")
                     else:
                         logger.warning(f"Unknown command: {command}")
                 except Exception as e:
@@ -385,6 +424,7 @@ class PatchAgent:
         except Exception:
             pass  # Connection closed; connect() handles reconnection
 
+    @trace
     async def run_scan(self):
         logger.info("Scanning for patches...")
         try:
@@ -401,6 +441,7 @@ class PatchAgent:
             }
         })
 
+    @trace
     async def run_deployment(self, payload: dict):
         deployment_id = payload.get("deployment_id", "")
         target_id = payload.get("target_id", "")
@@ -432,6 +473,7 @@ class PatchAgent:
         })
         logger.info(f"Deployment {deployment_id} result: {result_status} ({len(failed)} failed patches)")
 
+    @trace
     async def run_patch(self, patch_id: str):
         if not patch_id:
             return

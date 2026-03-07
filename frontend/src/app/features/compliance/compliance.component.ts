@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -58,10 +58,9 @@ export class ComplianceComponent implements OnInit {
       next: (r) => {
         const list = (r.results ?? []).map((d: any) => ({
           ...d,
-          compliance_rate: d.compliance_rate ?? Math.floor(Math.random() * 40 + 60),
-          patched_count: d.patched_count ?? 0,
-          missing_count: d.missing_count ?? 0,
-          last_scan: d.last_scan_at,
+          // Real data now available from backend DeviceListSerializer
+          compliance_rate: d.compliance_rate ?? 0,
+          last_scan: d.last_seen, // fallback for UI
         }));
         this.rows.set(list);
         this.filterTable();

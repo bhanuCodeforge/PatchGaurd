@@ -1,0 +1,42 @@
+<div class="modal-overlay" (click)="close.emit()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h5 class="mb-0">Edit Device: {{ device.hostname }}</h5>
+      <button class="close-btn" (click)="close.emit()">&#x2715;</button>
+    </div>
+    
+    <form [formGroup]="editForm" (ngSubmit)="save()" class="modal-body">
+      <div class="mb-3">
+        <label class="form-label">Hostname</label>
+        <input type="text" class="form-control" formControlName="hostname" />
+      </div>
+      
+      <div class="mb-3">
+        <label class="form-label">IP Address</label>
+        <input type="text" class="form-control" formControlName="ip_address" />
+      </div>
+      
+      <div class="mb-3">
+        <label class="form-label">Environment</label>
+        <select class="form-select" formControlName="environment">
+          <option value="production">Production</option>
+          <option value="staging">Staging</option>
+          <option value="development">Development</option>
+          <option value="test">Test</option>
+        </select>
+      </div>
+      
+      <div class="mb-3">
+        <label class="form-label">Tags (comma separated)</label>
+        <input type="text" class="form-control" formControlName="tags" placeholder="web, prod, linux" />
+      </div>
+
+      <div class="modal-footer px-0 pb-0">
+        <button type="button" class="btn btn-outline-secondary" (click)="close.emit()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid || submitting">
+          {{ submitting ? 'Saving...' : 'Save Changes' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

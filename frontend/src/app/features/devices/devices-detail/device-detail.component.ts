@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { DeviceService } from '../../../core/services/device.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -17,9 +17,12 @@ import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
 export class DeviceDetailComponent {
   @Input() device: any;
   @Output() close = new EventEmitter<void>();
+  @Output() edit = new EventEmitter<any>();
+  @Output() deleted = new EventEmitter<string>();
 
   private deviceSvc = inject(DeviceService);
   private ns = inject(NotificationService);
+  private router = inject(Router);
 
   onOverlay(e: MouseEvent) {
     if ((e.target as HTMLElement).classList.contains('flyout-overlay')) this.close.emit();
@@ -33,5 +36,14 @@ export class DeviceDetailComponent {
 
   reboot() {
     this.ns.info('Reboot', `Reboot command sent to ${this.device.hostname}`);
+  }
+
+  delete() {
+    if (!confirm(`Are you sure you want to delete ${this.device.hostname}?`)) return;
+    this.deviceSvc.deleteDevice(this.device.id).subscribe(() => {
+      this.ns.success('Deleted', `Device ${this.device.hostname} removed.`);
+      this.deleted.emit(this.device.id);
+      this.close.emit();
+    });
   }
 }

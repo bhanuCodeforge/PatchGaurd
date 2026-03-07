@@ -49,12 +49,28 @@ export class DeviceService {
     return this.api.get<PaginatedResponse<any>>('/devices/groups/', params);
   }
 
+  createGroup(group: any): Observable<any> {
+    return this.api.post<any>('/devices/groups/', group);
+  }
+
+  deleteGroup(id: string): Observable<void> {
+    return this.api.delete<void>(`/devices/groups/${id}/`);
+  }
+
   getDevicePatches(id: string, params: any = {}): Observable<PaginatedResponse<any>> {
     return this.api.get<PaginatedResponse<any>>(`/devices/${id}/patches/`, params);
   }
 
+  getDeviceDeployments(id: string): Observable<any[]> {
+    return this.api.get<any[]>(`/devices/${id}/deployments/`);
+  }
+
   bulkGroup(deviceIds: string[], groupId: string): Observable<any> {
     return this.api.post<any>('/devices/bulk_group/', { device_ids: deviceIds, group_id: groupId });
+  }
+
+  updateAgentConfig(id: string, config: any): Observable<any> {
+    return this.api.post<any>(`/devices/${id}/agent_config/`, config);
   }
 
   heartbeat(id: string, payload: any): Observable<any> {

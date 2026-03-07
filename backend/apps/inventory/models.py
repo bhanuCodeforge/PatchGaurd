@@ -64,6 +64,7 @@ class Device(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     hostname = models.CharField(max_length=255, unique=True, db_index=True)
+    description = models.TextField(blank=True, default='')
     ip_address = models.GenericIPAddressField(db_index=True)
     mac_address = models.CharField(max_length=17, blank=True)
     os_family = models.CharField(max_length=20, choices=OSFamily.choices)
@@ -76,6 +77,8 @@ class Device(models.Model):
     groups = models.ManyToManyField(DeviceGroup, related_name="devices", blank=True)
     metadata = models.JSONField(default=dict, blank=True)
     agent_api_key = models.CharField(max_length=64, unique=True, db_index=True)
+    compliance_rate = models.FloatField(default=100.0, db_index=True)
+    inventory_data = models.JSONField(default=dict, blank=True)
     last_seen = models.DateTimeField(null=True, blank=True)
     last_checkin_ip = models.GenericIPAddressField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -90,6 +93,7 @@ class Device(models.Model):
             models.Index(fields=["environment", "status"]),
             models.Index(fields=["last_seen"]),
         ]
+
 
     def __str__(self):
         return self.hostname

@@ -3,11 +3,13 @@ from django.utils import timezone
 from datetime import timedelta
 from common.redis_pubsub import RedisPublisher
 import logging
+from common.logging import trace
 
 logger = logging.getLogger(__name__)
 
 
 @shared_task
+@trace
 def mark_stale_devices():
     """Mark online devices offline when they haven't sent a heartbeat in 5 minutes."""
     from .models import Device
@@ -31,6 +33,7 @@ def flush_heartbeat_batch():
 
 
 @shared_task
+@trace
 def scan_device_patches(device_id: str):
     """
     Command the agent to run a full patch scan.
@@ -59,6 +62,7 @@ def scan_device_patches(device_id: str):
 
 
 @shared_task
+@trace
 def process_scan_results(device_id: str, patches: list):
     """
     Persist agent scan results into DevicePatchStatus.
@@ -85,32 +89,48 @@ def process_scan_results(device_id: str, patches: list):
     skipped = 0
 
     for patch_data in patches:
+        # 1. Identify the core vendor_id
         vendor_id = (
             patch_data.get("vendor_id")
             or patch_data.get("id")
             or patch_data.get("kb_id")
+            or patch_data.get("name")
         )
         if not vendor_id:
             skipped += 1
             continue
 
+        # 2. Extract basic metadata
+        title = patch_data.get("title") or patch_data.get("name") or str(vendor_id)
+        severity = patch_data.get("severity", Patch.Severity.MEDIUM).lower()
+        if severity not in [s[0] for s in Patch.Severity.choices]:
+            severity = Patch.Severity.MEDIUM
+
         patch, _ = Patch.objects.get_or_create(
             vendor_id=str(vendor_id),
             defaults={
-                "title": patch_data.get("title") or str(vendor_id),
-                "severity": patch_data.get("severity", Patch.Severity.MEDIUM),
+                "title": title,
+                "severity": severity,
                 "vendor": patch_data.get("vendor", device.os_family),
                 "status": Patch.Status.IMPORTED,
                 "applicable_os": [device.os_family],
-                "package_name": patch_data.get("package_name", ""),
+                "package_name": patch_data.get("package_name", str(vendor_id)),
                 "package_version": patch_data.get("version", ""),
             },
         )
 
-        installed = bool(patch_data.get("installed", False))
+        # 3. Determine if installed
+        is_installed = False
+        if "installed" in patch_data:
+            is_installed = bool(patch_data["installed"])
+        elif "missing" in patch_data:
+            is_installed = not bool(patch_data["missing"])
+        elif "status" in patch_data:
+            is_installed = str(patch_data["status"]).lower() in ["installed", "completed", "success"]
+        
         state = (
             DevicePatchStatus.State.INSTALLED
-            if installed
+            if is_installed
             else DevicePatchStatus.State.MISSING
         )
 
@@ -120,15 +140,18 @@ def process_scan_results(device_id: str, patches: list):
             defaults={"state": state},
         )
 
-        if installed:
+        if is_installed:
             installed_count += 1
         else:
             missing_count += 1
 
     logger.info(
-        f"Scan results for '{device.hostname}': "
+        f"Scan results for '{device_id}': "
         f"{installed_count} installed, {missing_count} missing, {skipped} skipped"
     )
+    
+    # Update device compliance rate
+    refresh_device_compliance(device_id)
 
     # Notify dashboards of updated compliance
     RedisPublisher.publish_notification(
@@ -136,3 +159,37 @@ def process_scan_results(device_id: str, patches: list):
         f"Scan complete for {device.hostname}: "
         f"{installed_count} installed, {missing_count} missing.",
     )
+
+
+@shared_task
+@trace
+def refresh_device_compliance(device_id: str):
+    """Calculate and save the compliance percentage for a single device."""
+    from .models import Device
+    from apps.patches.models import DevicePatchStatus
+    
+    try:
+        device = Device.objects.get(id=device_id)
+        statuses = DevicePatchStatus.objects.filter(device=device)
+        total = statuses.count()
+        if total == 0:
+            device.compliance_rate = 100
+        else:
+            installed = statuses.filter(state=DevicePatchStatus.State.INSTALLED).count()
+            device.compliance_rate = round((installed / total) * 100, 1)
+        
+        device.save(update_fields=["compliance_rate"])
+        logger.info(f"Updated compliance for {device.hostname}: {device.compliance_rate}%")
+    except Device.DoesNotExist:
+        logger.error(f"refresh_device_compliance: device {device_id} not found")
+
+
+@shared_task
+@trace
+def refresh_all_device_compliance():
+    """Batch refresh compliance for all devices."""
+    from .models import Device
+    devices = Device.objects.values_list('id', flat=True)
+    for dev_id in devices:
+        refresh_device_compliance.delay(str(dev_id))
+    logger.info(f"Triggered compliance refresh for {len(devices)} devices.")

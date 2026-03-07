@@ -153,7 +153,21 @@
   </div>
 
   <!-- Device Detail Flyout -->
-  <app-device-detail *ngIf="selectedDevice()" [device]="selectedDevice()" (close)="selectedDevice.set(null)"></app-device-detail>
+  <app-device-detail
+    *ngIf="selectedDevice() as d"
+    [device]="d"
+    (close)="selectedDevice.set(null)"
+    (edit)="handleEdit($event)"
+    (deleted)="handleDeleted($event)">
+  </app-device-detail>
+
+  <!-- Edit Modal -->
+  <app-device-edit
+    *ngIf="editingDevice() as d"
+    [device]="d"
+    (close)="editingDevice.set(null)"
+    (saved)="handleSaved($event)">
+  </app-device-edit>
 </div>
 
 <!-- Add Device Modal -->

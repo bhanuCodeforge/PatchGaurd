@@ -1,0 +1,81 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-0">{{ 'NAV.GROUPS' | translate }}</h2>
+      <p class="text-muted small">Manage organizational units and dynamic device groups.</p>
+    </div>
+    <button class="btn btn-primary" (click)="showModal = true">
+      <i class="bi bi-plus-lg me-2"></i>New Group
+    </button>
+  </div>
+
+  <div class="row g-4" *ngIf="!loading(); else loadingTpl">
+    <div class="col-md-4" *ngFor="let g of groups()">
+      <div class="card bg-dark text-white border-secondary border-opacity-25 h-100 group-card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="group-icon">📁</div>
+            <div class="dropdown">
+              <button class="btn btn-xs btn-link text-muted" type="button" (click)="deleteGroup(g.id, g.name)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+          <h5 class="card-title">{{ g.name }}</h5>
+          <p class="card-text text-muted small mb-4">{{ g.description || 'No description provided.' }}</p>
+          
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-secondary">{{ g.device_count || 0 }} Devices</span>
+              <span class="badge bg-info" *ngIf="g.is_dynamic">Dynamic</span>
+            </div>
+            <a [routerLink]="['/devices']" [queryParams]="{ group: g.id }" class="btn btn-sm btn-outline-primary">View</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12" *ngIf="groups().length === 0">
+      <app-empty-state 
+        title="No Groups Found" 
+        message="Create your first group to start organizing your fleet."
+        icon="folder2-open">
+      </app-empty-state>
+    </div>
+  </div>
+
+  <!-- Create Group Modal -->
+  <div class="modal fade show d-block" *ngIf="showModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary border-opacity-25">
+          <h5 class="modal-title">Create New Group</h5>
+          <button type="button" class="btn-close btn-close-white" (click)="showModal = false"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small text-muted">Group Name</label>
+            <input type="text" class="form-control bg-black text-white border-secondary" [(ngModel)]="newGroupName" placeholder="e.g. Sales Windows Laptops">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small text-muted">Description</label>
+            <textarea class="form-control bg-black text-white border-secondary" [(ngModel)]="newGroupDesc" rows="3" placeholder="Optional details..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-secondary border-opacity-25">
+          <button type="button" class="btn btn-outline-secondary" (click)="showModal = false">Cancel</button>
+          <button type="button" class="btn btn-primary" (click)="createGroup()" [disabled]="!newGroupName.trim()">Create Group</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="row g-4">
+    <div class="col-md-4" *ngFor="let i of [1,2,3]">
+      <app-loading-skeleton variant="card"></app-loading-skeleton>
+    </div>
+  </div>
+</ng-template>

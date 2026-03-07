@@ -7,7 +7,7 @@ import { NotificationService } from '../../core/services/notification.service';
 import { StatusBadgeComponent } from '../../shared/components/status-badge.component';
 import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
-import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog.component';
+import { PatchApprovalModalComponent } from '../../shared/components/patch-approval-modal.component';
 import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
 import { AuthService } from '../../core/auth/auth.service';
 
@@ -20,7 +20,7 @@ import { AuthService } from '../../core/auth/auth.service';
     TranslateModule,
     LoadingSkeletonComponent,
     EmptyStateComponent,
-    ConfirmDialogComponent,
+    PatchApprovalModalComponent,
     RelativeTimePipe,
   ],
   templateUrl: './patch-catalog.component.html',
@@ -179,12 +179,13 @@ export class PatchCatalogComponent implements OnInit {
     this.confirmMsg = `Reject "${p.title}"? It will be excluded from deployments.`;
     this.confirmVisible.set(true);
   }
-  doConfirm() {
+
+  doConfirm(reason: string = '') {
     this.confirmVisible.set(false);
     if (!this.pendingPatch) return;
     const obs = this.confirmAction === 'approve'
-      ? this.patchSvc.approvePatch(this.pendingPatch.id)
-      : this.patchSvc.rejectPatch(this.pendingPatch.id);
+      ? this.patchSvc.approvePatch(this.pendingPatch.id, reason)
+      : this.patchSvc.rejectPatch(this.pendingPatch.id, reason);
     obs.subscribe({
       next: () => {
         this.ns.success('Done', `Patch ${this.confirmAction}d successfully.`);

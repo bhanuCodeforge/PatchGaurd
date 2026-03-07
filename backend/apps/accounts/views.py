@@ -9,9 +9,10 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework.decorators import action
 from .serializers import (
-    CustomTokenObtainSerializer, UserSerializer, UserCreateSerializer, PasswordChangeSerializer
+    CustomTokenObtainSerializer, UserSerializer, UserCreateSerializer, PasswordChangeSerializer,
+    AuditLogSerializer
 )
-from .permissions import IsAdmin
+from .permissions import IsAdmin, IsOperatorOrAbove
 from .models import AuditLog
 
 User = get_user_model()
@@ -204,3 +205,13 @@ class UserViewSet(viewsets.ModelViewSet):
             resource_id=user.id
         )
         return Response({"status": f"Role changed to {new_role}"})
+
+class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ReadOnly interface for global audit logs. Restricted to Operators/Admins.
+    """
+    queryset = AuditLog.objects.all().select_related('user').order_by('-timestamp')
+    serializer_class = AuditLogSerializer
+    permission_classes = [IsOperatorOrAbove]
+    filterset_fields = ['resource_type', 'user']
+    search_fields = ['action', 'user__username']

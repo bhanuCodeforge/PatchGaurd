@@ -1,0 +1,432 @@
+@if (device(); as d) {
+<div class="container-fluid py-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a routerLink="/devices">Devices</a></li>
+      <li class="breadcrumb-item active">{{ d.hostname }}</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <div class="device-avatar">{{ d.os_family === 'windows' ? '🪟' : d.os_family === 'linux' ? '🐧' : '🍎' }}</div>
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          @if (!isEditing()) {
+            <h2 class="mb-0">{{ d.hostname }}</h2>
+          } @else {
+            <input type="text" class="form-control form-control-lg bg-dark text-white border-primary" [(ngModel)]="editData.hostname" style="max-width: 300px;">
+            <span class="badge bg-primary">Editing</span>
+          }
+        </div>
+        <div class="d-flex align-items-center gap-2 mt-1">
+          <app-status-badge [value]="d.status" [dot]="true"></app-status-badge>
+          <span class="text-muted small">IP: {{ d.ip_address }}</span>
+          <span class="badge bg-secondary opacity-50">{{ d.environment }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      @if (!isEditing()) {
+        <button class="btn btn-sm btn-outline-secondary" (click)="scan()">Scan Now</button>
+        <button class="btn btn-sm btn-outline-warning" (click)="reboot()">Reboot</button>
+        <button class="btn btn-sm btn-danger" (click)="delete()">Delete Device</button>
+      } @else {
+        <button class="btn btn-sm btn-outline-secondary" (click)="toggleEdit()">Cancel</button>
+        <button class="btn btn-sm btn-primary" (click)="save()">Save Changes</button>
+      }
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Stats Cards -->
+    <div class="col-md-3">
+      <div class="stat-card">
+        <label>CPU Usage</label>
+        <div class="d-flex align-items-center gap-3">
+          <div class="progress flex-grow-1" style="height: 6px;">
+            <div class="progress-bar" [style.width]="(d.metadata?.cpu_usage || 0) + '%'"
+              [class.bg-danger]="(d.metadata?.cpu_usage || 0) > 90"
+              [class.bg-warning]="(d.metadata?.cpu_usage || 0) > 70 && (d.metadata?.cpu_usage || 0) <= 90"
+              [class.bg-success]="(d.metadata?.cpu_usage || 0) <= 70"></div>
+          </div>
+          <span class="fw-bold">{{ d.metadata?.cpu_usage || 0 }}%</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <label>RAM Usage</label>
+        <div class="d-flex align-items-center gap-3">
+          <div class="progress flex-grow-1" style="height: 6px;">
+            <div class="progress-bar" [style.width]="(d.metadata?.ram_usage || 0) + '%'"
+              [class.bg-danger]="(d.metadata?.ram_usage || 0) > 90"
+              [class.bg-warning]="(d.metadata?.ram_usage || 0) > 70 && (d.metadata?.ram_usage || 0) <= 90"
+              [class.bg-success]="(d.metadata?.ram_usage || 0) <= 70"></div>
+          </div>
+          <span class="fw-bold">{{ d.metadata?.ram_usage || 0 }}%</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <label>Disk Usage</label>
+        <div class="d-flex align-items-center gap-3">
+          <div class="progress flex-grow-1" style="height: 6px;">
+            <div class="progress-bar" [style.width]="(d.metadata?.disk_usage || 0) + '%'"
+              [class.bg-danger]="(d.metadata?.disk_usage || 0) > 90"></div>
+          </div>
+          <span class="fw-bold">{{ d.metadata?.disk_usage || 0 }}%</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <label>Compliance</label>
+        <div class="d-flex align-items-center gap-3">
+          <div class="progress flex-grow-1" style="height: 6px;">
+            <div class="progress-bar bg-info" [style.width]="(d.compliance_rate || 0) + '%'"></div>
+          </div>
+          <span class="fw-bold">{{ d.compliance_rate || 0 }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs border-secondary border-opacity-25 mb-4 mt-4">
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab() === 'inventory'" (click)="activeTab.set('inventory')">Inventory</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab() === 'patches'" (click)="activeTab.set('patches')">Patches <span class="badge bg-secondary ms-1">{{ patches().length }}</span></button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab() === 'deployments'" (click)="activeTab.set('deployments')">Deployments</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" [class.active]="activeTab() === 'settings'" (click)="activeTab.set('settings')">Agent Settings</button>
+    </li>
+  </ul>
+
+  <div class="row g-4">
+    <!-- Main Content Column -->
+    <div class="col-md-8">
+      
+      <!-- Inventory Tab -->
+      @if (activeTab() === 'inventory') {
+        <div class="card bg-dark text-white mb-4 border-secondary border-opacity-25 overflow-hidden shadow-lg" @tabChange>
+          <div class="row g-0 h-100">
+            <!-- Inventory Sidebar -->
+            <div class="col-md-3 border-end border-secondary border-opacity-25 bg-black bg-opacity-20">
+              <div class="p-3">
+                <h6 class="text-uppercase small fw-bold text-muted mb-3 letter-spacing-1">General</h6>
+                <nav class="nav flex-column gap-1">
+                  <button class="nav-link inventory-nav-link" [class.active]="inventoryTab() === 'system'" (click)="inventoryTab.set('system')">
+                    <i class="bi bi-cpu me-2"></i> System
+                  </button>
+                  <button class="nav-link inventory-nav-link" [class.active]="inventoryTab() === 'hardware'" (click)="inventoryTab.set('hardware')">
+                    <i class="bi bi-pc-display me-2"></i> Hardware
+                  </button>
+                  <button class="nav-link inventory-nav-link" [class.active]="inventoryTab() === 'network'" (click)="inventoryTab.set('network')">
+                    <i class="bi bi-hdd-network me-2"></i> Network
+                  </button>
+                </nav>
+                <h6 class="text-uppercase small fw-bold text-muted mb-3 mt-4 letter-spacing-1">Software</h6>
+                <nav class="nav flex-column gap-1">
+                  <button class="nav-link inventory-nav-link" [class.active]="inventoryTab() === 'software'" (click)="inventoryTab.set('software')">
+                    <i class="bi bi-app-indicator me-2"></i> Installed Apps
+                    <span class="badge bg-secondary opacity-50 float-end">{{ d.inventory_data?.apps?.length || 0 }}</span>
+                  </button>
+                </nav>
+              </div>
+            </div>
+
+            <!-- Inventory Content -->
+            <div class="col-md-9 bg-dark">
+              <div class="card-body p-4">
+                
+                <!-- System View -->
+                @if (inventoryTab() === 'system') {
+                  <div @tabChange>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                      <h5 class="mb-0 fw-bold">System Identity</h5>
+                      <button class="btn btn-xs btn-outline-primary rounded-pill px-3" (click)="toggleEdit()">
+                        {{ isEditing() ? 'Finish Editing' : 'Edit Identity' }}
+                      </button>
+                    </div>
+                    <div class="row g-4">
+                      <div class="col-md-6">
+                        <div class="detail-group">
+                          <label>Hostname</label>
+                          <div class="detail-value text-primary">{{ d.hostname }}</div>
+                        </div>
+                        <div class="detail-group mt-3">
+                          <label>Description</label>
+                          @if (!isEditing()) {
+                            <div class="detail-value">{{ d.description || 'No description provided' }}</div>
+                          } @else {
+                            <input type="text" class="form-control form-control-sm bg-black text-white border-primary" [(ngModel)]="editData.description">
+                          }
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="detail-group">
+                          <label>Operating System</label>
+                          <div class="detail-value">{{ d.os_name || d.os_family | titlecase }}</div>
+                        </div>
+                        <div class="detail-group mt-3">
+                          <label>Kernel / OS Version</label>
+                          <div class="detail-value font-monospace small">{{ d.os_version }}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+
+                <!-- Software (Apps) View -->
+                @if (inventoryTab() === 'software') {
+                  <div @tabChange>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <h5 class="mb-0 fw-bold">Software Assets</h5>
+                      <div class="search-box">
+                        <i class="bi bi-search text-muted"></i>
+                        <input type="text" class="form-control form-control-sm bg-black border-secondary" placeholder="Search apps..." [(ngModel)]="appSearch">
+                      </div>
+                    </div>
+                    <div class="app-list-container custom-scrollbar">
+                      <div class="list-group list-group-flush bg-transparent" [@listAnimation]="filteredApps.length">
+                        @for (app of filteredApps; track $index) {
+                          <div class="list-group-item bg-transparent border-secondary border-opacity-10 py-3 px-0">
+                            <div class="d-flex align-items-center gap-3">
+                              <div class="app-icon shadow-sm">
+                                <i class="bi bi-box-seam h4 mb-0 text-primary opacity-75"></i>
+                              </div>
+                              <div class="flex-grow-1">
+                                <div class="fw-bold text-white mb-0">{{ app.name }}</div>
+                                <div class="text-muted small d-flex gap-3">
+                                  <span><i class="bi bi-tag me-1"></i> {{ app.version || 'No Version' }}</span>
+                                  <span><i class="bi bi-building me-1"></i> {{ app.publisher || d.os_family | titlecase }}</span>
+                                </div>
+                              </div>
+                              @if (app.install_date) {
+                                <div class="text-muted smallest text-end opacity-50">
+                                  {{ app.install_date }}
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        } @empty {
+                          <div class="text-center py-5 text-muted opacity-50">
+                            <i class="bi bi-inbox h1 d-block mb-2"></i>
+                            No applications found matching "{{ appSearch() }}"
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+
+                <!-- Network View -->
+                @if (inventoryTab() === 'network') {
+                  <div @tabChange>
+                    <h5 class="mb-4 fw-bold">Network Architecture</h5>
+                    <div class="row g-3">
+                      @for (net of d.inventory_data?.network || []; track $index) {
+                        <div class="col-md-6">
+                          <div class="network-card p-3 rounded-3 border border-secondary border-opacity-25 bg-black bg-opacity-20">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                              <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2 py-1 smallest">{{ net.interface }}</span>
+                              <i class="bi bi-ethernet text-muted small"></i>
+                            </div>
+                            <div class="fw-bold text-white fs-5 mb-1">{{ net.ip }}</div>
+                            <div class="text-muted small">Mask: {{ net.netmask }}</div>
+                          </div>
+                        </div>
+                      } @empty {
+                        <div class="col-12 text-center py-5 text-muted opacity-50">
+                          <i class="bi bi-reception-0 h1 d-block mb-2"></i>
+                          No network interface details available.
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- Hardware View -->
+                @if (inventoryTab() === 'hardware') {
+                  <div @tabChange>
+                    <h5 class="mb-4 fw-bold">Hardware Resource Mapping</h5>
+                    <div class="row g-4">
+                      <div class="col-md-6">
+                        <div class="stat-card transparent-stat p-0">
+                          <label class="mb-2">Processor (CPU)</label>
+                          <div class="fs-4 fw-bold mb-1">{{ d.os_arch }} Architecture</div>
+                          <div class="text-muted small">{{ d.metadata?.cpu_usage }}% load across {{ d.metadata?.cpu_count || '1' }} cores</div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="stat-card transparent-stat p-0">
+                          <label class="mb-2">Memory (RAM)</label>
+                          <div class="fs-4 fw-bold mb-1">{{ (d.metadata?.total_ram || 0) / 1024 / 1024 / 1024 | number:'1.1-1' }} GB Installed</div>
+                          <div class="text-muted small">{{ d.metadata?.ram_usage }}% utilized currently</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Patches Tab -->
+      @if (activeTab() === 'patches') {
+        <div class="card bg-dark text-white border-secondary border-opacity-25">
+          <div class="card-header border-secondary border-opacity-25">
+            <h5 class="mb-0">Detected Patches</h5>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-dark table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Patch Title</th>
+                  <th>Severity</th>
+                  <th>Status</th>
+                  <th>Last Attempt</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of patches(); track p.id) {
+                  <tr>
+                    <td>{{ p.patch?.title }}</td>
+                    <td><span class="severity-pill" [class]="'sev-' + p.patch?.severity">{{ p.patch?.severity }}</span></td>
+                    <td><span class="status-pill" [class]="'st-' + p.state">{{ p.state }}</span></td>
+                    <td>{{ p.last_attempt | relativeTime }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="4" class="text-center py-4 text-muted">No recently detected patches for this machine.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- Deployments Tab -->
+      @if (activeTab() === 'deployments') {
+        <div class="card bg-dark text-white mb-4 border-secondary border-opacity-25">
+          <div class="card-header border-secondary border-opacity-25">
+            <h5 class="mb-0">Recent Deployments</h5>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-dark table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Deployment Name</th>
+                  <th>Status</th>
+                  <th>Started</th>
+                  <th>Completed</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (dl of deployments(); track dl.id) {
+                  <tr>
+                    <td><a [routerLink]="['/deployments', dl.deployment_id]" class="text-info">{{ dl.deployment_name }}</a></td>
+                    <td><app-status-badge [value]="dl.status" [dot]="true"></app-status-badge></td>
+                    <td>{{ dl.started_at | relativeTime }}</td>
+                    <td>{{ dl.completed_at ? (dl.completed_at | relativeTime) : 'Ongoing' }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="4" class="text-center py-4 text-muted">No deployment history found.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- Settings Tab -->
+      @if (activeTab() === 'settings') {
+        <div class="card bg-dark text-white border-secondary border-opacity-25">
+          <div class="card-header border-secondary border-opacity-25">
+            <h5 class="mb-0">Agent Configuration</h5>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small mb-4">Values will be pushed to the agent via WebSocket in real-time.</p>
+            
+            <div class="row g-4">
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Log Level</label>
+                <select class="form-select bg-black text-white border-secondary" [(ngModel)]="configData.log_level">
+                  <option value="debug">Debug (Verbose)</option>
+                  <option value="info">Info (Standard)</option>
+                  <option value="warning">Warning</option>
+                  <option value="error">Error</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Heartbeat Interval (seconds)</label>
+                <div class="input-group">
+                  <input type="number" class="form-control bg-black text-white border-secondary" [(ngModel)]="configData.heartbeat_interval" min="5" max="3600">
+                  <span class="input-group-text bg-secondary border-secondary text-white">sec</span>
+                </div>
+              </div>
+              <div class="col-12 text-end">
+                <button class="btn btn-primary" (click)="updateConfig()" [disabled]="d.status !== 'online'">Push Configuration</button>
+              </div>
+            </div>
+            
+            <div class="mt-4 pt-4 border-top border-secondary border-opacity-25">
+              <h6 class="text-danger mb-3">Decommissioning</h6>
+              <p class="small text-muted">Irreversibly remove this device and all its history from the platform.</p>
+              <button class="btn btn-outline-danger btn-sm" (click)="delete()">Delete Device</button>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+
+    <!-- Sidebar Column -->
+    <div class="col-md-4">
+      <div class="card bg-dark text-white mb-4 border-secondary border-opacity-25">
+        <div class="card-header border-secondary border-opacity-25">
+          <h5 class="mb-0">Tags & Groups</h5>
+        </div>
+        <div class="card-body">
+          <label class="text-muted small mb-2 d-block">Tags</label>
+          <div class="d-flex flex-wrap gap-1 mb-4">
+            @for (t of d.tags; track t) {
+              <span class="device-tag">{{ t }}</span>
+            } @empty {
+              <span class="text-muted small">No tags assigned</span>
+            }
+          </div>
+
+          <label class="text-muted small mb-2 d-block">Device Groups</label>
+          <div class="d-flex flex-wrap gap-1">
+            @for (g of d.groups; track g.id) {
+              <span class="group-tag">{{ g.name }}</span>
+            } @empty {
+              <span class="text-muted small">No direct groups</span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+} @else {
+  <div class="p-5 text-center">
+    <app-loading-skeleton variant="card" [rows]="[0,1,2,3]"></app-loading-skeleton>
+    <p class="mt-3 text-muted">Loading device data...</p>
+  </div>
+}

@@ -1,0 +1,129 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Django: Debug Server",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/manage.py",
+      "args": ["runserver", "127.0.0.1:8000", "--noreload"],
+      "django": true,
+      "cwd": "${workspaceFolder}/backend",
+      "env": {
+        "DJANGO_SETTINGS_MODULE": "config.settings.dev",
+        "PYTHONPATH": "${workspaceFolder}/backend"
+      },
+      "console": "integratedTerminal",
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+    },
+    {
+      "name": "Realtime (WS): Debug Server",
+      "type": "python",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["main:app", "--host", "127.0.0.1", "--port", "8001"],
+      "cwd": "${workspaceFolder}/realtime",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/realtime"
+      },
+      "console": "integratedTerminal",
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+    },
+    {
+      "name": "Celery: Debug Worker",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/celery_worker.py",
+      "args": [
+        "-A", "config.celery_app",
+        "worker",
+        "--loglevel=info",
+        "-Q", "critical,default,reporting",
+        "--concurrency=1",
+        "--pool=solo"
+      ],
+      "cwd": "${workspaceFolder}/backend",
+      "env": {
+        "DJANGO_SETTINGS_MODULE": "config.settings.dev",
+        "PYTHONPATH": "${workspaceFolder}/backend"
+      },
+      "console": "integratedTerminal",
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+    },
+    {
+        "name": "Celery: Debug Beat",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/backend/celery_worker.py",
+        "args": [
+          "-A", "config.celery_app",
+          "beat",
+          "--loglevel=info"
+        ],
+        "cwd": "${workspaceFolder}/backend",
+        "env": {
+          "DJANGO_SETTINGS_MODULE": "config.settings.dev",
+          "PYTHONPATH": "${workspaceFolder}/backend"
+        },
+        "console": "integratedTerminal",
+        "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+      },
+    {
+      "name": "Agent: Debug Run",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/agent/agent.py",
+      "cwd": "${workspaceFolder}/agent",
+      "console": "integratedTerminal",
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe"
+    },
+    {
+      "name": "Angular: Debug Chrome",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:4200",
+      "webRoot": "${workspaceFolder}/frontend",
+      "preLaunchTask": "Angular: Wait for Serve"
+    },
+    {
+      "name": "Django: Migrate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cd '${workspaceFolder}\\backend'; $env:DJANGO_SETTINGS_MODULE='config.settings.dev'; d:\\PatchGaurd\\.venv\\Scripts\\python.exe manage.py migrate"
+    },
+    {
+      "name": "Django: Make Migrations",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cd '${workspaceFolder}\\backend'; $env:DJANGO_SETTINGS_MODULE='config.settings.dev'; d:\\PatchGaurd\\.venv\\Scripts\\python.exe manage.py makemigrations"
+    },
+    {
+        "name": "Docker: Build",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "cd '${workspaceFolder}'; docker compose build"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug: Full Platform (Django + Realtime + Worker + UI)",
+      "configurations": [
+        "Django: Debug Server",
+        "Realtime (WS): Debug Server",
+        "Celery: Debug Worker",
+        "Angular: Debug Chrome"
+      ]
+    },
+    {
+        "name": "Debug: Everything (Full Stack + Frontend + Agent)",
+        "configurations": [
+          "Django: Debug Server",
+          "Realtime (WS): Debug Server",
+          "Celery: Debug Worker",
+          "Celery: Debug Beat",
+          "Angular: Debug Chrome",
+          "Agent: Debug Run"
+        ]
+      }
+  ]
+}

@@ -32,10 +32,17 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'devices/groups',
+        loadComponent: () =>
+          import('./features/devices/group-list/group-list.component').then(
+            (m) => m.GroupListComponent,
+          ),
+      },
+      {
         path: 'devices/:id',
         loadComponent: () =>
-          import('./features/devices/devices-list/device-list.component').then(
-            (m) => m.DeviceListComponent,
+          import('./features/devices/device-full-detail/device-full-detail.component').then(
+            (m) => m.DeviceFullDetailComponent,
           ),
       },
       {

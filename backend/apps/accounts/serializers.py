@@ -5,6 +5,7 @@ from django.utils import timezone
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from datetime import timedelta
 import re
+from .models import AuditLog
 
 User = get_user_model()
 
@@ -83,3 +84,10 @@ class PasswordChangeSerializer(serializers.Serializer):
         if not user.check_password(value):
             raise ValidationError("Old password is not correct")
         return value
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+
+    class Meta:
+        model = AuditLog
+        fields = ['id', 'username', 'action', 'resource_type', 'resource_id', 'timestamp', 'ip_address']

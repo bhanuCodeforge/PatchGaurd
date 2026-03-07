@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status
+from common.logging import trace
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -110,6 +111,7 @@ class DeviceViewSet(viewsets.ModelViewSet):
         authentication_classes=_AGENT_AUTH,
         permission_classes=[IsAgentOrOperatorOrAbove],
     )
+    @trace
     def heartbeat(self, request, pk=None):
         from django.utils import timezone
         device = self.get_object()
@@ -139,6 +141,7 @@ class DeviceViewSet(viewsets.ModelViewSet):
         authentication_classes=_AGENT_AUTH,
         permission_classes=[IsAgentOrOperatorOrAbove],
     )
+    @trace
     def ingest_scan(self, request, pk=None):
         device = self.get_object()
         patches = request.data.get("patches", [])
@@ -160,6 +163,24 @@ class DeviceViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_202_ACCEPTED,
         )
+
+    @extend_schema(
+        summary="Ingest inventory info",
+        description="Persist detailed hardware and software inventory data from agent.",
+    )
+    @action(
+        detail=True, methods=["post"],
+        authentication_classes=_AGENT_AUTH,
+        permission_classes=[IsAgentOrOperatorOrAbove],
+    )
+    @trace
+    def ingest_inventory(self, request, pk=None):
+        device = self.get_object()
+        inventory = request.data.get("inventory", request.data)
+        if inventory:
+            device.inventory_data = inventory
+            device.save(update_fields=["inventory_data"])
+        return Response({"status": "inventory accepted", "device_id": str(device.id)})
 
     # ------------------------------------------------------------------ #
     # Operator actions — send commands to agent via Redis                 #
@@ -197,6 +218,25 @@ class DeviceViewSet(viewsets.ModelViewSet):
         )
         return Response(
             {"status": f"REBOOT command sent to '{device.hostname}'", "device_id": str(device.id)},
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+    @extend_schema(summary="Update agent config", description="Publish CONFIG_UPDATE command to agent.")
+    @action(detail=True, methods=["post"], permission_classes=[IsOperatorOrAbove])
+    def agent_config(self, request, pk=None):
+        device = self.get_object()
+        if device.status != Device.Status.ONLINE:
+            return Response(
+                {"error": f"Device '{device.hostname}' is {device.status}. Agent must be online to update config."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        from common.redis_pubsub import RedisPublisher
+        RedisPublisher.publish_agent_command(
+            str(device.id), "CONFIG_UPDATE",
+            {"config": request.data}
+        )
+        return Response(
+            {"status": "Configuration update command sent.", "device_id": str(device.id)},
             status=status.HTTP_202_ACCEPTED,
         )
 

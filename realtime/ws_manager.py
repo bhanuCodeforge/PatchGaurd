@@ -3,6 +3,7 @@ import json
 import logging
 from typing import Dict, List, Set
 from fastapi import WebSocket, WebSocketDisconnect
+from logging_utils import trace
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ class ConnectionManager:
         # Maps agent_id strings to their active websocket
         self.agent_connections: Dict[str, WebSocket] = {}
 
+    @trace
     async def connect_dashboard(self, websocket: WebSocket, user_id: str):
         await websocket.accept()
         if user_id not in self.dashboard_connections:
@@ -22,6 +24,7 @@ class ConnectionManager:
         self.dashboard_connections[user_id].append(websocket)
         logger.info(f"Dashboard User {user_id} connected.")
 
+    @trace
     async def connect_agent(self, websocket: WebSocket, agent_id: str):
         await websocket.accept()
         if agent_id in self.agent_connections:
@@ -85,6 +88,7 @@ class ConnectionManager:
             for socket in dead_sockets:
                 self.unsubscribe_from_deployment(socket, deployment_id)
 
+    @trace
     async def send_to_agent(self, agent_id: str, message: str) -> bool:
         if agent_id in self.agent_connections:
             try:

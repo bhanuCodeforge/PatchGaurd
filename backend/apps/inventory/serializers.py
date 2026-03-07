@@ -22,7 +22,7 @@ class DeviceGroupCreateSerializer(serializers.ModelSerializer):
 class DeviceListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Device
-        fields = ['id', 'hostname', 'ip_address', 'os_family', 'os_version', 'environment', 'status', 'tags', 'agent_version', 'last_seen']
+        fields = ['id', 'hostname', 'description', 'ip_address', 'os_family', 'os_version', 'environment', 'status', 'tags', 'agent_version', 'last_seen', 'compliance_rate']
 
 class DeviceDetailSerializer(serializers.ModelSerializer):
     groups = DeviceGroupSerializer(many=True, read_only=True)
@@ -60,7 +60,7 @@ class DeviceCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Device
-        fields = ['hostname', 'ip_address', 'os_family', 'os_version', 'mac_address', 'os_arch', 'environment', 'status', 'tags', 'agent_version']
+        fields = ['hostname', 'description', 'ip_address', 'os_family', 'os_version', 'mac_address', 'os_arch', 'environment', 'status', 'tags', 'agent_version']
 
     def create(self, validated_data):
         alphabet = string.ascii_letters + string.digits

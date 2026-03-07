@@ -1,15 +1,17 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { debounceTime, Subject } from 'rxjs';
+import { debounceTime, Subject, Subscription } from 'rxjs';
 import { DeviceService } from '../../../core/services/device.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge.component';
 import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
 import { DeviceDetailComponent } from '../devices-detail/device-detail.component';
+import { DeviceEditComponent } from '../device-edit/device-edit.component';
+import { WebsocketService } from '../../../core/services/websocket.service';
 
 @Component({
   selector: 'app-device-list',
@@ -23,13 +25,16 @@ import { DeviceDetailComponent } from '../devices-detail/device-detail.component
     LoadingSkeletonComponent,
     EmptyStateComponent,
     DeviceDetailComponent,
+    DeviceEditComponent,
   ],
   templateUrl: './device-list.component.html',
   styleUrl: './device-list.component.scss',
 })
-export class DeviceListComponent implements OnInit {
+export class DeviceListComponent implements OnInit, OnDestroy {
   private deviceSvc = inject(DeviceService);
   private ns = inject(NotificationService);
+  private ws = inject(WebsocketService);
+  private wsSub?: Subscription;
   Math = Math;
 
   loading = signal(true);
@@ -45,6 +50,7 @@ export class DeviceListComponent implements OnInit {
   sortDir = signal<Record<string, 'asc' | 'desc'>>({});
   selectedIds = signal<Set<string>>(new Set());
   selectedDevice = signal<any>(null);
+  editingDevice = signal<any>(null);
 
   // Add Device modal state
   showAddModal = signal(false);
@@ -121,6 +127,24 @@ export class DeviceListComponent implements OnInit {
       this.page.set(1);
       this.loadDevices();
     });
+
+    this.wsSub = this.ws.messages$.subscribe(msg => {
+      if (['status_change', 'agent_online', 'agent_offline'].includes(msg.event)) {
+        const { device_id, status } = msg.payload;
+        const newStatus = msg.event === 'agent_online' ? 'online' : (msg.event === 'agent_offline' ? 'offline' : status);
+        
+        this.devices.update(list => list.map(d => {
+          if (d.id === device_id) {
+            return { ...d, status: newStatus, last_seen: new Date().toISOString() };
+          }
+          return d;
+        }));
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.wsSub?.unsubscribe();
   }
 
   loadDevices() {
@@ -210,6 +234,20 @@ export class DeviceListComponent implements OnInit {
 
   openDetail(device: any) {
     this.selectedDevice.set(device);
+  }
+
+  handleEdit(device: any) {
+    this.editingDevice.set(device);
+  }
+
+  handleSaved(updated: any) {
+    this.devices.update(list => list.map(d => d.id === updated.id ? updated : d));
+    this.selectedDevice.set(updated);
+  }
+
+  handleDeleted(id: string) {
+    this.devices.update(list => list.filter(d => d.id !== id));
+    this.selectedIds.update(s => { const n = new Set(s); n.delete(id); return n; });
   }
 
   openAddModal() {

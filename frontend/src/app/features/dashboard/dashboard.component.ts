@@ -118,24 +118,33 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadDevices() {
-    this.deviceSvc.getDevices({ page_size: 50 }).subscribe({
+    this.deviceSvc.getDevices({ page_size: 10 }).subscribe({
       next: (r) => {
         this.recentDevices.set(r.results ?? []);
-        const devs = r.results ?? [];
-        const total = devs.length || 1;
-        const linux = devs.filter((d: any) => d.os_family?.toLowerCase().includes('linux')).length;
-        const win = devs.filter((d: any) => d.os_family?.toLowerCase().includes('windows')).length;
-        const mac = devs.filter((d: any) => d.os_family?.toLowerCase().includes('mac')).length;
-        this.osBars[0].count = linux;
-        this.osBars[0].pct = Math.round((linux / total) * 100);
-        this.osBars[1].count = win;
-        this.osBars[1].pct = Math.round((win / total) * 100);
-        this.osBars[2].count = mac;
-        this.osBars[2].pct = Math.round((mac / total) * 100);
         this.devicesLoading.set(false);
+        this.updateOsBreakdown();
       },
       error: () => this.devicesLoading.set(false),
     });
+  }
+
+  private updateOsBreakdown() {
+    const s = this.stats();
+    if (!s || !s.by_os) return;
+
+    const byOs = s.by_os;
+    const total = s.total_devices || 1;
+
+    const linux = byOs['linux'] || 0;
+    const win = byOs['windows'] || 0;
+    const mac = byOs['macos'] || 0;
+
+    this.osBars[0].count = linux;
+    this.osBars[0].pct = Math.round((linux / total) * 100);
+    this.osBars[1].count = win;
+    this.osBars[1].pct = Math.round((win / total) * 100);
+    this.osBars[2].count = mac;
+    this.osBars[2].pct = Math.round((mac / total) * 100);
   }
 
   private loadDeployments() {

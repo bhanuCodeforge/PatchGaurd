@@ -23,11 +23,24 @@ export interface Device {
   ip_address: string;
   mac_address: string;
   os_family: string;
+  os_name?: string;
   os_version: string;
   status: 'online' | 'offline' | 'decommissioned';
   environment: 'development' | 'staging' | 'production';
+  description?: string;
   tags: string[];
   last_seen: string;
+  os_arch?: string;
+  agent_version?: string;
+  groups?: any[];
+  metadata?: any;
+  compliance_rate?: number;
+  inventory_data?: {
+    apps?: any[];
+    network?: any[];
+    storage?: any[];
+    [key: string]: any;
+  };
 }
 
 export interface Patch {
@@ -37,10 +50,18 @@ export interface Patch {
   severity: 'low' | 'medium' | 'high' | 'critical';
   status: 'imported' | 'reviewed' | 'approved' | 'rejected' | 'superseded';
   vendor: string;
+  description?: string;
   applicable_os: string[];
   requires_reboot: boolean;
+  package_name?: string;
+  package_version?: string;
+  approved_by?: string;
+  approved_by_name?: string;
+  approved_at?: string;
+  status_notes?: string;
   released_at: string;
   affected_device_count?: number;
+  device_status_breakdown?: any;
 }
 
 export interface Deployment {

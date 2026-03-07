@@ -40,6 +40,35 @@
       </div>
 
       <div class="info-group">
+        <h6 class="info-heading">Performance (Global Metrics)</h6>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <span class="metric-label">CPU Usage</span>
+            <div class="d-flex align-items-center gap-2">
+              <div class="progress flex-grow-1" style="height: 4px; background: #374151;">
+                <div class="progress-bar" [style.width]="(device?.metadata?.cpu_usage || 0) + '%'"
+                  [class.bg-danger]="(device?.metadata?.cpu_usage || 0) > 90"
+                  [class.bg-warning]="(device?.metadata?.cpu_usage || 0) > 70 && (device?.metadata?.cpu_usage || 0) <= 90"
+                  [class.bg-success]="(device?.metadata?.cpu_usage || 0) <= 70"></div>
+              </div>
+              <span class="small font-monospace">{{ device?.metadata?.cpu_usage || 0 }}%</span>
+            </div>
+          </div>
+          <div class="metric-item mt-2">
+            <span class="metric-label">RAM Usage</span>
+            <div class="d-flex align-items-center gap-2">
+              <div class="progress flex-grow-1" style="height: 4px; background: #374151;">
+                <div class="progress-bar" [style.width]="(device?.metadata?.ram_usage || 0) + '%'"
+                  [class.bg-danger]="(device?.metadata?.ram_usage || 0) > 90"
+                  [class.bg-success]="(device?.metadata?.ram_usage || 0) <= 90"></div>
+              </div>
+              <span class="small font-monospace">{{ device?.metadata?.ram_usage || 0 }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-group">
         <h6 class="info-heading">Compliance</h6>
         <div class="compliance-bar-wrap">
           <div class="d-flex justify-content-between mb-1">
@@ -56,20 +85,20 @@
       </div>
     </div>
 
-    <div class="flyout-footer">
+    <div class="flyout-footer flex-wrap">
       <button class="btn btn-sm btn-outline-secondary" (click)="scan()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
         Scan Now
       </button>
       <button class="btn btn-sm btn-outline-warning" (click)="reboot()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-          <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-        </svg>
         Reboot
       </button>
-      <button class="btn btn-sm btn-primary" [routerLink]="['/devices', device?.id]">View Full Details →</button>
+      <button class="btn btn-sm btn-outline-primary" (click)="edit.emit(device)">
+        Edit
+      </button>
+      <button class="btn btn-sm btn-outline-danger" (click)="delete()">
+        Delete
+      </button>
+      <button class="btn btn-sm btn-primary ms-auto" [routerLink]="['/devices', device?.id]" (click)="close.emit()">View Full Details →</button>
     </div>
   </div>
 </div>

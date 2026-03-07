@@ -234,5 +234,36 @@ class ComplianceReportView(APIView):
     permission_classes = [ReadOnlyForViewers]
     @extend_schema(summary="Compliance Report", description="Detailed compliance report generation.")
     def get(self, request):
-        # A full implementation would query caching layer / snapshot tables
-        return Response({"status": "Report rendering enabled", "data": []})
+        from apps.inventory.models import Device
+        from apps.patches.models import Patch, DevicePatchStatus
+        from django.db.models import Count, Q, Avg
+        
+        total_devices = Device.objects.count()
+        if total_devices == 0:
+            return Response({"overall": 100, "compliant_devices": 0, "non_compliant_devices": 0, "total_devices": 0})
+            
+        # Overall Compliance Rate (Average of all device rates)
+        overall = Device.objects.aggregate(avg=Avg('compliance_rate'))['avg'] or 0.0
+        
+        # Compliant Devices (Rate >= 90%)
+        compliant_devices = Device.objects.filter(compliance_rate__gte=90).count()
+        non_compliant_devices = total_devices - compliant_devices
+        
+        # Severity breakdown of MISSING patches
+        missing_by_sev = DevicePatchStatus.objects.filter(
+            state=DevicePatchStatus.State.MISSING
+        ).values('patch__severity').annotate(count=Count('id'))
+        
+        sev_counts = {row['patch__severity']: row['count'] for row in missing_by_sev}
+        total_missing = sum(sev_counts.values()) or 1
+        
+        return Response({
+            "overall": round(overall, 1),
+            "compliant_devices": compliant_devices,
+            "non_compliant_devices": non_compliant_devices,
+            "total_devices": total_devices,
+            "critical_pct": round((sev_counts.get('critical', 0) / total_missing * 100), 1),
+            "high_pct": round((sev_counts.get('high', 0) / total_missing * 100), 1),
+            "medium_pct": round((sev_counts.get('medium', 0) / total_missing * 100), 1),
+            "low_pct": round((sev_counts.get('low', 0) / total_missing * 100), 1),
+        })

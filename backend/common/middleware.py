@@ -52,7 +52,28 @@ class AuditLogMiddleware(MiddlewareMixin):
             return response
 
         action = f"{request.method} {request.path}"
-        resource_type = request.path.strip("/").split("/")[2] if len(request.path.split("/")) > 2 else "unknown"
+        # Detect resource type and ID from path more robustly
+        path_parts = request.path.strip("/").split("/")
+        
+        if "api" in path_parts and "v1" in path_parts:
+            # Pattern: /api/v1/resource/id/
+            v1_idx = path_parts.index("v1")
+            resource_type = path_parts[v1_idx + 1] if len(path_parts) > v1_idx + 1 else "unknown"
+            potential_id = path_parts[v1_idx + 2] if len(path_parts) > v1_idx + 2 else None
+        else:
+            # Non-API path (e.g., /admin/login/)
+            resource_type = path_parts[0] if path_parts else "unknown"
+            potential_id = path_parts[1] if len(path_parts) > 1 else None
+
+        # Validate UUID if present
+        resource_id = None
+        if potential_id:
+            import uuid
+            try:
+                resource_id = uuid.UUID(potential_id)
+            except ValueError:
+                resource_id = None
+
         ip_address = get_client_ip(request)
         
         audit_entry = {
@@ -66,14 +87,26 @@ class AuditLogMiddleware(MiddlewareMixin):
             "ip_address": ip_address,
         }
         
-        # Log it for Phase 1. Task 1.5 explicitly states we use bulk_create if multiple queued.
-        # This will be fully activated when the AuditLog model is created in Phase 2.
+        from apps.accounts.models import AuditLog, User
+        
+        # Only assign user if it's a real User instance (not AgentPrincipal)
+        audit_user = request.user if isinstance(request.user, User) else None
+        
+        # If it's an agent, add that info to details
+        if not audit_user:
+            audit_entry["details"]["agent_principal"] = str(request.user)
+
+        # Log it for Phase 1.
         logger.info("audit_log", **audit_entry)
         
-        # Placeholder for DB bulk_create logic
-        self._audit_queue.append(audit_entry)
-        if len(self._audit_queue) > 10:
-            # AuditLog.objects.bulk_create([AuditLog(**data) for data in self._audit_queue])
-            self._audit_queue.clear()
+        # Activated DB persistence for Phase 2 implementation.
+        AuditLog.objects.create(
+            user=audit_user,
+            action=action,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            ip_address=ip_address,
+            details=audit_entry["details"]
+        )
             
         return response

@@ -1,25 +1,22 @@
-#!/usr/bin/env bash
-# Generate self-signed certificates for dev/testing.
-# To be replaced with real CA-signed certificates in true production.
-
+#!/bin/bash
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SSL_DIR="${SCRIPT_DIR}/../nginx/ssl"
+# Generate self-signed SSL certificates for PatchGuard on-premises deployment
 
-echo "Creating SSL directory at ${SSL_DIR}..."
-mkdir -p "${SSL_DIR}"
+CERT_DIR="./nginx/ssl"
+mkdir -p "$CERT_DIR"
 
-echo "Generating generic self-signed certificate..."
+if [ -f "$CERT_DIR/patchguard.key" ]; then
+    echo "Certificates already exist. Skipping generation."
+    exit 0
+fi
 
+echo "Generating self-signed SSL certificates..."
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout "${SSL_DIR}/key.pem" \
-    -out "${SSL_DIR}/cert.pem" \
-    -subj "/C=US/ST=State/L=City/O=PatchGuard/OU=IT/CN=patchmgr.internal.corp"
+    -keyout "$CERT_DIR/patchguard.key" \
+    -out "$CERT_DIR/patchguard.crt" \
+    -subj "/C=US/ST=State/L=City/O=PatchGuard/OU=IT/CN=patchguard.local"
 
-# Set permissions so docker/nginx process can read
-chmod 644 "${SSL_DIR}/cert.pem"
-chmod 640 "${SSL_DIR}/key.pem"
-
-echo "Certificate generated successfully."
-ls -l "${SSL_DIR}"
+echo "Certificates generated in $CERT_DIR"
+chmod 600 "$CERT_DIR/patchguard.key"
+chmod 644 "$CERT_DIR/patchguard.crt"

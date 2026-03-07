@@ -17,6 +17,11 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SESSION_COOKIE_SAMESITE = "Lax"
 
+# Security Headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+
 # Force JSON logging for prod
 LOGGING["loggers"]["patchguard"]["handlers"] = ["file", "console"]
 LOGGING["loggers"]["django"]["handlers"] = ["console"]

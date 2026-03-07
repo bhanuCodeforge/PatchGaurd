@@ -236,6 +236,18 @@ CELERY_TASK_QUEUES = {
     "reporting": {"exchange": "reporting", "routing_key": "reporting"},
 }
 
+# Periodic Tasks
+CELERY_BEAT_SCHEDULE = {
+    "mark_stale_devices_every_min": {
+        "task": "apps.inventory.tasks.mark_stale_devices",
+        "schedule": timedelta(seconds=60),
+    },
+    "refresh_compliance_every_15min": {
+        "task": "apps.inventory.tasks.refresh_all_device_compliance",
+        "schedule": timedelta(minutes=15),
+    },
+}
+
 # Logging Structure
 import structlog
 _log_dir = os.getenv("LOG_DIR", "/var/log/patchmgr")
@@ -278,7 +290,7 @@ LOGGING = {
         },
         "patchguard": {
             "handlers": ["console", "file"] if os.getenv("DJANGO_ENV") == "prod" else ["console"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "level": os.getenv("BACKEND_LOG_LEVEL", os.getenv("DJANGO_LOG_LEVEL", "INFO")),
         },
     },
 }

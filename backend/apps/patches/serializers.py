@@ -18,10 +18,19 @@ class PatchDetailSerializer(serializers.ModelSerializer):
     
     # In a full model, superseded_by is the reverse relation name. If standard reverse foreign key:
     superseded_by_names = serializers.SerializerMethodField()
+    approved_by_name = serializers.CharField(source='approved_by.full_name', read_only=True, default='')
 
     class Meta:
         model = Patch
-        fields = '__all__'
+        fields = [
+            'id', 'vendor_id', 'title', 'description', 'severity', 'status',
+            'vendor', 'kb_article', 'cve_ids', 'applicable_os', 
+            'package_name', 'package_version', 'file_url', 'requires_reboot',
+            'approved_by', 'approved_by_name', 'approved_at', 'status_notes',
+            'released_at', 'created_at', 'updated_at',
+            'affected_device_count', 'device_status_breakdown',
+            'supersedes_name', 'superseded_by_names'
+        ]
 
     def get_affected_device_count(self, obj):
         return DevicePatchStatus.objects.filter(patch=obj, state=DevicePatchStatus.State.MISSING).count()

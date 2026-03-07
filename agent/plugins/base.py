@@ -21,6 +21,11 @@ class OSPlugin(ABC):
         pass
 
     @abstractmethod
+    def get_inventory(self) -> Dict[str, Any]:
+        """Collect detailed hardware and software inventory."""
+        pass
+
+    @abstractmethod
     def reboot(self) -> bool:
         """Trigger a system reboot."""
         pass

@@ -26,6 +26,7 @@ class PatchStateMachine:
 
         old_status = patch.status
         patch.status = new_status
+        patch.status_notes = reason or ""
         
         if new_status == Patch.Status.APPROVED:
             patch.approved_by = user

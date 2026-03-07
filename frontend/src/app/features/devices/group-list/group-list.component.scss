@@ -1,0 +1,43 @@
+@import "../../../../styles.scss";
+
+.group-card {
+  transition: all 0.2s ease;
+  cursor: default;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+  border-radius: 12px;
+  
+  &:hover {
+    transform: translateY(-4px);
+    border-color: rgba(var(--primary-rgb), 0.3) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  }
+}
+
+.group-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(var(--primary-rgb), 0.1);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 1.5rem;
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
+}
+
+.modal-content {
+  border-radius: 16px;
+  box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  background: #111;
+}
+
+.btn-xs {
+  padding: 0.15rem 0.3rem;
+  font-size: 0.75rem;
+}
+
+.modal-backdrop {
+  background-color: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+}

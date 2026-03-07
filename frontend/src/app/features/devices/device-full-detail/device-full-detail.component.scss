@@ -1,0 +1,187 @@
+.stat-card {
+  background: #1f2937;
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+  }
+}
+
+.device-avatar {
+  width: 48px;
+  height: 48px;
+  background: #374151;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(156, 163, 175, 0.1);
+  &:last-child { border-bottom: none; }
+  .key { color: #9ca3af; font-size: 0.85rem; }
+  .val { color: #f3f4f6; font-weight: 500; font-size: 0.85rem; font-family: 'Inter', sans-serif; }
+}
+
+.device-tag {
+  background: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.group-tag {
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.severity-pill, .status-pill {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.btn-xs {
+  padding: 0.15rem 0.4rem;
+  font-size: 0.7rem;
+}
+
+.inventory-nav-link {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  width: 100%;
+  text-align: left;
+  
+  &:hover {
+    color: #f3f4f6;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  
+  &.active {
+    color: #60a5fa;
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.2);
+    font-weight: 600;
+  }
+}
+
+.detail-group {
+  label {
+    display: block;
+    font-size: 0.7rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+  }
+  .detail-value {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #f3f4f6;
+  }
+}
+
+.search-box {
+  position: relative;
+  i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+  }
+  input {
+    padding-left: 30px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    width: 200px;
+    &:focus {
+      width: 280px;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    transition: width 0.3s ease;
+  }
+}
+
+.app-list-container {
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.app-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.network-card {
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba(59, 130, 246, 0.4) !important;
+  }
+}
+
+.transparent-stat {
+  background: transparent;
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1.5rem !important;
+  border-radius: 12px;
+}
+
+.smallest {
+  font-size: 0.7rem;
+}
+
+.letter-spacing-1 {
+  letter-spacing: 0.1em;
+}
+
+.custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
