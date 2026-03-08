@@ -10,6 +10,7 @@
     "DEVICES": "Devices",
     "PATCHES": "Patches",
     "DEPLOYMENTS": "Deployments",
+    "GROUPS": "Groups",
     "REPORTS": "Reports",
     "COMPLIANCE": "Compliance",
     "AUDIT_LOG": "Audit log",

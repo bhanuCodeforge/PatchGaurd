@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -60,11 +60,20 @@ export class DeviceFullDetailComponent implements OnInit {
   patches = signal<any[]>([]);
   deployments = signal<any[]>([]);
   isEditing = signal(false);
-  activeTab = signal('inventory');
-  inventoryTab = signal('system'); // system, software, hardware, network
+  activeTab = signal('patches');
+  inventoryTab = signal('system');
   appSearch = signal('');
   editData = { hostname: '', description: '' };
   configData = { log_level: 'info', heartbeat_interval: 60 };
+
+  patchCounts = computed(() => {
+    const ps = this.patches();
+    return {
+      installed: ps.filter(p => p.state === 'installed').length,
+      pending:   ps.filter(p => p.state === 'pending' || p.state === 'missing').length,
+      failed:    ps.filter(p => p.state === 'failed').length,
+    };
+  });
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');

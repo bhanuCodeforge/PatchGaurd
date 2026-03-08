@@ -5,14 +5,18 @@
     <div class="success-content">
       <div class="success-icon-wrap">
         <div class="success-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
         </div>
       </div>
-      
+
       <h2 class="success-title">Deployment scheduled</h2>
       <p class="success-text">
-        Your deployment of {{ form.patch_ids.length }} {{ criticalPatchCount() > 0 ? 'critical' : '' }} patches 
-        to {{ totalTargetDevices() | number }} devices has been scheduled for tonight at {{ form.maintenance_window || '02:00' }} UTC
+        Your deployment of {{ form.patch_ids.length }} {{ criticalPatchCount() > 0 ? 'critical' : '' }} patches
+        to {{ totalTargetDevices() | number }} devices has been scheduled for tonight at {{ form.maintenance_window ||
+        '02:00' }} UTC
         using the {{ form.strategy }} strategy.
       </p>
 
@@ -36,7 +40,9 @@
           <div class="step-node" [class.active]="step() === i" [class.done]="step() > i">
             <div class="node-dot">
               <ng-container *ngIf="step() > i">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               </ng-container>
               <ng-container *ngIf="step() <= i">{{ i + 1 }}</ng-container>
             </div>
@@ -63,25 +69,34 @@
 
         <div class="toolbar mb-3">
           <div class="search-box">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input [(ngModel)]="patchSearch" (ngModelChange)="filterPatches()" placeholder="Search patches by title or CVE ID..." />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input [(ngModel)]="patchSearch" (ngModelChange)="filterPatches()"
+              placeholder="Search patches by title or CVE ID..." />
           </div>
           <div class="filter-pills">
-            <button class="pill" [class.active]="patchSevFilter === ''" (click)="patchSevFilter=''; filterPatches()">All</button>
-            <button class="pill pill-critical" [class.active]="patchSevFilter === 'critical'" (click)="patchSevFilter='critical'; filterPatches()">Critical</button>
-            <button class="pill pill-high" [class.active]="patchSevFilter === 'high'" (click)="patchSevFilter='high'; filterPatches()">High</button>
-            <button class="pill pill-medium" [class.active]="patchSevFilter === 'medium'" (click)="patchSevFilter='medium'; filterPatches()">Medium</button>
+            <button class="pill" [class.active]="patchSevFilter === ''"
+              (click)="patchSevFilter=''; filterPatches()">All</button>
+            <button class="pill pill-critical" [class.active]="patchSevFilter === 'critical'"
+              (click)="patchSevFilter='critical'; filterPatches()">Critical</button>
+            <button class="pill pill-high" [class.active]="patchSevFilter === 'high'"
+              (click)="patchSevFilter='high'; filterPatches()">High</button>
+            <button class="pill pill-medium" [class.active]="patchSevFilter === 'medium'"
+              (click)="patchSevFilter='medium'; filterPatches()">Medium</button>
           </div>
         </div>
 
         <div class="item-list">
-          <div *ngFor="let p of filteredPatches()"
-               class="item-row"
-               [class.selected]="form.patch_ids.includes(p.id)"
-               (click)="togglePatch(p.id)">
+          <div *ngFor="let p of filteredPatches()" class="item-row" [class.selected]="form.patch_ids.includes(p.id)"
+            (click)="togglePatch(p.id)">
             <div class="row-check">
               <div class="checkbox" [class.checked]="form.patch_ids.includes(p.id)">
-                <svg *ngIf="form.patch_ids.includes(p.id)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg *ngIf="form.patch_ids.includes(p.id)" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="3.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               </div>
             </div>
             <div class="row-info">
@@ -106,13 +121,17 @@
         <h3 class="section-title mb-2">Select target groups</h3>
 
         <div class="search-box mb-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
           <input [(ngModel)]="groupSearch" (ngModelChange)="filterGroups()" placeholder="Search groups..." />
         </div>
 
         <div class="filter-pills mb-2">
           <button class="pill" [class.active]="groupTagFilter === 'all'" (click)="setGroupTag('all')">All</button>
-          <button *ngFor="let tag of groupEnvTags()" class="pill" [class.active]="groupTagFilter === tag" (click)="setGroupTag(tag)">{{ tag | titlecase }}</button>
+          <button *ngFor="let tag of groupEnvTags()" class="pill" [class.active]="groupTagFilter === tag"
+            (click)="setGroupTag(tag)">{{ tag | titlecase }}</button>
         </div>
 
         <div class="groups-meta mb-1">
@@ -121,19 +140,21 @@
         </div>
 
         <div class="item-list">
-          <div *ngFor="let g of filteredGroups()"
-               class="item-row group-row"
-               [class.selected]="form.target_group_ids.includes(g.id)"
-               (click)="toggleGroup(g.id)">
+          <div *ngFor="let g of filteredGroups()" class="item-row group-row"
+            [class.selected]="form.target_group_ids.includes(g.id)" (click)="toggleGroup(g.id)">
             <div class="row-check">
               <div class="checkbox" [class.checked]="form.target_group_ids.includes(g.id)">
-                <svg *ngIf="form.target_group_ids.includes(g.id)" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg *ngIf="form.target_group_ids.includes(g.id)" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="3.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               </div>
             </div>
             <div class="row-info">
               <div class="row-title">
                 {{ g.name }}
-                <span *ngIf="g.environment" class="env-badge" [class]="envClass(g.environment)">{{ g.environment | titlecase }}</span>
+                <span *ngIf="g.environment" class="env-badge" [class]="envClass(g.environment)">{{ g.environment |
+                  titlecase }}</span>
               </div>
               <div class="row-desc" *ngIf="g.description">{{ g.description }}</div>
             </div>
@@ -150,19 +171,34 @@
         <h3 class="section-title mb-3">Rollout strategy</h3>
 
         <div class="strategy-grid">
-          <div *ngFor="let s of strategies"
-               class="strategy-card"
-               [class.selected]="form.strategy === s.value"
-               (click)="form.strategy = s.value">
+          <div *ngFor="let s of strategies" class="strategy-card" [class.selected]="form.strategy === s.value"
+            (click)="form.strategy = s.value">
             <div class="strat-icon">
-              <svg *ngIf="s.value === 'immediate'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-              <svg *ngIf="s.value === 'canary'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-              <svg *ngIf="s.value === 'rolling'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              <svg *ngIf="s.value === 'immediate'" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+              <svg *ngIf="s.value === 'canary'" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+              </svg>
+              <svg *ngIf="s.value === 'rolling'" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
             </div>
             <h4 class="strat-label">{{ s.label }}</h4>
             <p class="strat-desc">{{ s.desc }}</p>
-            <ul class="strat-pros"><li *ngFor="let pro of s.pros">+ {{ pro }}</li></ul>
-            <ul class="strat-cons"><li *ngFor="let con of s.cons">- {{ con }}</li></ul>
+            <ul class="strat-pros">
+              <li *ngFor="let pro of s.pros">+ {{ pro }}</li>
+            </ul>
+            <ul class="strat-cons">
+              <li *ngFor="let con of s.cons">- {{ con }}</li>
+            </ul>
           </div>
         </div>
 
@@ -237,14 +273,25 @@
 
         <h3 class="section-title mb-4">Choose a strategy</h3>
         <div class="strategy-grid">
-          <div *ngFor="let s of strategies"
-               class="strategy-card"
-               [class.selected]="form.strategy === s.value"
-               (click)="form.strategy = s.value">
+          <div *ngFor="let s of strategies" class="strategy-card" [class.selected]="form.strategy === s.value"
+            (click)="form.strategy = s.value">
             <div class="strat-icon">
-              <svg *ngIf="s.value === 'immediate'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-              <svg *ngIf="s.value === 'canary'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-              <svg *ngIf="s.value === 'rolling'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              <svg *ngIf="s.value === 'immediate'" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+              <svg *ngIf="s.value === 'canary'" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+              </svg>
+              <svg *ngIf="s.value === 'rolling'" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
             </div>
             <h4 class="strat-label">{{ s.label }}</h4>
             <p class="strat-desc">{{ s.desc }}</p>
@@ -337,7 +384,7 @@
             <span class="req-star">*</span>
           </h4>
           <input type="text" class="name-input" [(ngModel)]="form.name"
-                 placeholder="e.g., Critical Security Rollout — April 2026" />
+            placeholder="e.g., Critical Security Rollout — April 2026" />
           <div class="field-hint" *ngIf="!form.name.trim()">Required to continue</div>
         </div>
 
@@ -346,15 +393,21 @@
           <h4 class="config-title">Options</h4>
           <div class="options-list">
             <div class="toggle-row" (click)="form.requires_reboot = !form.requires_reboot">
-              <div class="toggle-switch" [class.on]="form.requires_reboot"><div class="toggle-thumb"></div></div>
+              <div class="toggle-switch" [class.on]="form.requires_reboot">
+                <div class="toggle-thumb"></div>
+              </div>
               <span>Allow reboot after installation (if required by patch)</span>
             </div>
             <div class="toggle-row" (click)="form.pre_flight_check = !form.pre_flight_check">
-              <div class="toggle-switch" [class.on]="form.pre_flight_check"><div class="toggle-thumb"></div></div>
+              <div class="toggle-switch" [class.on]="form.pre_flight_check">
+                <div class="toggle-thumb"></div>
+              </div>
               <span>Run pre-flight health check before each wave</span>
             </div>
             <div class="toggle-row" (click)="form.rollback_on_failure = !form.rollback_on_failure">
-              <div class="toggle-switch" [class.on]="form.rollback_on_failure"><div class="toggle-thumb"></div></div>
+              <div class="toggle-switch" [class.on]="form.rollback_on_failure">
+                <div class="toggle-thumb"></div>
+              </div>
               <span>Auto-rollback on failure threshold breach</span>
             </div>
           </div>
@@ -399,7 +452,10 @@
           <!-- Patches card -->
           <div class="review-card">
             <div class="card-heading">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
               Patches ({{ form.patch_ids.length }})
             </div>
             <div *ngFor="let p of selectedPatches()" class="rp-row">
@@ -416,7 +472,11 @@
           <!-- Targets card -->
           <div class="review-card">
             <div class="card-heading">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
               Targets
             </div>
             <div *ngFor="let gid of form.target_group_ids" class="rt-row">
@@ -433,43 +493,65 @@
         <!-- Strategy & schedule -->
         <div class="review-card mt-3">
           <div class="card-heading">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
             Strategy and schedule
           </div>
           <div class="strat-review-grid">
-            <div class="sr-item"><span class="sr-key">Strategy</span><span class="sr-val">{{ getStrategyLabel(form.strategy) }}</span></div>
-            <div class="sr-item"><span class="sr-key">Wave delay</span><span class="sr-val">{{ form.wave_delay_seconds / 60 }} minutes</span></div>
-            <div class="sr-item" *ngIf="form.strategy === 'canary'"><span class="sr-key">Canary size</span><span class="sr-val">{{ canaryDeviceCount() }} devices ({{ form.canary_percentage }}%)</span></div>
-            <div class="sr-item"><span class="sr-key">Schedule</span><span class="sr-val">{{ form.maintenance_window || 'No maintenance window' }}</span></div>
-            <div class="sr-item" *ngIf="form.strategy !== 'immediate'"><span class="sr-key">Wave size</span><span class="sr-val">{{ form.wave_size }} devices</span></div>
-            <div class="sr-item"><span class="sr-key">Est. duration</span><span class="sr-val">~{{ estDurationHours() }} hours</span></div>
-            <div class="sr-item" *ngIf="form.strategy !== 'immediate'"><span class="sr-key">Total waves</span><span class="sr-val">{{ waveCount() }}</span></div>
-            <div class="sr-item"><span class="sr-key">Max failure rate</span><span class="sr-val danger">{{ form.max_failure_percentage }}% ({{ maxFailuresBeforeHalt() }} devices)</span></div>
+            <div class="sr-item"><span class="sr-key">Strategy</span><span class="sr-val">{{
+                getStrategyLabel(form.strategy) }}</span></div>
+            <div class="sr-item"><span class="sr-key">Wave delay</span><span class="sr-val">{{ form.wave_delay_seconds /
+                60 }} minutes</span></div>
+            <div class="sr-item" *ngIf="form.strategy === 'canary'"><span class="sr-key">Canary size</span><span
+                class="sr-val">{{ canaryDeviceCount() }} devices ({{ form.canary_percentage }}%)</span></div>
+            <div class="sr-item"><span class="sr-key">Schedule</span><span class="sr-val">{{ form.maintenance_window ||
+                'No maintenance window' }}</span></div>
+            <div class="sr-item" *ngIf="form.strategy !== 'immediate'"><span class="sr-key">Wave size</span><span
+                class="sr-val">{{ form.wave_size }} devices</span></div>
+            <div class="sr-item"><span class="sr-key">Est. duration</span><span class="sr-val">~{{ estDurationHours() }}
+                hours</span></div>
+            <div class="sr-item" *ngIf="form.strategy !== 'immediate'"><span class="sr-key">Total waves</span><span
+                class="sr-val">{{ waveCount() }}</span></div>
+            <div class="sr-item"><span class="sr-key">Max failure rate</span><span class="sr-val danger">{{
+                form.max_failure_percentage }}% ({{ maxFailuresBeforeHalt() }} devices)</span></div>
           </div>
         </div>
 
         <!-- Safety options -->
         <div class="review-card mt-3">
           <div class="card-heading">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
             Safety options
           </div>
           <div class="safety-list">
             <div class="safety-item" [class.on]="form.requires_reboot">
               <div class="safety-check" [class.checked]="form.requires_reboot">
-                <svg *ngIf="form.requires_reboot" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg *ngIf="form.requires_reboot" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="3.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               </div>
               Allow reboot after installation (if required by patch)
             </div>
             <div class="safety-item" [class.on]="form.pre_flight_check">
               <div class="safety-check" [class.checked]="form.pre_flight_check">
-                <svg *ngIf="form.pre_flight_check" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg *ngIf="form.pre_flight_check" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="3.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               </div>
               Run pre-flight health check before each wave
             </div>
             <div class="safety-item" [class.on]="form.rollback_on_failure">
               <div class="safety-check" [class.checked]="form.rollback_on_failure">
-                <svg *ngIf="form.rollback_on_failure" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg *ngIf="form.rollback_on_failure" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="3.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               </div>
               Auto-rollback on failure threshold breach
             </div>
@@ -479,17 +561,25 @@
         <!-- Confirmation banner -->
         <div class="confirm-banner mt-3">
           <div class="confirm-header">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
             Important: Review before deploying
           </div>
           <p class="confirm-text">
             This deployment will install {{ form.patch_ids.length }} patch{{ form.patch_ids.length !== 1 ? 'es' : '' }}
-            on {{ totalTargetDevices() | number }} devices<ng-container *ngIf="form.requires_reboot"> and trigger a reboot on affected servers</ng-container>.
+            on {{ totalTargetDevices() | number }} devices<ng-container *ngIf="form.requires_reboot"> and trigger a
+              reboot on affected servers</ng-container>.
             Ensure change management approval is in place and affected teams have been notified.
           </p>
           <div class="confirm-check-row" (click)="confirmed.set(!confirmed())">
             <div class="checkbox" [class.checked]="confirmed()">
-              <svg *ngIf="confirmed()" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg *ngIf="confirmed()" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="3.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
             </div>
             <span>I confirm I have reviewed this deployment and have change approval.</span>
           </div>
@@ -525,7 +615,8 @@
         <span class="dsum-key">Patches</span>
         <div class="dsum-rhs">
           <span class="dsum-val">{{ form.patch_ids.length }} patches</span>
-          <span class="sev-badge sev-critical sm" *ngIf="criticalPatchCount() > 0">{{ criticalPatchCount() }} critical</span>
+          <span class="sev-badge sev-critical sm" *ngIf="criticalPatchCount() > 0">{{ criticalPatchCount() }}
+            critical</span>
         </div>
       </div>
       <div *ngFor="let p of selectedPatches()" class="dsum-patch-row">
@@ -571,8 +662,13 @@
 
       <!-- Warning -->
       <div class="warn-box mt-3" *ngIf="form.requires_reboot && totalTargetDevices() > 0">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        This deployment will trigger a reboot on {{ totalTargetDevices() | number }} production devices. Ensure change approval is in place.
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        This deployment will trigger a reboot on {{ totalTargetDevices() | number }} production devices. Ensure change
+        approval is in place.
       </div>
       <div class="sb-empty" *ngIf="selectedGroups().length === 0">Select at least one target group to continue.</div>
     </div>
@@ -595,4 +691,3 @@
   </div>
 
 </div>
-
