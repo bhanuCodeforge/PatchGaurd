@@ -274,7 +274,7 @@
       </div>
       <div class="dd-inv-cell">
         <span class="dd-inv-lbl">Kernel</span>
-        <span class="dd-inv-val">{{ d.os_version || '—' }}</span>
+        <span class="dd-inv-val">{{ d.metadata?.uptime || '—' }} (uptime)</span>
       </div>
       <div class="dd-inv-cell">
         <span class="dd-inv-lbl">{{ 'UI.u_ip_address' | translate }}</span>

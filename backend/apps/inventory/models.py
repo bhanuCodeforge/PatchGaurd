@@ -83,6 +83,12 @@ class Device(models.Model):
     last_checkin_ip = models.GenericIPAddressField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    @property
+    def os_name(self):
+        # Human readable name if family/version combined. 
+        # For windows it's usually just "Windows" but we can expand this.
+        return self.get_os_family_display()
 
     objects = DeviceManager()
 
@@ -96,4 +102,4 @@ class Device(models.Model):
 
 
     def __str__(self):
-        return self.hostname
+        return f"{self.hostname} ({self.ip_address})"

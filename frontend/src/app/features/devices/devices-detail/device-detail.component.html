@@ -23,10 +23,10 @@
       <div class="info-group">
         <h6 class="info-heading">System Information</h6>
         <div class="info-grid">
-          <div class="info-row"><span class="key">OS Family</span><span class="val">{{ device?.os_family }}</span></div>
+          <div class="info-row"><span class="key">OS Family</span><span class="val">{{ device?.os_family | titlecase }}</span></div>
           <div class="info-row"><span class="key">OS Version</span><span class="val">{{ device?.os_version || 'N/A' }}</span></div>
-          <div class="info-row"><span class="key">Architecture</span><span class="val">{{ device?.architecture || 'x86_64' }}</span></div>
-          <div class="info-row"><span class="key">Environment</span><span class="val">{{ device?.environment }}</span></div>
+          <div class="info-row"><span class="key">Architecture</span><span class="val">{{ device?.os_arch || 'x86_64' }}</span></div>
+          <div class="info-row"><span class="key">Environment</span><span class="val">{{ device?.environment | titlecase }}</span></div>
           <div class="info-row"><span class="key">Agent Version</span><span class="val">{{ device?.agent_version || 'N/A' }}</span></div>
           <div class="info-row"><span class="key">Last Seen</span><span class="val">{{ device?.last_seen | relativeTime }}</span></div>
         </div>

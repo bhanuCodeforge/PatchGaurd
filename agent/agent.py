@@ -45,6 +45,7 @@ class PatchAgent:
         self.running = True
         self._connected = False
         self._rest_session: Optional[Any] = None  # aiohttp.ClientSession
+        self.version = "1.0.0"
 
     # ------------------------------------------------------------------ #
     # Config & initialisation                                              #
@@ -323,13 +324,16 @@ class PatchAgent:
                 "device_id": self.device_id,
                 "hostname": hostname,
                 "ip_address": ip_address,
+                "mac_address": str(uuid.UUID(int=uuid.getnode())),
                 "os_family": info.get("os_family", ""),
                 "os_name": info.get("os_name", ""),
                 "os_version": info.get("os_version", ""),
                 "architecture": info.get("architecture", ""),
-                "agent_version": "1.0.0",
-                "cpu_count": psutil.cpu_count(),
-                "total_ram": psutil.virtual_memory().total,
+                "agent_version": self.version,
+                "cpu_count": info.get("cpu_count", psutil.cpu_count()),
+                "total_ram": info.get("total_ram", psutil.virtual_memory().total),
+                "total_disk": info.get("total_disk", 0),
+                "uptime": info.get("uptime", ""),
                 "tags": self.config.get("tags", []),
             }
         })
@@ -416,7 +420,7 @@ class PatchAgent:
                             self._persist_config()
                             if "log_level" in new_cfg:
                                 self._set_log_level()
-                            self.ns.info("Config Updated", "Agent configuration updated from server.")
+                            logger.info("Agent configuration updated from server.")
                     else:
                         logger.warning(f"Unknown command: {command}")
                 except Exception as e:

@@ -22,7 +22,11 @@ class DeviceGroupCreateSerializer(serializers.ModelSerializer):
 class DeviceListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Device
-        fields = ['id', 'hostname', 'description', 'ip_address', 'os_family', 'os_version', 'environment', 'status', 'tags', 'agent_version', 'last_seen', 'compliance_rate']
+        fields = [
+            'id', 'hostname', 'description', 'ip_address', 'mac_address', 
+            'os_family', 'os_version', 'os_arch', 'environment', 'status', 
+            'tags', 'agent_version', 'last_seen', 'compliance_rate', 'metadata'
+        ]
 
 class DeviceDetailSerializer(serializers.ModelSerializer):
     groups = DeviceGroupSerializer(many=True, read_only=True)
@@ -31,7 +35,13 @@ class DeviceDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Device
-        exclude = ['agent_api_key']
+        fields = [
+            'id', 'hostname', 'description', 'ip_address', 'mac_address',
+            'os_family', 'os_version', 'os_arch', 'agent_version',
+            'environment', 'status', 'tags', 'groups', 'metadata',
+            'compliance_rate', 'inventory_data', 'last_seen', 'created_at',
+            'compliance_summary', 'patch_stats', 'os_name'
+        ]
 
     def get_compliance_summary(self, obj):
         from apps.patches.models import DevicePatchStatus

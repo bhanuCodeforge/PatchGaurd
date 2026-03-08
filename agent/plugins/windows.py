@@ -1,7 +1,8 @@
-﻿import os
+import os
 import subprocess
 import platform
 import shutil
+import socket
 from typing import List, Dict, Any
 from .base import OSPlugin
 from logging_utils import trace
@@ -22,6 +23,17 @@ class WindowsPlugin(OSPlugin):
         return ""
 
     def get_system_info(self) -> Dict[str, Any]:
+        import psutil
+        import time
+        
+        # Calculate uptime
+        boot_time = psutil.boot_time()
+        uptime_seconds = time.time() - boot_time
+        days = int(uptime_seconds // (24 * 3600))
+        hours = int((uptime_seconds % (24 * 3600)) // 3600)
+        minutes = int((uptime_seconds % 3600) // 60)
+        uptime_str = f"{days}d {hours}h {minutes}m" if days > 0 else f"{hours}h {minutes}m"
+
         return {
             "os_family": "windows",
             "os_name": "Windows",
@@ -29,6 +41,10 @@ class WindowsPlugin(OSPlugin):
             "architecture": platform.machine(),
             "kernel": platform.version(),
             "package_manager": "wusa",
+            "cpu_count": psutil.cpu_count(),
+            "total_ram": psutil.virtual_memory().total,
+            "total_disk": psutil.disk_usage('C:\\').total,
+            "uptime": uptime_str,
         }
 
     @trace
