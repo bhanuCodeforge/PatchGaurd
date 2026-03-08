@@ -88,10 +88,19 @@ async def websocket_agent(websocket: WebSocket, api_key: str = Query(...)):
                 env = MessageEnvelope.model_validate_json(data)
 
                 if env.event == "heartbeat":
+                    # 1. Broadcast to dashboards
                     await manager.broadcast_to_dashboard(json.dumps({
                         "event": "agent_heartbeat",
                         "payload": {**env.payload, "device_id": device_id}
                     }))
+                    # 2. Update last_seen in Django backend asynchronously
+                    asyncio.create_task(
+                        _post_to_backend(
+                            f"/devices/{device_id}/heartbeat/",
+                            env.payload,
+                            api_key,
+                        )
+                    )
 
                 elif env.event == "system_info":
                     await manager.broadcast_to_dashboard(json.dumps({

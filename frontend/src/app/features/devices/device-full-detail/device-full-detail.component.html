@@ -312,7 +312,7 @@
       <div class="dd-inv-grid">
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">{{ 'UI.u_hostname' | translate }}</span>
-          <span class="dd-inv-val text-primary">{{ d.hostname }}</span>
+          <span class="dd-inv-val text-primary-bright">{{ d.hostname }}</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">{{ 'UI.u_serial_number' | translate }}</span>
@@ -320,16 +320,16 @@
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">{{ 'UI.u_last_login_title' | translate }}</span>
-          <span class="dd-inv-val">
+          <div class="dd-inv-val">
             {{ d.inventory_data?.['last_login']?.DisplayName || '—' }}
             <small class="d-block text-muted" *ngIf="d.inventory_data?.['last_login']?.LastLogon">
               {{ d.inventory_data?.['last_login']?.LastLogon | date:'short' }}
             </small>
-          </span>
+          </div>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">{{ 'UI.u_os' | translate }}</span>
-          <span class="dd-inv-val">{{ d.os_name || d.os_family }}</span>
+          <span class="dd-inv-val">{{ d.os_name || d.os_family | titlecase }}</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">{{ 'UI.u_last_sync' | translate }}</span>
@@ -361,20 +361,6 @@
               {{ d.inventory_data?.['battery']?.power_plugged ? ('UI.u_plugged_in' | translate) : ('UI.u_on_battery' | translate) }}
             </span>
           </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section: Network -->
-    <div class="dd-inv-section">
-      <div class="dd-inv-section-title">{{ 'UI.u_network_interfaces' | translate }}</div>
-      <div class="dd-inv-grid">
-        <div class="dd-inv-cell" *ngFor="let net of d.inventory_data?.network">
-          <span class="dd-inv-lbl">{{ net.interface }}</span>
-          <div class="dd-inv-val">{{ net.ip }}</div>
-          <div class="small text-muted" *ngIf="net.is_wifi">
-            📶 WiFi: {{ net.ssid || 'Unknown' }} ({{ net.signal || '—' }})
-          </div>
         </div>
       </div>
     </div>

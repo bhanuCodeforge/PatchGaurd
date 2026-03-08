@@ -129,7 +129,8 @@ class DeviceViewSet(viewsets.ModelViewSet):
             # Update metadata json with all spec fields
             spec_fields = (
                 "cpu_usage", "ram_usage", "disk_usage", "agent_version",
-                "cpu_count", "total_ram", "total_disk", "uptime", "serial_number"
+                "cpu_count", "total_ram", "total_disk", "uptime", "serial_number",
+                "log_level", "heartbeat_interval"
             )
             for field in spec_fields:
                 if field in meta:
@@ -240,9 +241,18 @@ class DeviceViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_409_CONFLICT,
             )
         from common.redis_pubsub import RedisPublisher
+        config = request.data
+        
+        # Persist to DB first
+        existing = device.metadata or {}
+        if "log_level" in config: existing["log_level"] = config["log_level"]
+        if "heartbeat_interval" in config: existing["heartbeat_interval"] = config["heartbeat_interval"]
+        device.metadata = existing
+        device.save(update_fields=["metadata"])
+
         RedisPublisher.publish_agent_command(
             str(device.id), "CONFIG_UPDATE",
-            {"config": request.data}
+            {"config": config}
         )
         return Response(
             {"status": "Configuration update command sent.", "device_id": str(device.id)},

@@ -105,7 +105,7 @@ export class DeviceFullDetailComponent implements OnInit {
 
       if (msg.event === 'agent_heartbeat') {
         this.device.update((d) =>
-          d ? { ...d, metadata: { ...d.metadata, ...msg.payload } } : null,
+          d ? { ...d, last_seen: new Date().toISOString(), metadata: { ...d.metadata, ...msg.payload } } : null,
         );
       } else if (msg.event === 'agent_inventory_info') {
         this.device.update((d) => (d ? { ...d, inventory_data: msg.payload.inventory } : null));

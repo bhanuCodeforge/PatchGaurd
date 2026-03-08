@@ -170,28 +170,12 @@ class PatchAgent:
             logger.error(f"Auto-register error: {e}")
 
     def _persist_config(self):
-        """Write updated api_key + device_id_override back to config.yaml."""
+        """Standardised persistence for all config fields."""
         config_path = "config.yaml"
-        if not os.path.exists(config_path):
-            return
         try:
-            with open(config_path, "r") as f:
-                content = f.read()
-
-            import re
-            content = re.sub(
-                r'^(api_key:\s*).*$',
-                f'api_key: "{self.config["api_key"]}"',
-                content, flags=re.MULTILINE
-            )
-            content = re.sub(
-                r'^(device_id_override:\s*).*$',
-                f'device_id_override: "{self.config["device_id_override"]}"',
-                content, flags=re.MULTILINE
-            )
             with open(config_path, "w") as f:
-                f.write(content)
-            logger.info("config.yaml updated with new api_key and device_id_override.")
+                yaml.dump(self.config, f, default_flow_style=False)
+            logger.info("config.yaml successfully updated.")
         except Exception as e:
             logger.warning(f"Failed to persist config: {e}")
 
@@ -339,6 +323,9 @@ class PatchAgent:
                 "total_ram": info.get("total_ram", psutil.virtual_memory().total),
                 "total_disk": info.get("total_disk", 0),
                 "uptime": info.get("uptime", ""),
+                "serial_number": info.get("serial_number", "—"),
+                "log_level": self.config.get("log_level", "info"),
+                "heartbeat_interval": self.config.get("heartbeat_interval", 60),
                 "tags": self.config.get("tags", []),
             }
         })
@@ -377,6 +364,9 @@ class PatchAgent:
                         "total_ram": info.get("total_ram"),
                         "total_disk": info.get("total_disk"),
                         "uptime": info.get("uptime"),
+                        "serial_number": info.get("serial_number", "—"),
+                        "log_level": self.config.get("log_level", "info"),
+                        "heartbeat_interval": self.config.get("heartbeat_interval", 60),
                     }
                 })
             except Exception as e:
@@ -427,10 +417,16 @@ class PatchAgent:
                         new_cfg = payload.get("config", {})
                         if new_cfg:
                             logger.info(f"Applying remote config update: {new_cfg}")
+                            old_interval = self.config.get("heartbeat_interval", 60)
+                            
                             self.config.update(new_cfg)
                             self._persist_config()
+                            
                             if "log_level" in new_cfg:
                                 self._set_log_level()
+                            
+                            # If heartbeat interval changed, the loop will adapt on next sleep
+                            # as it reads from self.config each iteration
                             logger.info("Agent configuration updated from server.")
                     else:
                         logger.warning(f"Unknown command: {command}")
