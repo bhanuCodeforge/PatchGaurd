@@ -76,6 +76,9 @@ export interface Deployment {
   progress_percentage: number;
   failure_rate: number;
   created_at: string;
+  started_at?: string;
+  events?: any[];
+  wave_summary?: any[];
 }
 
 export interface DashboardStats {

@@ -1,52 +1,55 @@
-﻿<div class="wiz-page">
+<div class="wiz-page">
 
   <!-- ═══ SUCCESS STATE ════════════════════════════════════════════════════ -->
-  <div class="success-screen" *ngIf="confirmed()">
-    <div class="success-card">
+  <div class="success-screen" *ngIf="success()">
+    <div class="success-content">
       <div class="success-icon-wrap">
         <div class="success-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
       </div>
       
       <h2 class="success-title">Deployment scheduled</h2>
       <p class="success-text">
         Your deployment of {{ form.patch_ids.length }} {{ criticalPatchCount() > 0 ? 'critical' : '' }} patches 
-        to {{ totalTargetDevices() | number }} devices has been scheduled for {{ form.maintenance_window || 'today' }} 
+        to {{ totalTargetDevices() | number }} devices has been scheduled for tonight at {{ form.maintenance_window || '02:00' }} UTC
         using the {{ form.strategy }} strategy.
       </p>
 
       <div class="success-actions">
-        <button class="btn-success-view" (click)="viewDeployment()">View deployment</button>
-        <button class="btn-success-dash" (click)="cancel()">Back to dashboard</button>
+        <button class="btn-primary" (click)="viewDeployment()">View deployment</button>
+        <button class="btn-outline" (click)="cancel()">Back to dashboard</button>
       </div>
     </div>
   </div>
 
   <!-- ═══ HEADER (Hidden on success) ════════════════════════════════════════ -->
-  <div class="wiz-header" *ngIf="!confirmed()">
-    <span class="wiz-title">New deployment</span>
-
-    <div class="step-track">
-      <ng-container *ngFor="let s of steps; let i = index">
-        <div class="step-node" [class.active]="step() === i" [class.done]="step() > i">
-          <div class="node-dot">
-            <ng-container *ngIf="step() > i">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
-            </ng-container>
-            <ng-container *ngIf="step() <= i">{{ i + 1 }}</ng-container>
-          </div>
-          <span class="node-label">{{ s }}</span>
-        </div>
-        <div *ngIf="i < steps.length - 1" class="step-line" [class.done]="step() > i"></div>
-      </ng-container>
+  <div class="wiz-header" *ngIf="!success()">
+    <div class="header-top">
+      <span class="wiz-title">New deployment</span>
+      <span class="step-counter">Step {{ step() + 1 }} of {{ steps.length }}</span>
     </div>
 
-    <span class="step-counter">Step {{ step() + 1 }} of {{ steps.length }}</span>
+    <div class="step-track-wrapper">
+      <div class="step-track">
+        <ng-container *ngFor="let s of steps; let i = index">
+          <div class="step-node" [class.active]="step() === i" [class.done]="step() > i">
+            <div class="node-dot">
+              <ng-container *ngIf="step() > i">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </ng-container>
+              <ng-container *ngIf="step() <= i">{{ i + 1 }}</ng-container>
+            </div>
+            <span class="node-label">{{ s }}</span>
+          </div>
+          <div *ngIf="i < steps.length - 1" class="step-line" [class.done]="step() > i"></div>
+        </ng-container>
+      </div>
+    </div>
   </div>
 
   <!-- ═══ BODY (Hidden on success) ═══════════════════════════════════════════ -->
-  <div class="wiz-body" *ngIf="!confirmed()">
+  <div class="wiz-body" *ngIf="!success()">
 
     <!-- ─── LEFT: Main content ─────────────────────────────────────────── -->
     <div class="wiz-main" [class.full]="step() >= 2">
@@ -98,24 +101,26 @@
 
       <!-- ══ STEP 1: Targets ═══════════════════════════════════════════════ -->
       <ng-container *ngIf="step() === 1">
-        <h3 class="section-title mb-3">Device groups</h3>
+
+        <!-- ── Target groups ──────────────────────────────────────────── -->
+        <h3 class="section-title mb-2">Select target groups</h3>
 
         <div class="search-box mb-2">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input [(ngModel)]="groupSearch" (ngModelChange)="filterGroups()" placeholder="Search groups..." />
         </div>
 
-        <div class="filter-pills mb-3">
+        <div class="filter-pills mb-2">
           <button class="pill" [class.active]="groupTagFilter === 'all'" (click)="setGroupTag('all')">All</button>
           <button *ngFor="let tag of groupEnvTags()" class="pill" [class.active]="groupTagFilter === tag" (click)="setGroupTag(tag)">{{ tag | titlecase }}</button>
         </div>
 
-        <div class="groups-meta">
+        <div class="groups-meta mb-1">
           <span class="groups-count">{{ filteredGroups().length }} groups shown</span>
           <button class="select-all-link" (click)="selectAllShown()">Select all shown</button>
         </div>
 
-        <div class="item-list mt-2">
+        <div class="item-list">
           <div *ngFor="let g of filteredGroups()"
                class="item-row group-row"
                [class.selected]="form.target_group_ids.includes(g.id)"
@@ -139,6 +144,92 @@
           </div>
           <div *ngIf="filteredGroups().length === 0" class="empty-state">No groups found.</div>
         </div>
+
+        <!-- ── Rollout strategy ───────────────────────────────────────── -->
+        <div class="step-section-sep"></div>
+        <h3 class="section-title mb-3">Rollout strategy</h3>
+
+        <div class="strategy-grid">
+          <div *ngFor="let s of strategies"
+               class="strategy-card"
+               [class.selected]="form.strategy === s.value"
+               (click)="form.strategy = s.value">
+            <div class="strat-icon">
+              <svg *ngIf="s.value === 'immediate'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              <svg *ngIf="s.value === 'canary'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+              <svg *ngIf="s.value === 'rolling'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </div>
+            <h4 class="strat-label">{{ s.label }}</h4>
+            <p class="strat-desc">{{ s.desc }}</p>
+            <ul class="strat-pros"><li *ngFor="let pro of s.pros">+ {{ pro }}</li></ul>
+            <ul class="strat-cons"><li *ngFor="let con of s.cons">- {{ con }}</li></ul>
+          </div>
+        </div>
+
+        <!-- Quick params -->
+        <div class="param-grid" *ngIf="form.strategy !== 'immediate'">
+          <div class="param-card" *ngIf="form.strategy === 'canary'">
+            <div class="param-head">
+              <span class="param-label">Canary size</span>
+              <span class="param-val">{{ form.canary_percentage }}%</span>
+            </div>
+            <input type="range" class="slider" min="1" max="20" step="1" [(ngModel)]="form.canary_percentage" />
+            <div class="param-range"><span>1%</span><span>20%</span></div>
+            <div class="param-hint">{{ canaryDeviceCount() }} devices in canary</div>
+          </div>
+          <div class="param-card">
+            <div class="param-head">
+              <span class="param-label">Wave size</span>
+              <span class="param-val">{{ form.wave_size }} devices</span>
+            </div>
+            <input type="range" class="slider" min="10" max="200" step="5" [(ngModel)]="form.wave_size" />
+            <div class="param-range"><span>10</span><span>200</span></div>
+            <div class="param-hint">{{ waveCount() }} waves total</div>
+          </div>
+          <div class="param-card">
+            <div class="param-head">
+              <span class="param-label">Max failure rate</span>
+              <span class="param-val">{{ form.max_failure_percentage }}%</span>
+            </div>
+            <input type="range" class="slider" min="1" max="25" step="1" [(ngModel)]="form.max_failure_percentage" />
+            <div class="param-range"><span>1%</span><span>25%</span></div>
+            <div class="param-hint">Halt if exceeded</div>
+          </div>
+        </div>
+
+        <!-- Immediate: just failure rate -->
+        <div class="param-grid" *ngIf="form.strategy === 'immediate'">
+          <div class="param-card">
+            <div class="param-head">
+              <span class="param-label">Max failure rate</span>
+              <span class="param-val">{{ form.max_failure_percentage }}%</span>
+            </div>
+            <input type="range" class="slider" min="1" max="25" step="1" [(ngModel)]="form.max_failure_percentage" />
+            <div class="param-range"><span>1%</span><span>25%</span></div>
+            <div class="param-hint">Halt if exceeded</div>
+          </div>
+        </div>
+
+        <!-- Wave delay + Maintenance window -->
+        <div class="scheduling-row mt-3">
+          <div class="sched-field">
+            <label class="field-label">Wave delay</label>
+            <select class="field-select" [(ngModel)]="form.wave_delay_seconds">
+              <option [value]="300">5 minutes</option>
+              <option [value]="900">15 minutes</option>
+              <option [value]="1800">30 minutes</option>
+              <option [value]="3600">1 hour</option>
+              <option [value]="14400">4 hours</option>
+            </select>
+          </div>
+          <div class="sched-field">
+            <label class="field-label">Maintenance window</label>
+            <select class="field-select" [(ngModel)]="form.maintenance_window">
+              <option *ngFor="let w of maintenanceWindows" [value]="w.value">{{ w.label }}</option>
+            </select>
+          </div>
+        </div>
+
       </ng-container>
 
       <!-- ══ STEP 2: Strategy ══════════════════════════════════════════════ -->
@@ -427,27 +518,61 @@
     </div>
 
     <div class="wiz-sidebar" *ngIf="step() === 1">
-      <h4 class="sidebar-title">Selection summary</h4>
-      <div class="stat-cards">
-        <div class="stat-card">
-          <span class="sc-num">{{ form.target_group_ids.length }}</span>
-          <span class="sc-lbl">Groups</span>
-        </div>
-        <div class="stat-card">
-          <span class="sc-num">{{ totalTargetDevices() | number }}</span>
-          <span class="sc-lbl">Devices</span>
-        </div>
-      </div>
-      <div class="sidebar-section" *ngIf="selectedGroups().length > 0">
-        <div class="sb-sub">Selected groups</div>
-        <div *ngFor="let g of selectedGroups()" class="sb-item">
-          <span class="sb-name">{{ g.name }}</span>
-          <span class="sb-count">{{ g.device_count || 0 | number }}</span>
+      <h4 class="sidebar-title">Deployment summary</h4>
+
+      <!-- Patches -->
+      <div class="dsum-row">
+        <span class="dsum-key">Patches</span>
+        <div class="dsum-rhs">
+          <span class="dsum-val">{{ form.patch_ids.length }} patches</span>
+          <span class="sev-badge sev-critical sm" *ngIf="criticalPatchCount() > 0">{{ criticalPatchCount() }} critical</span>
         </div>
       </div>
-      <div class="warn-box" *ngIf="largeDeployment()">
+      <div *ngFor="let p of selectedPatches()" class="dsum-patch-row">
+        <span class="dsum-patch-id">{{ p.vendor_id || p.title }}</span>
+        <span class="sev-badge sm" [class]="sevClass(p.severity)">{{ p.severity }}</span>
+      </div>
+
+      <div class="dsum-sep"></div>
+
+      <!-- Target groups -->
+      <div class="dsum-row">
+        <span class="dsum-key">Target groups</span>
+        <span class="dsum-val">{{ form.target_group_ids.length }} groups</span>
+      </div>
+      <div class="dsum-row" *ngIf="totalTargetDevices() > 0">
+        <span class="dsum-key">Total devices</span>
+        <span class="dsum-val strong">{{ totalTargetDevices() | number }}</span>
+      </div>
+
+      <div class="dsum-sep"></div>
+
+      <!-- Strategy -->
+      <div class="dsum-row">
+        <span class="dsum-key">Strategy</span>
+        <span class="dsum-strat-badge">{{ getStrategyLabel(form.strategy) }}</span>
+      </div>
+      <div class="dsum-row" *ngIf="form.strategy === 'canary' && totalTargetDevices() > 0">
+        <span class="dsum-key">Canary size</span>
+        <span class="dsum-val">{{ canaryDeviceCount() }} devices ({{ form.canary_percentage }}%)</span>
+      </div>
+      <div class="dsum-row" *ngIf="form.maintenance_window">
+        <span class="dsum-key">Schedule</span>
+        <span class="dsum-val">{{ maintenanceWindowLabel() }}</span>
+      </div>
+      <div class="dsum-row" *ngIf="totalTargetDevices() > 0">
+        <span class="dsum-key">Est. duration</span>
+        <span class="dsum-val">~{{ estDurationHours() }} hours</span>
+      </div>
+      <div class="dsum-row">
+        <span class="dsum-key">Requires reboot</span>
+        <span class="dsum-val" [class.danger]="form.requires_reboot">{{ form.requires_reboot ? 'Yes' : 'No' }}</span>
+      </div>
+
+      <!-- Warning -->
+      <div class="warn-box mt-3" *ngIf="form.requires_reboot && totalTargetDevices() > 0">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Large deployment: {{ totalTargetDevices() | number }} devices. Consider using a canary strategy.
+        This deployment will trigger a reboot on {{ totalTargetDevices() | number }} production devices. Ensure change approval is in place.
       </div>
       <div class="sb-empty" *ngIf="selectedGroups().length === 0">Select at least one target group to continue.</div>
     </div>

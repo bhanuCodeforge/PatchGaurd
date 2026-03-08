@@ -27,7 +27,7 @@ db.sqlite3-journal
 *.pot
 *.mo
 
-# â”€â”€â”€ Node / Angular â”€â”€â”€
+# Node / Angular
 node_modules/
 frontend/dist/
 frontend/.angular/

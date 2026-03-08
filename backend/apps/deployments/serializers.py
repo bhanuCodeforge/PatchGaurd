@@ -17,6 +17,7 @@ class DeploymentListSerializer(serializers.ModelSerializer):
         ]
 
 class DeploymentDetailSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
     patches = PatchListSerializer(many=True, read_only=True)
     target_groups = DeviceGroupSerializer(many=True, read_only=True)
     progress_percentage = serializers.ReadOnlyField()
@@ -57,6 +58,7 @@ class DeploymentDetailSerializer(serializers.ModelSerializer):
         }
 
 class DeploymentCreateSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
     target_device_ids = serializers.ListField(
         child=serializers.UUIDField(), required=False, write_only=True,
         help_text="Direct device UUIDs (alternative to target_groups)."
@@ -65,7 +67,7 @@ class DeploymentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Deployment
         fields = [
-            'name', 'description', 'strategy', 'canary_percentage', 'wave_size', 
+            'id', 'name', 'description', 'strategy', 'canary_percentage', 'wave_size', 
             'wave_delay_minutes', 'max_failure_percentage', 'requires_reboot', 
             'maintenance_window_start', 'maintenance_window_end', 'scheduled_at',
             'patches', 'target_groups', 'target_device_ids'

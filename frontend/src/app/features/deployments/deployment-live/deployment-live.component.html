@@ -1,126 +1,189 @@
-﻿<div class="live-monitor-container" *ngIf="!loading() && deployment()">
-  <!-- Header -->
-  <div class="monitor-header">
-    <div>
-      <h2 class="monitor-title">{{ deployment().name }}</h2>
-      <div class="monitor-subtitle">
-        Started {{ deployment().started_at | relativeTime }} &middot; 
-        {{ deployment().strategy | uppercase }} rollout &middot; 
-        {{ stats().total }} target devices
+﻿<div class="lm-page" *ngIf="!loading() && deployment()">
+
+  <!-- ══ HEADER ═══════════════════════════════════════════════════════════ -->
+  <div class="lm-header">
+    <div class="lm-header-left">
+      <div class="lm-title-row">
+        <h2 class="lm-title">{{ deployment().name }}</h2>
+        <span class="live-badge" *ngIf="deployment().status === 'in_progress'">
+          <span class="live-dot"></span>Live
+        </span>
+        <span class="status-badge" [class]="'sbadge-' + deployment().status" *ngIf="deployment().status !== 'in_progress'">
+          {{ deployment().status | titlecase }}
+        </span>
+      </div>
+      <div class="lm-subtitle">
+        Started by {{ deployment().created_by || 'System' }} &mdash; Elapsed: {{ elapsed() }}
+      </div>
+      <div class="patch-tags">
+        <span *ngFor="let p of deployment().patches || []" class="patch-tag">
+          <span class="ptag-id">{{ p.vendor_id || p.title }}</span>
+          <span class="ptag-sev" [class]="'ptag-' + (p.severity || 'unknown')">{{ p.severity || 'patch' }}</span>
+        </span>
       </div>
     </div>
-    <div class="d-flex align-items-center gap-3">
-      <div class="status-indicator" [class]="'status-' + deployment().status">
-        {{ deployment().status }}
+    <div class="lm-header-actions">
+      <button *ngIf="deployment().status === 'in_progress'" class="hdr-btn hdr-btn-pause" (click)="pause()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        Pause
+      </button>
+      <button *ngIf="deployment().status === 'paused'" class="hdr-btn hdr-btn-resume" (click)="resume()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Resume
+      </button>
+      <button *ngIf="deployment().status !== 'completed' && deployment().status !== 'failed'" class="hdr-btn hdr-btn-cancel" (click)="cancel()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Cancel
+      </button>
+      <button *ngIf="deployment().status === 'completed' || deployment().status === 'failed'" class="hdr-btn hdr-btn-exit" routerLink="/deployments">
+        Back to list
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ PROGRESS SECTION ════════════════════════════════════════════════ -->
+  <div class="lm-progress-section">
+    <div class="lm-progress-header">
+      <span class="lm-progress-label">Overall progress</span>
+      <span class="lm-progress-pct" [class.danger-pct]="stats().failed > 0">{{ progressPct() }}%</span>
+    </div>
+    <div class="lm-progress-track">
+      <div class="lm-progress-fill" [style.width.%]="progressPct()">
+        <div class="lm-progress-fail-segment"
+             *ngIf="stats().failed > 0"
+             [style.width.%]="(stats().failed / stats().total) * 100"></div>
       </div>
-      <div class="d-flex gap-2">
-        <button *ngIf="deployment().status === 'in_progress'" class="btn btn-sm btn-outline-warning" (click)="pause()">Pause</button>
-        <button *ngIf="deployment().status === 'paused'" class="btn btn-sm btn-success" (click)="resume()">Resume</button>
-        <button *ngIf="deployment().status !== 'completed' && deployment().status !== 'failed'" class="btn btn-sm btn-outline-danger" (click)="cancel()">Stop</button>
-        <a routerLink="/deployments" class="btn btn-sm btn-outline-secondary">Exit</a>
+    </div>
+    <div class="lm-stats-row">
+      <div class="lm-stat">
+        <span class="lm-stat-val">{{ stats().total | number }}</span>
+        <span class="lm-stat-lbl">Total</span>
+      </div>
+      <div class="lm-stat-divider"></div>
+      <div class="lm-stat">
+        <span class="lm-stat-val success-val">{{ stats().success | number }}</span>
+        <span class="lm-stat-lbl">Completed</span>
+      </div>
+      <div class="lm-stat-divider"></div>
+      <div class="lm-stat">
+        <span class="lm-stat-val active-val">{{ stats().in_progress | number }}</span>
+        <span class="lm-stat-lbl">In progress</span>
+      </div>
+      <div class="lm-stat-divider"></div>
+      <div class="lm-stat">
+        <span class="lm-stat-val fail-val">{{ stats().failed | number }}</span>
+        <span class="lm-stat-lbl">Failed</span>
+      </div>
+      <div class="lm-stat-divider"></div>
+      <div class="lm-stat">
+        <span class="lm-stat-val">{{ stats().pending | number }}</span>
+        <span class="lm-stat-lbl">Queued</span>
+      </div>
+      <div class="lm-stat-divider"></div>
+      <div class="lm-stat">
+        <span class="lm-stat-val" [class.fail-val]="failureRate() > 0">{{ failureRate() }}%</span>
+        <span class="lm-stat-lbl">Failure rate</span>
       </div>
     </div>
   </div>
 
-  <div class="monitor-content">
-    <!-- Sidebar: Progress & Waves -->
-    <div class="sidebar-panel">
-      <div class="panel-title">Deployment Progress</div>
-      <div class="progress-card">
-        <div class="progress-val">{{ progressPct() }}%</div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar-fill" [style.width.%]="progressPct()"></div>
-        </div>
-        <div class="text-muted extra-small mt-3 d-flex justify-content-between">
-          <span>Success: {{ stats().success }}</span>
-          <span>Failed: {{ stats().failed }}</span>
-        </div>
-      </div>
+  <!-- ══ MIDDLE ROW ═══════════════════════════════════════════════════════ -->
+  <div class="lm-middle">
 
-      <div class="status-stats">
-        <div class="stat-box stat-success">
-          <div class="stat-label">Success</div>
-          <div class="stat-value">{{ stats().success }}</div>
-        </div>
-        <div class="stat-box stat-failed">
-          <div class="stat-label">Failed</div>
-          <div class="stat-value">{{ stats().failed }}</div>
-        </div>
-        <div class="stat-box stat-pending">
-          <div class="stat-label">In Progress</div>
-          <div class="stat-value">{{ stats().in_progress }}</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label">Queued</div>
-          <div class="stat-value">{{ stats().pending }}</div>
-        </div>
+    <!-- Wave progress -->
+    <div class="lm-panel lm-wave-panel">
+      <div class="lm-panel-header">
+        <span class="lm-panel-title">Wave progress</span>
+        <span class="lm-wave-active-badge" *ngIf="deployment().current_wave">
+          Wave {{ deployment().current_wave }} active
+        </span>
       </div>
-
-      <div class="panel-title mt-2">Rollout Waves</div>
-      <div class="wave-list">
-        <div *ngFor="let w of waves()" class="wave-item" [class.active]="deployment().current_wave === w.wave_number">
-          <div class="wave-header">
-            <span class="wave-name">Wave {{ w.wave_number }}</span>
-            <span class="wave-status">{{ w.completed }}/{{ w.total }} Done</span>
+      <div class="wave-scroll">
+        <div *ngFor="let w of waves()"
+             class="wave-row"
+             [class.wave-active]="deployment().current_wave === w.wave_number"
+             [class.wave-done]="w.completed === w.total && w.total > 0 && deployment().current_wave !== w.wave_number">
+          <div class="wave-row-top">
+            <div class="wave-row-label">
+              <span class="wave-name">{{ w.wave_number === 0 ? 'Canary' : 'Wave' }}</span>
+              <span class="wave-num" *ngIf="w.wave_number > 0">{{ w.wave_number }}</span>
+            </div>
+            <div class="wave-row-meta">
+              <span class="wave-count">{{ w.completed }}/{{ w.total }}</span>
+              <span class="wave-fail" *ngIf="w.failed > 0">{{ w.failed }} fail</span>
+            </div>
           </div>
-          <div class="progress-bar-wrap" style="height: 3px;">
-            <div class="progress-bar-fill" 
-                 [style.width.%]="(w.completed / w.total) * 100"
-                 [style.background]="w.failed > 0 ? '#ef4444' : '#10b981'"></div>
+          <div class="wave-bar-track">
+            <div class="wave-bar-fill"
+                 [style.width.%]="w.total > 0 ? (w.completed / w.total) * 100 : 0"
+                 [class.wave-bar-active]="deployment().current_wave === w.wave_number"
+                 [class.wave-bar-done]="w.completed === w.total && w.total > 0 && deployment().current_wave !== w.wave_number">
+            </div>
           </div>
+        </div>
+        <div *ngIf="waves().length === 0" class="wave-empty">
+          No wave data yet. Deployment is initializing...
         </div>
       </div>
     </div>
 
-    <!-- Main: Device Map -->
-    <div class="main-panel">
-      <div class="panel-title">Real-time Device Fleet Map</div>
-      <div class="device-map-wrap">
+    <!-- Device map -->
+    <div class="lm-panel lm-map-panel">
+      <div class="lm-panel-header">
+        <span class="lm-panel-title">Device map</span>
+        <span class="lm-map-scale">1 square = 1 device</span>
+      </div>
+      <div class="device-grid-wrap">
         <div class="device-grid">
-          <div *ngFor="let t of targets()" 
-               class="device-square" 
+          <div *ngFor="let t of targets()"
+               class="dev-sq"
                [style.background-color]="heatColor(t.status)"
-               [title]="t.device_hostname + ' (' + t.status + ')'">
+               [title]="(t.device_hostname || t.device || 'Device') + ' — ' + t.status">
           </div>
         </div>
-        <div class="mt-auto pt-3 d-flex gap-3 justify-content-center">
-          <div class="d-flex align-items-center gap-1 small">
-            <div class="device-square" style="background: #10b981"></div> <span class="text-muted">Success</span>
-          </div>
-          <div class="d-flex align-items-center gap-1 small">
-            <div class="device-square" style="background: #ef4444"></div> <span class="text-muted">Failed</span>
-          </div>
-          <div class="d-flex align-items-center gap-1 small">
-            <div class="device-square" style="background: #3b82f6"></div> <span class="text-muted">Active</span>
-          </div>
-          <div class="d-flex align-items-center gap-1 small">
-            <div class="device-square" style="background: #1e293b"></div> <span class="text-muted">Queued</span>
-          </div>
-        </div>
+      </div>
+      <div class="map-legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span>Patched</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>Installing</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>Failed</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#1e293b;border:1px solid #334155"></span>Queued</span>
       </div>
     </div>
 
-    <!-- Terminal: Event Log -->
-    <div class="sidebar-panel" style="padding: 0;">
-      <div class="panel-title px-4 pt-4">Live Execution Log</div>
-      <div class="terminal-wrap m-3">
-        <div class="terminal-log">
-          <div *ngFor="let ev of events()" class="log-entry" [class]="'level-' + ev.level">
-            <span class="log-ts">[{{ ev.ts | date:'HH:mm:ss' }}]</span>
-            <span class="log-msg">{{ ev.message }}</span>
-          </div>
-          <div *ngIf="events().length === 0" class="text-muted italic opacity-50 p-2">
-            Waiting for deployment events...
-          </div>
-        </div>
+  </div><!-- /lm-middle -->
+
+  <!-- ══ EVENT LOG ═══════════════════════════════════════════════════════ -->
+  <div class="lm-panel lm-log-panel">
+    <div class="lm-panel-header">
+      <span class="lm-panel-title">Live event log</span>
+      <span class="lm-event-count" *ngIf="events().length > 0">{{ events().length }} events</span>
+    </div>
+    <div class="event-log-list">
+      <div *ngFor="let ev of events()" class="event-row">
+        <span class="ev-ts">{{ ev.ts | date:'HH:mm:ss' }}</span>
+        <span class="ev-dot" [class]="'evdot-' + ev.level"></span>
+        <span class="ev-msg" [class]="'evmsg-' + ev.level">{{ ev.message }}</span>
+      </div>
+      <div *ngIf="events().length === 0" class="event-empty">
+        Waiting for deployment events...
       </div>
     </div>
+  </div>
+
+</div><!-- /lm-page -->
+
+<!-- ══ LOADING ══════════════════════════════════════════════════════════ -->
+<div *ngIf="loading()" class="lm-loading">
+  <div class="lm-loading-inner">
+    <div class="lm-spinner"></div>
+    <div class="lm-loading-text">Initializing live monitor...</div>
   </div>
 </div>
 
-<div *ngIf="loading()" class="d-flex align-items-center justify-content-center" style="height: 100vh; background: #0f172a;">
-  <div class="text-center">
-    <div class="spinner-border text-primary mb-3"></div>
-    <div class="text-muted small">Initializing live monitor...</div>
+<!-- ══ NO DATA ══════════════════════════════════════════════════════════ -->
+<div *ngIf="!loading() && !deployment()" class="lm-loading">
+  <div class="lm-loading-inner">
+    <div class="lm-loading-text">Deployment not found.</div>
+    <a routerLink="/deployments" class="hdr-btn hdr-btn-exit" style="margin-top:16px">Back to list</a>
   </div>
 </div>

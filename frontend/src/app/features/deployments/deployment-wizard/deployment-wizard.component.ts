@@ -1,4 +1,4 @@
-﻿import { Component, signal, inject, OnInit, computed } from '@angular/core';
+import { Component, signal, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -35,7 +35,7 @@ export class DeploymentWizardComponent implements OnInit {
     {
       value: 'immediate',
       label: 'Immediate',
-      desc: 'Deploy to all devices simultaneously. Fastest option but highest risk â€” no time to detect issues.',
+      desc: 'Deploy to all devices simultaneously. Fastest option but highest risk — no time to detect issues.',
       pros: ['Fastest completion time', 'Simple execution'],
       cons: ['No rollback window', 'All devices at risk'],
     },
@@ -56,9 +56,9 @@ export class DeploymentWizardComponent implements OnInit {
   ];
 
   maintenanceWindows = [
-    { label: 'Tonight 02:00â€“06:00 UTC', value: '02:00-06:00' },
-    { label: 'Tonight 22:00â€“02:00 UTC', value: '22:00-02:00' },
-    { label: 'This Weekend (Sat 00:00â€“06:00 UTC)', value: 'weekend' },
+    { label: 'Tonight 02:00–06:00 UTC', value: '02:00-06:00' },
+    { label: 'Tonight 22:00–02:00 UTC', value: '22:00-02:00' },
+    { label: 'This Weekend (Sat 00:00–06:00 UTC)', value: 'weekend' },
     { label: 'No maintenance window', value: '' },
   ];
 
@@ -89,28 +89,28 @@ export class DeploymentWizardComponent implements OnInit {
   groupSearch = '';
   groupTagFilter = 'all';
 
-  // â”€â”€ Computed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  //  Computed
 
   totalTargetDevices = computed(() =>
     this.allGroups()
-      .filter(g => this.form.target_group_ids.includes(g.id))
-      .reduce((a, g) => a + (g.device_count || 0), 0)
+      .filter((g) => this.form.target_group_ids.includes(g.id))
+      .reduce((a, g) => a + (g.device_count || 0), 0),
   );
 
   selectedGroups = computed(() =>
-    this.allGroups().filter(g => this.form.target_group_ids.includes(g.id))
+    this.allGroups().filter((g) => this.form.target_group_ids.includes(g.id)),
   );
 
   selectedPatches = computed(() =>
-    this.allPatches().filter(p => this.form.patch_ids.includes(p.id))
+    this.allPatches().filter((p) => this.form.patch_ids.includes(p.id)),
   );
 
-  criticalPatchCount = computed(() =>
-    this.selectedPatches().filter(p => p.severity === 'critical').length
+  criticalPatchCount = computed(
+    () => this.selectedPatches().filter((p) => p.severity === 'critical').length,
   );
 
   canaryDeviceCount = computed(() =>
-    Math.ceil(this.totalTargetDevices() * this.form.canary_percentage / 100)
+    Math.ceil((this.totalTargetDevices() * this.form.canary_percentage) / 100),
   );
 
   waveCount = computed(() => {
@@ -132,7 +132,7 @@ export class DeploymentWizardComponent implements OnInit {
   });
 
   maxFailuresBeforeHalt = computed(() =>
-    Math.ceil(this.totalTargetDevices() * this.form.max_failure_percentage / 100)
+    Math.ceil((this.totalTargetDevices() * this.form.max_failure_percentage) / 100),
   );
 
   waveTimeline = computed(() => {
@@ -147,13 +147,16 @@ export class DeploymentWizardComponent implements OnInit {
       let w = 1;
       while (rem > 0) {
         waves.push({ label: `Wave ${w}`, count: Math.min(rem, size) });
-        rem -= size; w++;
+        rem -= size;
+        w++;
       }
     } else if (this.form.strategy === 'rolling') {
-      let rem = total; let w = 1;
+      let rem = total;
+      let w = 1;
       while (rem > 0) {
         waves.push({ label: `Wave ${w}`, count: Math.min(rem, size) });
-        rem -= size; w++;
+        rem -= size;
+        w++;
       }
     } else {
       waves.push({ label: 'All devices', count: total });
@@ -168,12 +171,14 @@ export class DeploymentWizardComponent implements OnInit {
 
   groupEnvTags = computed(() => {
     const tags = new Set<string>();
-    this.allGroups().forEach(g => { if (g.environment) tags.add(g.environment); });
+    this.allGroups().forEach((g) => {
+      if (g.environment) tags.add(g.environment);
+    });
     return Array.from(tags);
   });
 
   hasRebootPatch = computed(() =>
-    this.selectedPatches().some(p => p.requires_reboot || p.reboot_required)
+    this.selectedPatches().some((p) => p.requires_reboot || p.reboot_required),
   );
 
   nextLabel = computed(() => {
@@ -182,10 +187,10 @@ export class DeploymentWizardComponent implements OnInit {
     return 'Continue';
   });
 
-  // â”€â”€ Lifecycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  //  Lifecycle
 
   ngOnInit() {
-    this.patchSvc.getPatches({ status: 'approved', page_size: 200 }).subscribe(r => {
+    this.patchSvc.getPatches({ status: 'approved', page_size: 200 }).subscribe((r) => {
       this.allPatches.set(r.results ?? []);
       this.filteredPatches.set(r.results ?? []);
     });
@@ -196,16 +201,19 @@ export class DeploymentWizardComponent implements OnInit {
     });
   }
 
-  // â”€â”€ Filter helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  //  Filter helpers
 
   filterPatches() {
     const s = this.patchSearch.toLowerCase();
     const sev = this.patchSevFilter;
     this.filteredPatches.set(
-      this.allPatches().filter(p =>
-        (!s || (p.title || '').toLowerCase().includes(s) || (p.vendor_id || '').toLowerCase().includes(s)) &&
-        (!sev || p.severity === sev)
-      )
+      this.allPatches().filter(
+        (p) =>
+          (!s ||
+            (p.title || '').toLowerCase().includes(s) ||
+            (p.vendor_id || '').toLowerCase().includes(s)) &&
+          (!sev || p.severity === sev),
+      ),
     );
   }
 
@@ -213,12 +221,14 @@ export class DeploymentWizardComponent implements OnInit {
     const s = this.groupSearch.toLowerCase();
     const tag = this.groupTagFilter;
     this.filteredGroups.set(
-      this.allGroups().filter(g => {
-        const matchSearch = !s || (g.name || '').toLowerCase().includes(s) ||
+      this.allGroups().filter((g) => {
+        const matchSearch =
+          !s ||
+          (g.name || '').toLowerCase().includes(s) ||
           (g.description || '').toLowerCase().includes(s);
         const matchTag = tag === 'all' || (g.environment || '').toLowerCase() === tag.toLowerCase();
         return matchSearch && matchTag;
-      })
+      }),
     );
   }
 
@@ -228,7 +238,7 @@ export class DeploymentWizardComponent implements OnInit {
   }
 
   selectAllShown() {
-    this.filteredGroups().forEach(g => {
+    this.filteredGroups().forEach((g) => {
       if (!this.form.target_group_ids.includes(g.id)) this.form.target_group_ids.push(g.id);
     });
   }
@@ -243,7 +253,7 @@ export class DeploymentWizardComponent implements OnInit {
     idx >= 0 ? this.form.target_group_ids.splice(idx, 1) : this.form.target_group_ids.push(id);
   }
 
-  // â”€â”€ Navigation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  //  Navigation
 
   canNext(): boolean {
     if (this.step() === 0) return this.form.patch_ids.length > 0;
@@ -253,29 +263,63 @@ export class DeploymentWizardComponent implements OnInit {
     return true;
   }
 
-  nextStep() { if (this.canNext()) this.step.update(s => s + 1); }
-  prevStep() { this.step.update(s => Math.max(0, s - 1)); }
-  cancel() { this.router.navigate(['/deployments']); }
-  viewDeployment() { if (this.createdDeploymentId()) this.router.navigate(['/deployments', this.createdDeploymentId()]); }
+  nextStep() {
+    if (this.canNext()) this.step.update((s) => s + 1);
+  }
+  prevStep() {
+    this.step.update((s) => Math.max(0, s - 1));
+  }
+  cancel() {
+    this.router.navigate(['/deployments']);
+  }
+  viewDeployment() {
+    if (this.createdDeploymentId())
+      this.router.navigate(['/deployments', this.createdDeploymentId()]);
+  }
 
-  // â”€â”€ Lookup helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  //  Lookup helpers
 
-  getPatchTitle(id: string) { return this.allPatches().find(p => p.id === id)?.title ?? id; }
-  getGroupName(id: string) { return this.allGroups().find(g => g.id === id)?.name ?? id; }
-  getStrategyLabel(v: string) { return this.strategies.find(s => s.value === v)?.label ?? v; }
-  getGroupDeviceCount(id: string) { return this.allGroups().find(g => g.id === id)?.device_count ?? 0; }
+  getPatchTitle(id: string) {
+    return this.allPatches().find((p) => p.id === id)?.title ?? id;
+  }
+  getGroupName(id: string) {
+    return this.allGroups().find((g) => g.id === id)?.name ?? id;
+  }
+  getStrategyLabel(v: string) {
+    return this.strategies.find((s) => s.value === v)?.label ?? v;
+  }
+  getGroupDeviceCount(id: string) {
+    return this.allGroups().find((g) => g.id === id)?.device_count ?? 0;
+  }
 
   sevClass(sev: string) {
-    return { critical: 'sev-critical', high: 'sev-high', medium: 'sev-medium', low: 'sev-low' }
-      [sev?.toLowerCase()] ?? 'sev-medium';
+    return (
+      { critical: 'sev-critical', high: 'sev-high', medium: 'sev-medium', low: 'sev-low' }[
+        sev?.toLowerCase()
+      ] ?? 'sev-medium'
+    );
   }
 
   envClass(env: string) {
-    return { production: 'env-prod', staging: 'env-staging', development: 'env-dev', mixed: 'env-mixed' }
-      [env?.toLowerCase()] ?? 'env-other';
+    return (
+      {
+        production: 'env-prod',
+        staging: 'env-staging',
+        development: 'env-dev',
+        mixed: 'env-mixed',
+      }[env?.toLowerCase()] ?? 'env-other'
+    );
   }
 
-  // â”€â”€ Submit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  maintenanceWindowLabel(): string {
+    return (
+      this.maintenanceWindows.find((w) => w.value === this.form.maintenance_window)?.label ??
+      this.form.maintenance_window ??
+      'No maintenance window'
+    );
+  }
+
+  //  Submit
 
   submit() {
     if (!this.confirmed()) return;
@@ -309,12 +353,11 @@ export class DeploymentWizardComponent implements OnInit {
         this.submitting.set(false);
       },
       error: (err: any) => {
-        const msg = err?.error?.detail || JSON.stringify(err?.error) || 'Failed to create deployment.';
+        const msg =
+          err?.error?.detail || JSON.stringify(err?.error) || 'Failed to create deployment.';
         this.ns.error('Error', msg);
         this.submitting.set(false);
       },
     });
   }
 }
-
-

@@ -37,6 +37,14 @@ class DeploymentViewSet(viewsets.ModelViewSet):
             return DeploymentCreateSerializer
         return DeploymentDetailSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        deployment = self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        read_serializer = DeploymentDetailSerializer(deployment, context=self.get_serializer_context())
+        return Response(read_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
     def perform_create(self, serializer):
         target_device_ids = serializer.validated_data.pop('target_device_ids', None)
         deployment = serializer.save(created_by=self.request.user)
@@ -52,6 +60,8 @@ class DeploymentViewSet(viewsets.ModelViewSet):
             for dev in devices:
                 dev.groups.add(group)
             deployment.target_groups.add(group)
+
+        return deployment
 
     @extend_schema(summary="Approve deployment")
     @action(detail=True, methods=["post"])
