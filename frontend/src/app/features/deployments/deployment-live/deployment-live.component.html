@@ -1,4 +1,4 @@
-﻿<div class="lm-page" *ngIf="!loading() && deployment()">
+<div class="lm-page" *ngIf="!loading() && deployment()">
 
   <!-- ══ HEADER ═══════════════════════════════════════════════════════════ -->
   <div class="lm-header">
@@ -6,7 +6,7 @@
       <div class="lm-title-row">
         <h2 class="lm-title">{{ deployment().name }}</h2>
         <span class="live-badge" *ngIf="deployment().status === 'in_progress'">
-          <span class="live-dot"></span>Live
+          <span class="live-dot"></span>{{ 'UI.u_live' | translate }}
         </span>
         <span class="status-badge" [class]="'sbadge-' + deployment().status" *ngIf="deployment().status !== 'in_progress'">
           {{ deployment().status | titlecase }}
@@ -25,7 +25,7 @@
     <div class="lm-header-actions">
       <button *ngIf="deployment().status === 'in_progress'" class="hdr-btn hdr-btn-pause" (click)="pause()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-        Pause
+        {{ 'UI.u_pause' | translate }}
       </button>
       <button *ngIf="deployment().status === 'paused'" class="hdr-btn hdr-btn-resume" (click)="resume()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -33,10 +33,10 @@
       </button>
       <button *ngIf="deployment().status !== 'completed' && deployment().status !== 'failed'" class="hdr-btn hdr-btn-cancel" (click)="cancel()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        Cancel
+        {{ 'UI.u_cancel' | translate }}
       </button>
       <button *ngIf="deployment().status === 'completed' || deployment().status === 'failed'" class="hdr-btn hdr-btn-exit" routerLink="/deployments">
-        Back to list
+        {{ 'UI.u_back' | translate }}
       </button>
     </div>
   </div>
@@ -44,7 +44,7 @@
   <!-- ══ PROGRESS SECTION ════════════════════════════════════════════════ -->
   <div class="lm-progress-section">
     <div class="lm-progress-header">
-      <span class="lm-progress-label">Overall progress</span>
+      <span class="lm-progress-label">{{ 'UI.u_overall_progress' | translate }}</span>
       <span class="lm-progress-pct" [class.danger-pct]="stats().failed > 0">{{ progressPct() }}%</span>
     </div>
     <div class="lm-progress-track">
@@ -57,32 +57,32 @@
     <div class="lm-stats-row">
       <div class="lm-stat">
         <span class="lm-stat-val">{{ stats().total | number }}</span>
-        <span class="lm-stat-lbl">Total</span>
+        <span class="lm-stat-lbl">{{ 'UI.u_all' | translate }}</span>
       </div>
       <div class="lm-stat-divider"></div>
       <div class="lm-stat">
         <span class="lm-stat-val success-val">{{ stats().success | number }}</span>
-        <span class="lm-stat-lbl">Completed</span>
+        <span class="lm-stat-lbl">{{ 'UI.u_completed' | translate }}</span>
       </div>
       <div class="lm-stat-divider"></div>
       <div class="lm-stat">
         <span class="lm-stat-val active-val">{{ stats().in_progress | number }}</span>
-        <span class="lm-stat-lbl">In progress</span>
+        <span class="lm-stat-lbl">{{ 'UI.u_in_progress' | translate }}</span>
       </div>
       <div class="lm-stat-divider"></div>
       <div class="lm-stat">
         <span class="lm-stat-val fail-val">{{ stats().failed | number }}</span>
-        <span class="lm-stat-lbl">Failed</span>
+        <span class="lm-stat-lbl">{{ 'UI.u_failed' | translate }}</span>
       </div>
       <div class="lm-stat-divider"></div>
       <div class="lm-stat">
         <span class="lm-stat-val">{{ stats().pending | number }}</span>
-        <span class="lm-stat-lbl">Queued</span>
+        <span class="lm-stat-lbl">{{ 'UI.u_queued' | translate }}</span>
       </div>
       <div class="lm-stat-divider"></div>
       <div class="lm-stat">
         <span class="lm-stat-val" [class.fail-val]="failureRate() > 0">{{ failureRate() }}%</span>
-        <span class="lm-stat-lbl">Failure rate</span>
+        <span class="lm-stat-lbl">{{ 'UI.u_max_failure' | translate }}</span>
       </div>
     </div>
   </div>
@@ -93,9 +93,9 @@
     <!-- Wave progress -->
     <div class="lm-panel lm-wave-panel">
       <div class="lm-panel-header">
-        <span class="lm-panel-title">Wave progress</span>
+        <span class="lm-panel-title">{{ 'UI.u_wave_progress' | translate }}</span>
         <span class="lm-wave-active-badge" *ngIf="deployment().current_wave">
-          Wave {{ deployment().current_wave }} active
+          {{ 'UI.u_wave_active_label' | translate:{num: deployment().current_wave} }}
         </span>
       </div>
       <div class="wave-scroll">
@@ -105,7 +105,7 @@
              [class.wave-done]="w.completed === w.total && w.total > 0 && deployment().current_wave !== w.wave_number">
           <div class="wave-row-top">
             <div class="wave-row-label">
-              <span class="wave-name">{{ w.wave_number === 0 ? 'Canary' : 'Wave' }}</span>
+              <span class="wave-name">{{ w.wave_number === 0 ? ('UI.u_canary_label' | translate) : ('UI.u_wave_label' | translate) }}</span>
               <span class="wave-num" *ngIf="w.wave_number > 0">{{ w.wave_number }}</span>
             </div>
             <div class="wave-row-meta">
@@ -122,7 +122,7 @@
           </div>
         </div>
         <div *ngIf="waves().length === 0" class="wave-empty">
-          No wave data yet. Deployment is initializing...
+          {{ 'UI.u_no_wave_data' | translate }}
         </div>
       </div>
     </div>
@@ -130,8 +130,8 @@
     <!-- Device map -->
     <div class="lm-panel lm-map-panel">
       <div class="lm-panel-header">
-        <span class="lm-panel-title">Device map</span>
-        <span class="lm-map-scale">1 square = 1 device</span>
+        <span class="lm-panel-title">{{ 'UI.u_device_map' | translate }}</span>
+        <span class="lm-map-scale">{{ 'UI.u_map_scale' | translate }}</span>
       </div>
       <div class="device-grid-wrap">
         <div class="device-grid">
@@ -143,10 +143,10 @@
         </div>
       </div>
       <div class="map-legend">
-        <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span>Patched</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>Installing</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>Failed</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#1e293b;border:1px solid #334155"></span>Queued</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span>{{ 'UI.u_patched' | translate }}</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>{{ 'UI.u_installing' | translate }}</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>{{ 'UI.u_failed' | translate }}</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#1e293b;border:1px solid #334155"></span>{{ 'UI.u_queued' | translate }}</span>
       </div>
     </div>
 
@@ -155,8 +155,8 @@
   <!-- ══ EVENT LOG ═══════════════════════════════════════════════════════ -->
   <div class="lm-panel lm-log-panel">
     <div class="lm-panel-header">
-      <span class="lm-panel-title">Live event log</span>
-      <span class="lm-event-count" *ngIf="events().length > 0">{{ events().length }} events</span>
+      <span class="lm-panel-title">{{ 'UI.u_event_log' | translate }}</span>
+      <span class="lm-event-count" *ngIf="events().length > 0">{{ 'UI.u_events_count' | translate:{count: events().length} }}</span>
     </div>
     <div class="event-log-list">
       <div *ngFor="let ev of events()" class="event-row">
@@ -165,7 +165,7 @@
         <span class="ev-msg" [class]="'evmsg-' + ev.level">{{ ev.message }}</span>
       </div>
       <div *ngIf="events().length === 0" class="event-empty">
-        Waiting for deployment events...
+        {{ 'UI.u_waiting_events' | translate }}
       </div>
     </div>
   </div>
@@ -176,14 +176,14 @@
 <div *ngIf="loading()" class="lm-loading">
   <div class="lm-loading-inner">
     <div class="lm-spinner"></div>
-    <div class="lm-loading-text">Initializing live monitor...</div>
+    <div class="lm-loading-text">{{ 'UI.u_initializing_monitor' | translate }}</div>
   </div>
 </div>
 
 <!-- ══ NO DATA ══════════════════════════════════════════════════════════ -->
 <div *ngIf="!loading() && !deployment()" class="lm-loading">
   <div class="lm-loading-inner">
-    <div class="lm-loading-text">Deployment not found.</div>
-    <a routerLink="/deployments" class="hdr-btn hdr-btn-exit" style="margin-top:16px">Back to list</a>
+    <div class="lm-loading-text">{{ 'UI.u_deployment_not_found' | translate }}</div>
+    <a routerLink="/deployments" class="hdr-btn hdr-btn-exit" style="margin-top:16px">{{ 'UI.u_back' | translate }}</a>
   </div>
 </div>

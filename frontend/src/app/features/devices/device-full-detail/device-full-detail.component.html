@@ -3,8 +3,10 @@
 
   <!-- ── Back link ─────────────────────────────────────────────────────── -->
   <a routerLink="/devices" class="dd-back">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-    Back to devices
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+    {{ 'UI.u_back_to_devices' | translate }}
   </a>
 
   <!-- ── Hero card ──────────────────────────────────────────────────────── -->
@@ -12,9 +14,18 @@
     <!-- Left: icon + name + sub -->
     <div class="dd-hero-left">
       <div class="dd-avatar">
-        <svg *ngIf="d.os_family === 'windows'" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.6L10.5 4.5v7H3V5.6zM11.5 4.35L21 3v8.5H11.5V4.35zM3 12.5h7.5V19.5L3 18.4V12.5zM11.5 12.5H21V21l-9.5-1.35V12.5z"/></svg>
-        <svg *ngIf="d.os_family === 'linux'" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-3L7 16l-1.5-1.5L9 11H7V9h5v5.5zM14.5 17h-1.75v-5.25L11 13l-1-1.5 2.75-2.75H14.5V17z"/></svg>
-        <svg *ngIf="d.os_family !== 'windows' && d.os_family !== 'linux'" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/></svg>
+        <svg *ngIf="d.os_family === 'windows'" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M3 5.6L10.5 4.5v7H3V5.6zM11.5 4.35L21 3v8.5H11.5V4.35zM3 12.5h7.5V19.5L3 18.4V12.5zM11.5 12.5H21V21l-9.5-1.35V12.5z" />
+        </svg>
+        <svg *ngIf="d.os_family === 'linux'" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-3L7 16l-1.5-1.5L9 11H7V9h5v5.5zM14.5 17h-1.75v-5.25L11 13l-1-1.5 2.75-2.75H14.5V17z" />
+        </svg>
+        <svg *ngIf="d.os_family !== 'windows' && d.os_family !== 'linux'" width="22" height="22" viewBox="0 0 24 24"
+          fill="currentColor">
+          <path d="M12 2a10 10 0 100 20A10 10 0 0012 2z" />
+        </svg>
       </div>
       <div>
         <div class="dd-hostname">{{ d.hostname }}</div>
@@ -28,16 +39,14 @@
       <span class="dd-status-lbl">{{ d.status | titlecase }}</span>
       <div class="dd-comp-bar-wrap">
         <div class="dd-comp-bar">
-          <div class="dd-comp-fill"
-               [style.width]="(d.compliance_rate || 0) + '%'"
-               [class.fill-green]="(d.compliance_rate || 0) >= 90"
-               [class.fill-orange]="(d.compliance_rate || 0) >= 60 && (d.compliance_rate || 0) < 90"
-               [class.fill-red]="(d.compliance_rate || 0) < 60"></div>
+          <div class="dd-comp-fill" [style.width]="(d.compliance_rate || 0) + '%'"
+            [class.fill-green]="(d.compliance_rate || 0) >= 90"
+            [class.fill-orange]="(d.compliance_rate || 0) >= 60 && (d.compliance_rate || 0) < 90"
+            [class.fill-red]="(d.compliance_rate || 0) < 60"></div>
         </div>
-        <span class="dd-comp-pct"
-              [class.text-green]="(d.compliance_rate || 0) >= 90"
-              [class.text-orange]="(d.compliance_rate || 0) >= 60 && (d.compliance_rate || 0) < 90"
-              [class.text-red]="(d.compliance_rate || 0) < 60">{{ d.compliance_rate || 0 }}%</span>
+        <span class="dd-comp-pct" [class.text-green]="(d.compliance_rate || 0) >= 90"
+          [class.text-orange]="(d.compliance_rate || 0) >= 60 && (d.compliance_rate || 0) < 90"
+          [class.text-red]="(d.compliance_rate || 0) < 60">{{ d.compliance_rate || 0 }}%</span>
       </div>
     </div>
   </div>
@@ -45,19 +54,19 @@
   <!-- ── Spec grid ──────────────────────────────────────────────────────── -->
   <div class="dd-spec-grid">
     <div class="dd-spec-cell">
-      <span class="dd-spec-lbl">OS</span>
+      <span class="dd-spec-lbl">{{ 'UI.u_os' | translate }}</span>
       <span class="dd-spec-val">{{ d.os_name || (d.os_family | titlecase) }}</span>
     </div>
     <div class="dd-spec-cell">
-      <span class="dd-spec-lbl">Architecture</span>
+      <span class="dd-spec-lbl">{{ 'UI.u_os_arch' | translate }}</span>
       <span class="dd-spec-val">{{ d.os_arch || 'x86_64' }}</span>
     </div>
     <div class="dd-spec-cell">
-      <span class="dd-spec-lbl">Environment</span>
+      <span class="dd-spec-lbl">{{ 'UI.u_environment' | translate }}</span>
       <span class="dd-spec-val">{{ d.environment }}</span>
     </div>
     <div class="dd-spec-cell">
-      <span class="dd-spec-lbl">Agent version</span>
+      <span class="dd-spec-lbl">{{ 'UI.u_agent_version' | translate }}</span>
       <span class="dd-spec-val">{{ d.agent_version || '—' }}</span>
     </div>
     <div class="dd-spec-cell">
@@ -66,14 +75,16 @@
     </div>
     <div class="dd-spec-cell">
       <span class="dd-spec-lbl">RAM</span>
-      <span class="dd-spec-val">{{ d.metadata?.total_ram ? ((d.metadata.total_ram / 1073741824) | number:'1.0-0') + ' GB' : '—' }}</span>
+      <span class="dd-spec-val">{{ d.metadata?.total_ram ? ((d.metadata.total_ram / 1073741824) | number:'1.0-0') + '
+        GB' : '—' }}</span>
     </div>
     <div class="dd-spec-cell">
       <span class="dd-spec-lbl">Disk</span>
-      <span class="dd-spec-val">{{ d.metadata?.total_disk ? ((d.metadata.total_disk / 1073741824) | number:'1.0-0') + ' GB' : '—' }}</span>
+      <span class="dd-spec-val">{{ d.metadata?.total_disk ? ((d.metadata.total_disk / 1073741824) | number:'1.0-0') + '
+        GB' : '—' }}</span>
     </div>
     <div class="dd-spec-cell">
-      <span class="dd-spec-lbl">Uptime</span>
+      <span class="dd-spec-lbl">{{ 'UI.u_uptime' | translate }}</span>
       <span class="dd-spec-val">{{ d.metadata?.uptime || '—' }}</span>
     </div>
   </div>
@@ -81,10 +92,10 @@
   <!-- ── Tags + Groups ──────────────────────────────────────────────────── -->
   <div class="dd-tags-row">
     @for (t of d.tags; track t) {
-      <span class="dd-tag">{{ t }}</span>
+    <span class="dd-tag">{{ t }}</span>
     }
     @for (g of d.groups; track g.id) {
-      <span class="dd-group-tag">{{ g.name }}</span>
+    <span class="dd-group-tag">{{ g.name }}</span>
     }
   </div>
 
@@ -94,54 +105,46 @@
     <!-- CPU -->
     <div class="dd-gauge-card">
       <div class="dd-gauge-header">
-        <span class="dd-gauge-lbl">CPU usage</span>
-        <span class="dd-gauge-pct"
-              [class.text-green]="(d.metadata?.cpu_usage || 0) <= 60"
-              [class.text-orange]="(d.metadata?.cpu_usage || 0) > 60 && (d.metadata?.cpu_usage || 0) <= 85"
-              [class.text-red]="(d.metadata?.cpu_usage || 0) > 85">{{ d.metadata?.cpu_usage || 0 }}%</span>
+        <span class="dd-gauge-lbl">{{ 'UI.u_cpu_usage' | translate }}</span>
+        <span class="dd-gauge-pct" [class.text-green]="(d.metadata?.cpu_usage || 0) <= 60"
+          [class.text-orange]="(d.metadata?.cpu_usage || 0) > 60 && (d.metadata?.cpu_usage || 0) <= 85"
+          [class.text-red]="(d.metadata?.cpu_usage || 0) > 85">{{ d.metadata?.cpu_usage || 0 }}%</span>
       </div>
       <div class="dd-bar-track">
-        <div class="dd-bar-fill"
-             [class.bar-green]="(d.metadata?.cpu_usage || 0) <= 60"
-             [class.bar-orange]="(d.metadata?.cpu_usage || 0) > 60 && (d.metadata?.cpu_usage || 0) <= 85"
-             [class.bar-red]="(d.metadata?.cpu_usage || 0) > 85"
-             [style.width]="(d.metadata?.cpu_usage || 0) + '%'"></div>
+        <div class="dd-bar-fill" [class.bar-green]="(d.metadata?.cpu_usage || 0) <= 60"
+          [class.bar-orange]="(d.metadata?.cpu_usage || 0) > 60 && (d.metadata?.cpu_usage || 0) <= 85"
+          [class.bar-red]="(d.metadata?.cpu_usage || 0) > 85" [style.width]="(d.metadata?.cpu_usage || 0) + '%'"></div>
       </div>
     </div>
 
     <!-- Memory -->
     <div class="dd-gauge-card">
       <div class="dd-gauge-header">
-        <span class="dd-gauge-lbl">Memory usage</span>
-        <span class="dd-gauge-pct"
-              [class.text-green]="(d.metadata?.ram_usage || 0) <= 60"
-              [class.text-orange]="(d.metadata?.ram_usage || 0) > 60 && (d.metadata?.ram_usage || 0) <= 85"
-              [class.text-red]="(d.metadata?.ram_usage || 0) > 85">{{ d.metadata?.ram_usage || 0 }}%</span>
+        <span class="dd-gauge-lbl">{{ 'UI.u_mem_usage' | translate }}</span>
+        <span class="dd-gauge-pct" [class.text-green]="(d.metadata?.ram_usage || 0) <= 60"
+          [class.text-orange]="(d.metadata?.ram_usage || 0) > 60 && (d.metadata?.ram_usage || 0) <= 85"
+          [class.text-red]="(d.metadata?.ram_usage || 0) > 85">{{ d.metadata?.ram_usage || 0 }}%</span>
       </div>
       <div class="dd-bar-track">
-        <div class="dd-bar-fill"
-             [class.bar-green]="(d.metadata?.ram_usage || 0) <= 60"
-             [class.bar-orange]="(d.metadata?.ram_usage || 0) > 60 && (d.metadata?.ram_usage || 0) <= 85"
-             [class.bar-red]="(d.metadata?.ram_usage || 0) > 85"
-             [style.width]="(d.metadata?.ram_usage || 0) + '%'"></div>
+        <div class="dd-bar-fill" [class.bar-green]="(d.metadata?.ram_usage || 0) <= 60"
+          [class.bar-orange]="(d.metadata?.ram_usage || 0) > 60 && (d.metadata?.ram_usage || 0) <= 85"
+          [class.bar-red]="(d.metadata?.ram_usage || 0) > 85" [style.width]="(d.metadata?.ram_usage || 0) + '%'"></div>
       </div>
     </div>
 
     <!-- Disk -->
     <div class="dd-gauge-card">
       <div class="dd-gauge-header">
-        <span class="dd-gauge-lbl">Disk usage</span>
-        <span class="dd-gauge-pct"
-              [class.text-green]="(d.metadata?.disk_usage || 0) <= 60"
-              [class.text-orange]="(d.metadata?.disk_usage || 0) > 60 && (d.metadata?.disk_usage || 0) <= 85"
-              [class.text-red]="(d.metadata?.disk_usage || 0) > 85">{{ d.metadata?.disk_usage || 0 }}%</span>
+        <span class="dd-gauge-lbl">{{ 'UI.u_disk_usage' | translate }}</span>
+        <span class="dd-gauge-pct" [class.text-green]="(d.metadata?.disk_usage || 0) <= 60"
+          [class.text-orange]="(d.metadata?.disk_usage || 0) > 60 && (d.metadata?.disk_usage || 0) <= 85"
+          [class.text-red]="(d.metadata?.disk_usage || 0) > 85">{{ d.metadata?.disk_usage || 0 }}%</span>
       </div>
       <div class="dd-bar-track">
-        <div class="dd-bar-fill"
-             [class.bar-green]="(d.metadata?.disk_usage || 0) <= 60"
-             [class.bar-orange]="(d.metadata?.disk_usage || 0) > 60 && (d.metadata?.disk_usage || 0) <= 85"
-             [class.bar-red]="(d.metadata?.disk_usage || 0) > 85"
-             [style.width]="(d.metadata?.disk_usage || 0) + '%'"></div>
+        <div class="dd-bar-fill" [class.bar-green]="(d.metadata?.disk_usage || 0) <= 60"
+          [class.bar-orange]="(d.metadata?.disk_usage || 0) > 60 && (d.metadata?.disk_usage || 0) <= 85"
+          [class.bar-red]="(d.metadata?.disk_usage || 0) > 85" [style.width]="(d.metadata?.disk_usage || 0) + '%'">
+        </div>
       </div>
     </div>
 
@@ -150,192 +153,197 @@
   <!-- ── Tabs ───────────────────────────────────────────────────────────── -->
   <div class="dd-tabs">
     <button class="dd-tab" [class.active]="activeTab() === 'patches'" (click)="activeTab.set('patches')">
-      Patch status
+      {{ 'UI.u_patch_status' | translate }}
       <span class="dd-tab-badge">{{ patches().length }}</span>
     </button>
     <button class="dd-tab" [class.active]="activeTab() === 'deployments'" (click)="activeTab.set('deployments')">
-      Deployment history
+      {{ 'UI.u_deploy_history' | translate }}
     </button>
     <button class="dd-tab" [class.active]="activeTab() === 'inventory'" (click)="activeTab.set('inventory')">
-      Inventory
+      {{ 'UI.u_inventory_tab' | translate }}
     </button>
     <button class="dd-tab" [class.active]="activeTab() === 'settings'" (click)="activeTab.set('settings')">
-      Agent settings
+      {{ 'UI.u_agent_settings' | translate }}
     </button>
   </div>
 
   <!-- ── Patch status tab ───────────────────────────────────────────────── -->
   @if (activeTab() === 'patches') {
-    <div class="dd-tab-panel" @tabChange>
+  <div class="dd-tab-panel" @tabChange>
 
-      <!-- Patch summary counts -->
-      <div class="dd-patch-summary">
-        <div class="dd-psum-item">
-          <span class="dd-psum-num text-green">{{ patchCounts().installed }}</span>
-          <span class="dd-psum-lbl">Installed</span>
-        </div>
-        <div class="dd-psum-item">
-          <span class="dd-psum-num text-orange">{{ patchCounts().pending }}</span>
-          <span class="dd-psum-lbl">Pending</span>
-        </div>
-        <div class="dd-psum-item">
-          <span class="dd-psum-num text-red">{{ patchCounts().failed }}</span>
-          <span class="dd-psum-lbl">Failed</span>
-        </div>
+    <!-- Patch summary counts -->
+    <div class="dd-patch-summary">
+      <div class="dd-psum-item item-installed">
+        <span class="dd-psum-num">{{ patchCounts().installed }}</span>
+        <span class="dd-psum-lbl">{{ 'UI.u_installed' | translate }}</span>
       </div>
-
-      <!-- Patch table -->
-      <div class="dd-table-wrap">
-        <table class="dd-table">
-          <thead>
-            <tr>
-              <th>CVE / Patch</th>
-              <th>Title</th>
-              <th>Severity</th>
-              <th>Status</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (p of patches(); track p.id) {
-              <tr>
-                <td class="dd-cve">{{ p.patch?.vendor_id || p.patch?.id }}</td>
-                <td>{{ p.patch?.title }}</td>
-                <td>
-                  <span class="dd-sev-badge"
-                    [class.sev-critical]="p.patch?.severity === 'critical'"
-                    [class.sev-high]="p.patch?.severity === 'high'"
-                    [class.sev-medium]="p.patch?.severity === 'medium'"
-                    [class.sev-low]="p.patch?.severity === 'low'">{{ p.patch?.severity }}</span>
-                </td>
-                <td>
-                  <span class="dd-state-badge"
-                    [class.state-installed]="p.state === 'installed'"
-                    [class.state-pending]="p.state === 'pending' || p.state === 'missing'"
-                    [class.state-failed]="p.state === 'failed'">{{ p.state }}</span>
-                </td>
-                <td class="text-muted small">{{ p.last_attempt ? (p.last_attempt | relativeTime) : '—' }}</td>
-              </tr>
-            } @empty {
-              <tr><td colspan="5" class="dd-empty">No patches detected.</td></tr>
-            }
-          </tbody>
-        </table>
+      <div class="dd-psum-item item-pending">
+        <span class="dd-psum-num">{{ patchCounts().pending }}</span>
+        <span class="dd-psum-lbl">{{ 'UI.u_pending' | translate }}</span>
+      </div>
+      <div class="dd-psum-item item-failed">
+        <span class="dd-psum-num">{{ patchCounts().failed }}</span>
+        <span class="dd-psum-lbl">{{ 'UI.u_failed' | translate }}</span>
       </div>
     </div>
+
+    <!-- Patch table -->
+    <div class="dd-table-wrap">
+      <table class="dd-table">
+        <thead>
+          <tr>
+            <th>CVE / Patch</th>
+            <th>Title</th>
+            <th>Severity</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of patches(); track p.id) {
+          <tr>
+            <td class="dd-cve">{{ p.patch?.vendor_id || p.patch?.id }}</td>
+            <td>{{ p.patch?.title }}</td>
+            <td>
+              <span class="dd-sev-badge" [class.sev-critical]="p.patch?.severity === 'critical'"
+                [class.sev-high]="p.patch?.severity === 'high'" [class.sev-medium]="p.patch?.severity === 'medium'"
+                [class.sev-low]="p.patch?.severity === 'low'">{{ p.patch?.severity }}</span>
+            </td>
+            <td>
+              <span class="dd-state-badge" [class.state-installed]="p.state === 'installed'"
+                [class.state-pending]="p.state === 'pending' || p.state === 'missing'"
+                [class.state-failed]="p.state === 'failed'">{{ p.state }}</span>
+            </td>
+            <td class="text-muted small">{{ p.last_attempt ? (p.last_attempt | relativeTime) : '—' }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5" class="dd-empty">{{ 'UI.u_no_data' | translate }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
   }
 
   <!-- ── Deployment history tab ────────────────────────────────────────── -->
   @if (activeTab() === 'deployments') {
-    <div class="dd-tab-panel" @tabChange>
-      <div class="dd-table-wrap">
-        <table class="dd-table">
-          <thead>
-            <tr>
-              <th>Deployment</th>
-              <th>Status</th>
-              <th>Started</th>
-              <th>Completed</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (dl of deployments(); track dl.id) {
-              <tr>
-                <td><a [routerLink]="['/deployments', dl.deployment_id || dl.id]" class="dd-link">{{ dl.deployment_name || dl.name }}</a></td>
-                <td><app-status-badge [value]="dl.status" [dot]="true"></app-status-badge></td>
-                <td class="text-muted small">{{ dl.started_at | relativeTime }}</td>
-                <td class="text-muted small">{{ dl.completed_at ? (dl.completed_at | relativeTime) : 'Ongoing' }}</td>
-              </tr>
-            } @empty {
-              <tr><td colspan="4" class="dd-empty">No deployment history.</td></tr>
-            }
-          </tbody>
-        </table>
-      </div>
+  <div class="dd-tab-panel" @tabChange>
+    <div class="dd-table-wrap">
+      <table class="dd-table">
+        <thead>
+          <tr>
+            <th>Deployment</th>
+            <th>Status</th>
+            <th>Started</th>
+            <th>Completed</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (dl of deployments(); track dl.id) {
+          <tr>
+            <td><a [routerLink]="['/deployments', dl.deployment_id || dl.id]" class="dd-link">{{ dl.deployment_name ||
+                dl.name }}</a></td>
+            <td><app-status-badge [value]="dl.status" [dot]="true"></app-status-badge></td>
+            <td class="text-muted small">{{ dl.started_at | relativeTime }}</td>
+            <td class="text-muted small">{{ dl.completed_at ? (dl.completed_at | relativeTime) : 'Ongoing' }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="4" class="dd-empty">{{ 'UI.u_no_data' | translate }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
     </div>
+  </div>
   }
 
   <!-- ── Inventory tab ─────────────────────────────────────────────────── -->
   @if (activeTab() === 'inventory') {
-    <div class="dd-tab-panel" @tabChange>
-      <div class="dd-inv-grid">
-        <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Hostname</span>
-          <span class="dd-inv-val text-primary">{{ d.hostname }}</span>
-        </div>
-        <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">OS</span>
-          <span class="dd-inv-val">{{ d.os_name || d.os_family }}</span>
-        </div>
-        <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Kernel</span>
-          <span class="dd-inv-val">{{ d.os_version || '—' }}</span>
-        </div>
-        <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">IP Address</span>
-          <span class="dd-inv-val">{{ d.ip_address }}</span>
-        </div>
-        <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">MAC Address</span>
-          <span class="dd-inv-val">{{ d.mac_address || '—' }}</span>
-        </div>
-        <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Last seen</span>
-          <span class="dd-inv-val">{{ d.last_seen | relativeTime }}</span>
-        </div>
+  <div class="dd-tab-panel" @tabChange>
+    <div class="dd-inv-grid">
+      <div class="dd-inv-cell">
+        <span class="dd-inv-lbl">{{ 'UI.u_hostname' | translate }}</span>
+        <span class="dd-inv-val text-primary">{{ d.hostname }}</span>
       </div>
-
-      <!-- Installed apps -->
-      <div class="dd-inv-section-title">Installed applications ({{ d.inventory_data?.apps?.length || 0 }})</div>
-      <div class="dd-app-list">
-        @for (app of filteredApps; track $index) {
-          <div class="dd-app-row">
-            <span class="dd-app-name">{{ app.name }}</span>
-            <span class="dd-app-ver text-muted">{{ app.version || '—' }}</span>
-            <span class="dd-app-pub text-muted">{{ app.publisher || '—' }}</span>
-          </div>
-        } @empty {
-          <div class="dd-empty">No installed applications found.</div>
-        }
+      <div class="dd-inv-cell">
+        <span class="dd-inv-lbl">{{ 'UI.u_os' | translate }}</span>
+        <span class="dd-inv-val">{{ d.os_name || d.os_family }}</span>
+      </div>
+      <div class="dd-inv-cell">
+        <span class="dd-inv-lbl">Kernel</span>
+        <span class="dd-inv-val">{{ d.os_version || '—' }}</span>
+      </div>
+      <div class="dd-inv-cell">
+        <span class="dd-inv-lbl">{{ 'UI.u_ip_address' | translate }}</span>
+        <span class="dd-inv-val">{{ d.ip_address }}</span>
+      </div>
+      <div class="dd-inv-cell">
+        <span class="dd-inv-lbl">{{ 'UI.u_mac_address' | translate }}</span>
+        <span class="dd-inv-val">{{ d.mac_address || '—' }}</span>
+      </div>
+      <div class="dd-inv-cell">
+        <span class="dd-inv-lbl">{{ 'UI.u_last_sync' | translate }}</span>
+        <span class="dd-inv-val">{{ d.last_seen | relativeTime }}</span>
       </div>
     </div>
+
+    <!-- Installed apps -->
+    <div class="dd-inv-section-title">Installed applications ({{ d.inventory_data?.apps?.length || 0 }})</div>
+    <div class="dd-app-list">
+      @for (app of filteredApps; track $index) {
+      <div class="dd-app-row">
+        <span class="dd-app-name">{{ app.name }}</span>
+        <span class="dd-app-ver text-muted">{{ app.version || '—' }}</span>
+        <span class="dd-app-pub text-muted">{{ app.publisher || '—' }}</span>
+      </div>
+      } @empty {
+      <div class="dd-empty">{{ 'UI.u_no_apps_found' | translate }}</div>
+      }
+    </div>
+  </div>
   }
 
   <!-- ── Agent settings tab ────────────────────────────────────────────── -->
   @if (activeTab() === 'settings') {
-    <div class="dd-tab-panel" @tabChange>
-      <p class="text-muted small mb-4">Values will be pushed to the agent via WebSocket in real-time.</p>
-      <div class="row g-3" style="max-width:600px">
-        <div class="col-md-6">
-          <label class="dd-inv-lbl mb-1">Log Level</label>
-          <select class="form-select form-select-sm bg-dark text-white border-secondary" [(ngModel)]="configData.log_level">
-            <option value="debug">Debug</option>
-            <option value="info">Info</option>
-            <option value="warning">Warning</option>
-            <option value="error">Error</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="dd-inv-lbl mb-1">Heartbeat Interval (sec)</label>
-          <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary"
-                 [(ngModel)]="configData.heartbeat_interval" min="5" max="3600">
-        </div>
-        <div class="col-12">
-          <button class="btn btn-sm btn-primary" (click)="updateConfig()" [disabled]="d.status !== 'online'">Push Configuration</button>
-        </div>
+  <div class="dd-tab-panel" @tabChange>
+    <p class="text-muted small mb-4">Values will be pushed to the agent via WebSocket in real-time.</p>
+    <div class="row g-3" style="max-width:600px">
+      <div class="col-md-6">
+        <label class="dd-inv-lbl mb-1">Log Level</label>
+        <select class="form-select form-select-sm bg-dark text-white border-secondary"
+          [(ngModel)]="configData.log_level">
+          <option value="debug">Debug</option>
+          <option value="info">Info</option>
+          <option value="warning">Warning</option>
+          <option value="error">Error</option>
+        </select>
       </div>
-      <div class="mt-4 pt-4 border-top border-secondary border-opacity-25">
-        <h6 class="text-danger mb-2">Danger zone</h6>
-        <p class="small text-muted mb-2">Irreversibly delete this device from the platform.</p>
-        <button class="btn btn-sm btn-outline-danger" (click)="delete()">Delete Device</button>
+      <div class="col-md-6">
+        <label class="dd-inv-lbl mb-1">Heartbeat Interval (sec)</label>
+        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary"
+          [(ngModel)]="configData.heartbeat_interval" min="5" max="3600">
+      </div>
+      <div class="col-12">
+        <button class="btn btn-sm btn-primary" (click)="updateConfig()" [disabled]="d.status !== 'online'">{{
+          'UI.u_push_config' | translate }}</button>
       </div>
     </div>
+    <div class="mt-4 pt-4 border-top border-secondary border-opacity-25">
+      <h6 class="text-danger mb-2">{{ 'UI.u_danger_zone' | translate }}</h6>
+      <p class="small text-muted mb-2">{{ 'UI.u_delete_device_desc' | translate }}</p>
+      <button class="btn btn-sm btn-outline-danger" (click)="delete()">{{ 'UI.u_delete_device_btn' | translate
+        }}</button>
+    </div>
+  </div>
   }
 
 </div>
 } @else {
-  <div class="p-5 text-center">
-    <app-loading-skeleton variant="card" [rows]="[0,1,2,3]"></app-loading-skeleton>
-    <p class="mt-3 text-muted">Loading device data...</p>
-  </div>
+<div class="p-5 text-center">
+  <app-loading-skeleton variant="card" [rows]="[0,1,2,3]"></app-loading-skeleton>
+  <p class="mt-3 text-muted">{{ 'UI.u_loading_data' | translate }}</p>
+</div>
 }

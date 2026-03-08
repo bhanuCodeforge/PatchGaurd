@@ -2,70 +2,70 @@
   <div class="login-card" style="max-width:420px;">
     <div class="logo-section">
       <div class="shield-icon"></div>
-      <h1>PatchGuard</h1>
-      <p>Create your account</p>
+      <h1>{{ 'UI.u_name' | translate }}</h1>
+      <p>{{ 'UI.u_create_account' | translate }}</p>
     </div>
 
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
 
       <div class="name-row">
         <div class="form-group">
-          <label>First name</label>
-          <input type="text" formControlName="first_name" placeholder="Jane"
+          <label>{{ 'UI.u_first_name' | translate }}</label>
+          <input type="text" formControlName="first_name" [placeholder]="'UI.u_first_name' | translate"
             [class.ng-invalid]="registerForm.get('first_name')?.invalid"
             [class.ng-touched]="registerForm.get('first_name')?.touched">
         </div>
         <div class="form-group">
-          <label>Last name</label>
-          <input type="text" formControlName="last_name" placeholder="Smith"
+          <label>{{ 'UI.u_last_name' | translate }}</label>
+          <input type="text" formControlName="last_name" [placeholder]="'UI.u_last_name' | translate"
             [class.ng-invalid]="registerForm.get('last_name')?.invalid"
             [class.ng-touched]="registerForm.get('last_name')?.touched">
         </div>
       </div>
 
       <div class="form-group">
-        <label for="reg-username">Username</label>
+        <label for="reg-username">{{ 'UI.u_username_label' | translate }}</label>
         <input type="text" id="reg-username" formControlName="username"
-          placeholder="jsmith" autocomplete="username"
+          [placeholder]="'UI.u_username_label' | translate" autocomplete="username"
           [class.ng-invalid]="registerForm.get('username')?.invalid"
           [class.ng-touched]="registerForm.get('username')?.touched">
         <span class="error-text"
           *ngIf="registerForm.get('username')?.invalid && registerForm.get('username')?.touched">
-          Username must be at least 3 characters
+          {{ 'ERROR.e_username_min' | translate }}
         </span>
       </div>
 
       <div class="form-group">
-        <label for="reg-email">Email</label>
+        <label for="reg-email">{{ 'UI.u_email_label' | translate }}</label>
         <input type="email" id="reg-email" formControlName="email"
-          placeholder="jane@company.com" autocomplete="email">
+          [placeholder]="'UI.u_email_placeholder' | translate" autocomplete="email">
         <span class="error-text"
           *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
-          Valid email is required
+          {{ 'ERROR.e_invalid_email' | translate }}
         </span>
       </div>
 
       <div class="form-group">
-        <label for="reg-password">Password <span class="text-muted" style="font-size:11px;">(min 12 chars)</span></label>
+        <label for="reg-password">{{ 'UI.u_password_label' | translate }} <span class="text-muted" style="font-size:11px;">({{ 'UI.u_min_chars' | translate: {count: 12} }})</span></label>
         <input type="password" id="reg-password" formControlName="password"
           placeholder="••••••••••••" autocomplete="new-password">
         <span class="error-text"
           *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
-          Password must be at least 12 characters
+          {{ 'ERROR.e_password_min' | translate }}
         </span>
       </div>
 
       <div class="form-group">
-        <label for="reg-confirm">Confirm password</label>
+        <label for="reg-confirm">{{ 'UI.u_confirm_password' | translate }}</label>
         <input type="password" id="reg-confirm" formControlName="confirmPassword"
           placeholder="••••••••••••" autocomplete="new-password">
         <span class="error-text" *ngIf="pwdMismatch">
-          Passwords do not match
+          {{ 'ERROR.e_password_mismatch' | translate }}
         </span>
       </div>
 
       <button type="submit" class="submit-btn" [disabled]="registerForm.invalid || isLoading()">
-        <span *ngIf="!isLoading()">Create Account</span>
+        <span *ngIf="!isLoading()">{{ 'UI.u_create_account' | translate }}</span>
         <div *ngIf="isLoading()" class="spinner"></div>
       </button>
 
@@ -73,8 +73,8 @@
 
     <div class="footer" style="justify-content:center; margin-top:1.25rem;">
       <span style="color:#9ca3af; font-size:0.875rem;">
-        Already have an account?&nbsp;
-        <a routerLink="/login" style="color:#60a5fa;">Sign in</a>
+        {{ 'UI.u_have_account' | translate }}&nbsp;
+        <a routerLink="/login" style="color:#60a5fa;">{{ 'UI.u_sign_in' | translate }}</a>
       </span>
     </div>
   </div>

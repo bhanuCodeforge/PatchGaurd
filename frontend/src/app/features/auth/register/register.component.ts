@@ -10,6 +10,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 function passwordMatch(control: AbstractControl): ValidationErrors | null {
   const pwd = control.get('password');
@@ -23,7 +24,7 @@ function passwordMatch(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
 })
@@ -65,7 +66,7 @@ export class RegisterComponent {
     this.authService.register(payload).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.notificationService.success('Account Created', 'Welcome to PatchGuard!');
+        this.notificationService.success('MSG.m_account_created', 'MSG.m_welcome_pg');
         this.router.navigate(['/dashboard']);
       },
       error: (err: any) => {
@@ -80,8 +81,8 @@ export class RegisterComponent {
           err?.error?.email?.[0] ||
           err?.error?.password?.[0] ||
           err?.error?.non_field_errors?.[0] ||
-          'Registration failed.';
-        this.notificationService.error('Registration Failed', msg);
+          'MSG.m_registration_failed';
+        this.notificationService.error('MSG.m_registration_failed', msg);
       },
     });
   }

@@ -5,7 +5,7 @@
     <nav class="settings-nav">
       <button *ngFor="let s of sections" class="nav-item" [class.active]="activeSection === s.id" (click)="activeSection = s.id">
         <span class="nav-icon">{{ s.icon }}</span>
-        {{ s.label }}
+        {{ s.label | translate }}
       </button>
     </nav>
 
@@ -14,47 +14,47 @@
 
       <!-- Profile -->
       <div *ngIf="activeSection === 'profile'" class="section">
-        <h3 class="section-title">{{ 'SETTINGS.PROFILE' | translate }}</h3>
+        <h3 class="section-title">{{ 'UI.u_profile_tab' | translate }}</h3>
         <div class="row g-3" style="max-width:500px">
           <div class="col-12">
-            <label class="form-label-sm">{{ 'SETTINGS.DISPLAY_NAME' | translate }}</label>
+            <label class="form-label-sm">{{ 'UI.u_display_name' | translate }}</label>
             <input class="pg-input" [(ngModel)]="profile.name" />
           </div>
           <div class="col-12">
-            <label class="form-label-sm">{{ 'SETTINGS.EMAIL' | translate }}</label>
+            <label class="form-label-sm">{{ 'UI.u_email_label' | translate }}</label>
             <input class="pg-input" type="email" [(ngModel)]="profile.email" />
           </div>
           <div class="col-12">
-            <button class="btn btn-primary btn-sm" (click)="saveProfile()">{{ 'SETTINGS.SAVE' | translate }}</button>
+            <button class="btn btn-primary btn-sm" (click)="saveProfile()">{{ 'UI.u_save_changes' | translate }}</button>
           </div>
         </div>
       </div>
 
       <!-- Security -->
       <div *ngIf="activeSection === 'security'" class="section">
-        <h3 class="section-title">{{ 'SETTINGS.SECURITY' | translate }}</h3>
+        <h3 class="section-title">{{ 'UI.u_security_tab' | translate }}</h3>
         <div class="row g-3" style="max-width:500px">
           <div class="col-12">
-            <label class="form-label-sm">Current Password</label>
+            <label class="form-label-sm">{{ 'UI.u_current_password' | translate }}</label>
             <input class="pg-input" type="password" [(ngModel)]="pwd.current" />
           </div>
           <div class="col-12">
-            <label class="form-label-sm">New Password</label>
+            <label class="form-label-sm">{{ 'UI.u_new_password' | translate }}</label>
             <input class="pg-input" type="password" [(ngModel)]="pwd.new" />
           </div>
           <div class="col-12">
-            <label class="form-label-sm">Confirm Password</label>
+            <label class="form-label-sm">{{ 'UI.u_confirm_password' | translate }}</label>
             <input class="pg-input" type="password" [(ngModel)]="pwd.confirm" />
           </div>
           <div class="col-12">
-            <button class="btn btn-danger btn-sm" (click)="changePassword()">Change Password</button>
+            <button class="btn btn-danger btn-sm" (click)="changePassword()">{{ 'UI.u_change_password' | translate }}</button>
           </div>
         </div>
       </div>
 
       <!-- Notifications -->
       <div *ngIf="activeSection === 'notifications'" class="section">
-        <h3 class="section-title">{{ 'SETTINGS.NOTIFICATIONS' | translate }}</h3>
+        <h3 class="section-title">{{ 'UI.u_notifications_tab' | translate }}</h3>
         <div class="pref-list">
           <div class="pref-row" *ngFor="let p of notifPrefs">
             <div>
@@ -67,12 +67,12 @@
             </label>
           </div>
         </div>
-        <button class="btn btn-primary btn-sm mt-3" (click)="saveNotifPrefs()">{{ 'SETTINGS.SAVE' | translate }}</button>
+        <button class="btn btn-primary btn-sm mt-3" (click)="saveNotifPrefs()">{{ 'UI.u_save_changes' | translate }}</button>
       </div>
 
       <!-- System Info -->
       <div *ngIf="activeSection === 'system'" class="section">
-        <h3 class="section-title">System Info</h3>
+        <h3 class="section-title">{{ 'UI.u_system_info_tab' | translate }}</h3>
         <div class="info-grid">
           <div class="info-row" *ngFor="let info of sysInfo">
             <span class="info-key">{{ info.key }}</span>

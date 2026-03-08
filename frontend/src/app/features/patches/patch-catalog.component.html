@@ -3,10 +3,10 @@
   <!-- Header -->
   <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
     <div>
-      <h2 class="page-title mb-0">{{ 'PATCHES.TITLE' | translate }}</h2>
+      <h2 class="page-title mb-0">{{ 'UI.u_patches' | translate }}</h2>
       <p class="text-muted small mb-0 mt-1">
-        {{ stats()?.total ?? 0 }} patches catalogued &middot;
-        {{ stats()?.critical_pending_count ?? 0 }} critical pending
+        {{ stats()?.total ?? 0 }} {{ 'UI.u_patches' | translate | lowercase }} {{ 'UI.u_catalogued' | translate }} &middot;
+        {{ stats()?.critical_pending_count ?? 0 }} {{ 'UI.u_critical' | translate | lowercase }} {{ 'UI.u_pending' | translate | lowercase }}
       </p>
     </div>
     <div class="d-flex gap-2">
@@ -15,13 +15,13 @@
           <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
           <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
         </svg>
-        Refresh
+        {{ 'UI.u_scan_now' | translate }}
       </button>
       <button class="btn btn-sm btn-outline-primary" *ngIf="selectedIds().size > 1 && canWrite()" (click)="bulkApprove()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
-        Bulk Approve ({{ selectedIds().size }})
+        {{ 'UI.u_bulk_actions' | translate }} ({{ selectedIds().size }})
       </button>
     </div>
   </div>
@@ -31,25 +31,25 @@
     <div class="col-6 col-md-3">
       <div class="stat-mini stat-critical">
         <div class="stat-mini-val">{{ stats()?.critical_pending_count ?? 0 }}</div>
-        <div class="stat-mini-lbl">Critical Pending</div>
+        <div class="stat-mini-lbl">{{ 'UI.u_critical' | translate }} {{ 'UI.u_pending' | translate }}</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="stat-mini stat-awaiting">
         <div class="stat-mini-val">{{ stats()?.awaiting_review_count ?? 0 }}</div>
-        <div class="stat-mini-lbl">Awaiting Review</div>
+        <div class="stat-mini-lbl">{{ 'UI.u_awaiting_review' | translate }}</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="stat-mini stat-approved">
         <div class="stat-mini-val">{{ approvedCount() }}</div>
-        <div class="stat-mini-lbl">Approved</div>
+        <div class="stat-mini-lbl">{{ 'UI.u_approved' | translate }}</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="stat-mini stat-total">
         <div class="stat-mini-val">{{ stats()?.total ?? 0 }}</div>
-        <div class="stat-mini-lbl">Total Patches</div>
+        <div class="stat-mini-lbl">{{ 'UI.u_all' | translate }}</div>
       </div>
     </div>
   </div>
@@ -74,11 +74,11 @@
       <button *ngIf="searchTerm" class="search-clear" (click)="searchTerm=''; loadPatches()">&#x2715;</button>
     </div>
     <select class="pg-select" [(ngModel)]="severityFilter" (ngModelChange)="loadPatches()">
-      <option value="">{{ 'PATCHES.ALL_SEVERITIES' | translate }}</option>
-      <option value="critical">Critical</option>
-      <option value="high">High</option>
-      <option value="medium">Medium</option>
-      <option value="low">Low</option>
+      <option value="">{{ 'UI.u_all_severities' | translate }}</option>
+      <option value="critical">{{ 'UI.u_critical' | translate }}</option>
+      <option value="high">{{ 'UI.u_high' | translate }}</option>
+      <option value="medium">{{ 'UI.u_medium' | translate }}</option>
+      <option value="low">{{ 'UI.u_low' | translate }}</option>
     </select>
     <select class="pg-select" [(ngModel)]="vendorFilter" (ngModelChange)="loadPatches()">
       <option value="">{{ 'PATCHES.ALL_VENDORS' | translate }}</option>
@@ -94,7 +94,7 @@
     <app-loading-skeleton *ngIf="loading()" variant="table" [rows]="rows"></app-loading-skeleton>
 
     <app-empty-state *ngIf="!loading() && patches().length === 0" icon="&#x1F4E6;"
-      title="No patches found" description="No patches match the current filter.">
+      [title]="'UI.u_no_data' | translate" [description]="'UI.u_search_placeholder' | translate">
     </app-empty-state>
 
     <div *ngIf="!loading() && patches().length > 0" class="table-responsive">
@@ -104,13 +104,13 @@
             <th style="width:40px">
               <input type="checkbox" class="form-check-input" (change)="toggleAll($event)" />
             </th>
-            <th>{{ 'PATCHES.CVE_PATCH' | translate }}</th>
-            <th>{{ 'PATCHES.SEVERITY' | translate }}</th>
-            <th>{{ 'PATCHES.STATUS' | translate }}</th>
-            <th>OS</th>
-            <th>{{ 'PATCHES.AFFECTED' | translate }}</th>
-            <th>{{ 'PATCHES.RELEASED' | translate }}</th>
-            <th>{{ 'PATCHES.ACTIONS' | translate }}</th>
+            <th>{{ 'UI.u_cve_patch' | translate }}</th>
+            <th>{{ 'UI.u_severity' | translate }}</th>
+            <th>{{ 'UI.u_status' | translate }}</th>
+            <th>{{ 'UI.u_os' | translate }}</th>
+            <th>{{ 'UI.u_affected' | translate }}</th>
+            <th>{{ 'UI.u_released' | translate }}</th>
+            <th>{{ 'UI.u_actions' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -127,10 +127,10 @@
               <div class="patch-title text-truncate" style="max-width:260px;" [title]="p.title">{{ p.title }}</div>
             </td>
             <td>
-              <span class="severity-pill" [class]="'sev-' + p.severity">{{ p.severity }}</span>
+              <span class="severity-pill" [class]="'sev-' + p.severity">{{ 'UI.u_' + p.severity | translate }}</span>
             </td>
             <td>
-              <span class="status-pill" [class]="'st-' + p.status">{{ p.status }}</span>
+              <span class="status-pill" [class]="'st-' + p.status">{{ 'UI.u_' + p.status | translate }}</span>
             </td>
             <td>
               <span class="os-tag" *ngFor="let os of (p.applicable_os || []).slice(0,2)">{{ os }}</span>
@@ -161,13 +161,13 @@
 
     <!-- Pagination -->
     <div *ngIf="totalPages() > 1" class="d-flex align-items-center justify-content-between px-3 py-3 border-top border-secondary border-opacity-25">
-      <span class="text-muted small">Page {{ page() }} of {{ totalPages() }}</span>
+      <span class="text-muted small">{{ 'UI.u_page' | translate }} {{ page() }} {{ 'UI.u_of' | translate }} {{ totalPages() }}</span>
       <div class="d-flex gap-1">
-        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page()-1)">&#x2190; Prev</button>
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page()-1)">← {{ 'UI.u_prev' | translate }}</button>
         <button *ngFor="let p of pageNumbers()" class="btn btn-sm"
           [class.btn-primary]="p === page()" [class.btn-outline-secondary]="p !== page()"
           (click)="setPage(p)">{{ p }}</button>
-        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()" (click)="setPage(page()+1)">Next &#x2192;</button>
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()" (click)="setPage(page()+1)">{{ 'UI.u_next' | translate }} →</button>
       </div>
     </div>
   </div>
@@ -196,15 +196,15 @@
 
       <div class="flyout-body">
         <div class="info-group">
-          <h6 class="info-heading">Patch Details</h6>
+          <h6 class="info-heading">{{ 'UI.u_patch_details' | translate }}</h6>
           <p class="text-white fw-500 mb-3">{{ selectedPatch().title }}</p>
           
           <div class="info-grid">
-            <div class="info-row"><span class="key">Package Name</span><span class="val font-monospace">{{ selectedPatch().package_name || 'N/A' }}</span></div>
-            <div class="info-row"><span class="key">Package Version</span><span class="val font-monospace">{{ selectedPatch().package_version || 'N/A' }}</span></div>
-            <div class="info-row"><span class="key">Released</span><span class="val">{{ selectedPatch().released_at | relativeTime }}</span></div>
-            <div class="info-row"><span class="key">Reboot Required</span><span class="val">{{ selectedPatch().requires_reboot ? 'Yes' : 'No' }}</span></div>
-            <div class="info-row"><span class="key">OS Target</span><span class="val">{{ getOsLabel(selectedPatch()) }}</span></div>
+            <div class="info-row"><span class="key">{{ 'UI.u_package' | translate }}</span><span class="val font-monospace">{{ selectedPatch().package_name || '—' }}</span></div>
+            <div class="info-row"><span class="key">{{ 'UI.u_version' | translate }}</span><span class="val font-monospace">{{ selectedPatch().package_version || '—' }}</span></div>
+            <div class="info-row"><span class="key">{{ 'UI.u_released' | translate }}</span><span class="val">{{ selectedPatch().released_at | relativeTime }}</span></div>
+            <div class="info-row"><span class="key">{{ 'UI.u_auto_reboot' | translate }}</span><span class="val">{{ selectedPatch().requires_reboot ? ('UI.u_yes' | translate) : ('UI.u_no' | translate) }}</span></div>
+            <div class="info-row"><span class="key">{{ 'UI.u_os' | translate }}</span><span class="val">{{ getOsLabel(selectedPatch()) }}</span></div>
           </div>
         </div>
 
@@ -216,8 +216,8 @@
         </div>
 
         <div class="info-group">
-          <h6 class="info-heading">Description</h6>
-          <div class="description-text">{{ selectedPatch().description || 'No description available for this patch.' }}</div>
+          <h6 class="info-heading">{{ 'UI.u_description' | translate }}</h6>
+          <div class="description-text">{{ selectedPatch().description || ('UI.u_no_data' | translate) }}</div>
         </div>
 
         <!-- Approval / Rejection Audit -->

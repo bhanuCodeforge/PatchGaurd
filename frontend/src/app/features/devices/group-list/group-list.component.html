@@ -1,11 +1,11 @@
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <h2 class="mb-0">{{ 'NAV.GROUPS' | translate }}</h2>
-      <p class="text-muted small">Manage organizational units and dynamic device groups.</p>
+      <h2 class="mb-0">{{ 'UI.u_groups' | translate }}</h2>
+      <p class="text-muted small">{{ 'MSG.m_manage_groups_desc' | translate }}</p>
     </div>
     <button class="btn btn-primary" (click)="showModal = true">
-      <i class="bi bi-plus-lg me-2"></i>New Group
+      <i class="bi bi-plus-lg me-2"></i>{{ 'UI.u_new_group' | translate }}
     </button>
   </div>
 
@@ -22,14 +22,14 @@
             </div>
           </div>
           <h5 class="card-title">{{ g.name }}</h5>
-          <p class="card-text text-muted small mb-4">{{ g.description || 'No description provided.' }}</p>
+          <p class="card-text text-muted small mb-4">{{ g.description || ('UI.u_no_data' | translate) }}</p>
           
           <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-2">
-              <span class="badge bg-secondary">{{ g.device_count || 0 }} Devices</span>
-              <span class="badge bg-info" *ngIf="g.is_dynamic">Dynamic</span>
+              <span class="badge bg-secondary">{{ g.device_count || 0 }} {{ 'UI.u_devices' | translate }}</span>
+              <span class="badge bg-info" *ngIf="g.is_dynamic">{{ 'UI.u_dynamic' | translate }}</span>
             </div>
-            <a [routerLink]="['/devices']" [queryParams]="{ group: g.id }" class="btn btn-sm btn-outline-primary">View</a>
+            <a [routerLink]="['/devices']" [queryParams]="{ group: g.id }" class="btn btn-sm btn-outline-primary">{{ 'UI.u_view' | translate }}</a>
           </div>
         </div>
       </div>
@@ -37,8 +37,8 @@
 
     <div class="col-12" *ngIf="groups().length === 0">
       <app-empty-state 
-        title="No Groups Found" 
-        message="Create your first group to start organizing your fleet."
+        [title]="'UI.u_no_data' | translate" 
+        [description]="'UI.u_no_data' | translate"
         icon="folder2-open">
       </app-empty-state>
     </div>
@@ -49,22 +49,22 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content bg-dark text-white border-secondary">
         <div class="modal-header border-secondary border-opacity-25">
-          <h5 class="modal-title">Create New Group</h5>
+          <h5 class="modal-title">{{ 'UI.u_new_group' | translate }}</h5>
           <button type="button" class="btn-close btn-close-white" (click)="showModal = false"></button>
         </div>
         <div class="modal-body">
           <div class="mb-3">
-            <label class="form-label small text-muted">Group Name</label>
-            <input type="text" class="form-control bg-black text-white border-secondary" [(ngModel)]="newGroupName" placeholder="e.g. Sales Windows Laptops">
+            <label class="form-label small text-muted">{{ 'UI.u_name_label' | translate }}</label>
+            <input type="text" class="form-control bg-black text-white border-secondary" [(ngModel)]="newGroupName" [placeholder]="'UI.u_name_label' | translate">
           </div>
           <div class="mb-3">
-            <label class="form-label small text-muted">Description</label>
-            <textarea class="form-control bg-black text-white border-secondary" [(ngModel)]="newGroupDesc" rows="3" placeholder="Optional details..."></textarea>
+            <label class="form-label small text-muted">{{ 'UI.u_description' | translate }}</label>
+            <textarea class="form-control bg-black text-white border-secondary" [(ngModel)]="newGroupDesc" rows="3" [placeholder]="'UI.u_description' | translate"></textarea>
           </div>
         </div>
         <div class="modal-footer border-secondary border-opacity-25">
-          <button type="button" class="btn btn-outline-secondary" (click)="showModal = false">Cancel</button>
-          <button type="button" class="btn btn-primary" (click)="createGroup()" [disabled]="!newGroupName.trim()">Create Group</button>
+          <button type="button" class="btn btn-outline-secondary" (click)="showModal = false">{{ 'UI.u_cancel' | translate }}</button>
+          <button type="button" class="btn btn-primary" (click)="createGroup()" [disabled]="!newGroupName.trim()">{{ 'UI.u_create' | translate }}</button>
         </div>
       </div>
     </div>

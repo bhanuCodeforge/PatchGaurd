@@ -5,11 +5,12 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { WebsocketService } from '../../../core/services/websocket.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
@@ -49,8 +50,8 @@ export class LoginComponent {
         next: () => {
           this.isLoading.set(false);
           this.notificationService.success(
-            'Welcome Back',
-            'Successfully authenticated into PatchGuard.',
+            'MSG.m_welcome_back',
+            'MSG.m_login_success',
           );
 
           // Connect WebSocket after auth
@@ -64,12 +65,9 @@ export class LoginComponent {
             const d = err?.error?.detail;
             const detail = (typeof d === 'string' ? d : null) || err?.error?.non_field_errors?.[0] || '';
             if (detail?.toLowerCase().includes('lock')) {
-              this.notificationService.error(
-                'Account Locked',
-                'Multiple failed attempts detected. Try again later.',
-              );
+              this.notificationService.error('MSG.m_account_locked', 'MSG.m_lock_desc');
             } else {
-              this.notificationService.error('Access Denied', 'Invalid username or password.');
+              this.notificationService.error('MSG.m_access_denied', 'MSG.m_invalid_creds');
             }
           } else if (err.status === 403) {
             this.notificationService.error(

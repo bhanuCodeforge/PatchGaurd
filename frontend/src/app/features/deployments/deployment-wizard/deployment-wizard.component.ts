@@ -29,27 +29,27 @@ export class DeploymentWizardComponent implements OnInit {
   success = signal(false);
   createdDeploymentId = signal<string | null>(null);
 
-  steps = ['Patches', 'Targets', 'Strategy', 'Review'];
+  steps = ['UI.u_patches', 'UI.u_targets', 'UI.u_strategy', 'UI.u_review'];
 
   strategies = [
     {
       value: 'immediate',
-      label: 'Immediate',
-      desc: 'Deploy to all devices simultaneously. Fastest option but highest risk — no time to detect issues.',
+      label: 'UI.u_strategy_immediate',
+      desc: 'UI.u_strategy_immediate_desc',
       pros: ['Fastest completion time', 'Simple execution'],
       cons: ['No rollback window', 'All devices at risk'],
     },
     {
       value: 'canary',
-      label: 'Canary',
-      desc: 'Small percentage goes first. If canary succeeds, remaining devices deploy in waves.',
+      label: 'UI.u_strategy_canary',
+      desc: 'UI.u_strategy_canary_desc',
       pros: ['Early failure detection', 'Controlled risk exposure'],
       cons: ['Longer total time', 'Requires monitoring canary'],
     },
     {
       value: 'rolling',
-      label: 'Rolling',
-      desc: 'Deploy wave by wave with configurable delays between each. Balanced risk and speed.',
+      label: 'UI.u_strategy_rolling',
+      desc: 'UI.u_strategy_rolling_desc',
       pros: ['Steady, predictable pace', 'Per-wave failure checks'],
       cons: ['Slower than immediate', 'No dedicated canary phase'],
     },
@@ -182,9 +182,9 @@ export class DeploymentWizardComponent implements OnInit {
   );
 
   nextLabel = computed(() => {
-    if (this.step() === 1) return 'Continue to strategy';
-    if (this.step() === 2) return 'Continue to review';
-    return 'Continue';
+    if (this.step() === 1) return 'UI.u_continue_review'; // Assuming this maps to 'Continue to strategy' in your logic, or we use generic keys
+    if (this.step() === 2) return 'UI.u_continue_review';
+    return 'UI.u_continue';
   });
 
   //  Lifecycle

@@ -1,7 +1,7 @@
 <div class="app-layout">
   <app-sidebar></app-sidebar>
   <div class="app-main">
-    <app-topbar [title]="pageTitle"></app-topbar>
+    <app-topbar [title]="pageTitle | translate"></app-topbar>
     <main class="app-content">
       <router-outlet></router-outlet>
     </main>

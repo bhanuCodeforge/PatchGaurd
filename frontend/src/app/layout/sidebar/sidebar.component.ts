@@ -57,21 +57,21 @@ export class SidebarComponent {
 
   constructor() {
     this.overviewItems = [
-      { label: 'NAV.DASHBOARD', icon: this.icon('dashboard'), route: '/dashboard' },
-      { label: 'NAV.DEPLOYMENTS', icon: this.icon('deployments'), route: '/deployments' },
+      { label: 'UI.u_dashboard', icon: this.icon('dashboard'), route: '/dashboard' },
+      { label: 'UI.u_deployments', icon: this.icon('deployments'), route: '/deployments' },
     ];
     this.manageItems = [
-      { label: 'NAV.DEVICES', icon: this.icon('devices'), route: '/devices' },
-      { label: 'NAV.GROUPS', icon: this.icon('groups'), route: '/devices/groups' },
-      { label: 'NAV.PATCHES', icon: this.icon('patches'), route: '/patches' },
+      { label: 'UI.u_devices', icon: this.icon('devices'), route: '/devices' },
+      { label: 'UI.u_groups', icon: this.icon('groups'), route: '/devices/groups' },
+      { label: 'UI.u_patches', icon: this.icon('patches'), route: '/patches' },
     ];
     this.reportItems = [
-      { label: 'NAV.COMPLIANCE', icon: this.icon('compliance'), route: '/compliance' },
-      { label: 'NAV.AUDIT_LOG', icon: this.icon('audit'), route: '/audit' },
+      { label: 'UI.u_compliance', icon: this.icon('compliance'), route: '/compliance' },
+      { label: 'UI.u_audit_log', icon: this.icon('audit'), route: '/audit' },
     ];
     this.systemItems = [
-      { label: 'NAV.USER_MANAGEMENT', icon: this.icon('users'), route: '/settings/users', adminOnly: true },
-      { label: 'NAV.SETTINGS', icon: this.icon('settings'), route: '/settings', adminOnly: true },
+      { label: 'UI.u_user_management', icon: this.icon('users'), route: '/settings/users', adminOnly: true },
+      { label: 'UI.u_settings', icon: this.icon('settings'), route: '/settings', adminOnly: true },
     ];
   }
 }

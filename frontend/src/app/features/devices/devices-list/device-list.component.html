@@ -4,22 +4,22 @@
   <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
     <div>
       <h2 class="page-title mb-0">
-        {{ 'DEVICES.TITLE' | translate }}
+        {{ 'UI.u_devices' | translate }}
         <span class="text-muted fw-normal fs-6" *ngIf="!loading()">({{ total() | number }})</span>
       </h2>
     </div>
     <div class="d-flex gap-2">
       <button class="btn btn-outline-secondary btn-sm" *ngIf="selectedIds().size > 0" (click)="showTagModal.set(true)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-        Tag ({{ selectedIds().size }})
+        {{ 'UI.u_tag' | translate }} ({{ selectedIds().size }})
       </button>
       <button class="btn btn-primary btn-sm" (click)="openAddModal()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        {{ 'DEVICES.ADD_DEVICE' | translate }}
+        {{ 'UI.u_add_device' | translate }}
       </button>
       <button class="btn btn-outline-secondary btn-sm">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        {{ 'DEVICES.EXPORT' | translate }}
+        {{ 'UI.u_export' | translate }}
       </button>
     </div>
   </div>
@@ -31,7 +31,7 @@
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
       <input class="search-input" [(ngModel)]="searchTerm" (ngModelChange)="onSearch($event)"
-        [placeholder]="'DEVICES.SEARCH_PLACEHOLDER' | translate" />
+        [placeholder]="'UI.u_search_placeholder' | translate" />
       <button *ngIf="searchTerm" class="search-clear" (click)="clearSearch()">✕</button>
     </div>
 
@@ -56,7 +56,7 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="20 6 9 17 4 12"/>
       </svg>
-      {{ selectedIds().size }} {{ 'DEVICES.SELECTED' | translate }}
+      {{ selectedIds().size }} {{ 'UI.u_selected' | translate }}
     </span>
     <div class="d-flex gap-2">
       <button class="btn btn-sm btn-outline-secondary">
@@ -64,16 +64,16 @@
           <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
           <line x1="7" y1="7" x2="7.01" y2="7"/>
         </svg>
-        {{ 'DEVICES.TAG' | translate }}
+        {{ 'UI.u_tag' | translate }}
       </button>
-      <button class="btn btn-sm btn-outline-secondary" (click)="showGroupModal.set(true)">{{ 'DEVICES.ASSIGN_GROUP' | translate }}</button>
+      <button class="btn btn-sm btn-outline-secondary" (click)="showGroupModal.set(true)">{{ 'UI.u_assign_group' | translate }}</button>
       <button class="btn btn-sm btn-outline-primary" (click)="bulkScan()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
-        {{ 'DEVICES.SCAN_NOW' | translate }}
+        {{ 'UI.u_scan_now' | translate }}
       </button>
-      <button class="btn btn-sm btn-outline-danger">{{ 'DEVICES.DECOMMISSION' | translate }}</button>
+      <button class="btn btn-sm btn-outline-danger">{{ 'UI.u_decommission' | translate }}</button>
       <button class="btn btn-sm btn-link text-muted" (click)="clearSelection()">✕</button>
     </div>
   </div>
@@ -83,7 +83,7 @@
     <app-loading-skeleton *ngIf="loading()" variant="table" [rows]="rows"></app-loading-skeleton>
 
     <app-empty-state *ngIf="!loading() && devices().length === 0" icon="🖥️"
-      title="No devices found" description="No devices match your current filters.">
+      [title]="'UI.u_no_data' | translate" [description]="'UI.u_no_data' | translate">
     </app-empty-state>
 
     <div *ngIf="!loading() && devices().length > 0" class="table-responsive">
@@ -93,13 +93,13 @@
             <th style="width:40px">
               <input type="checkbox" class="form-check-input" (change)="toggleAll($event)" [checked]="allSelected()" />
             </th>
-            <th class="sortable" (click)="sort('hostname')">{{ 'DEVICES.HOSTNAME' | translate }} <span>{{ sortIcon('hostname') }}</span></th>
-            <th>{{ 'DEVICES.IP_ADDRESS' | translate }}</th>
-            <th class="sortable" (click)="sort('os_family')">{{ 'DEVICES.OS' | translate }} <span>{{ sortIcon('os_family') }}</span></th>
-            <th>{{ 'DEVICES.ENVIRONMENT' | translate }}</th>
-            <th class="sortable" (click)="sort('status')">{{ 'DEVICES.STATUS' | translate }} <span>{{ sortIcon('status') }}</span></th>
-            <th>{{ 'DEVICES.COMPLIANCE' | translate }}</th>
-            <th>{{ 'DEVICES.TAGS' | translate }}</th>
+            <th class="sortable" (click)="sort('hostname')">{{ 'UI.u_hostname' | translate }} <span>{{ sortIcon('hostname') }}</span></th>
+            <th>{{ 'UI.u_ip_address' | translate }}</th>
+            <th class="sortable" (click)="sort('os_family')">{{ 'UI.u_os' | translate }} <span>{{ sortIcon('os_family') }}</span></th>
+            <th>{{ 'UI.u_environment' | translate }}</th>
+            <th class="sortable" (click)="sort('status')">{{ 'UI.u_status' | translate }} <span>{{ sortIcon('status') }}</span></th>
+            <th>{{ 'UI.u_compliance' | translate }}</th>
+            <th>{{ 'UI.u_tags' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -142,12 +142,12 @@
     <!-- Pagination -->
     <div *ngIf="total() > pageSize" class="d-flex align-items-center justify-content-between px-3 py-3 border-top border-secondary border-opacity-25">
       <span class="text-muted small">
-        {{ 'DEVICES.SHOWING' | translate }} {{ (page()-1)*pageSize + 1 }}–{{ Math.min(page()*pageSize, total()) }} {{ 'DEVICES.OF' | translate }} {{ total() | number }} {{ 'DEVICES.DEVICES_COUNT' | translate }}
+        {{ 'UI.u_showing' | translate }} {{ (page()-1)*pageSize + 1 }}–{{ Math.min(page()*pageSize, total()) }} {{ 'UI.u_of' | translate }} {{ total() | number }} {{ 'UI.u_devices_count' | translate }}
       </span>
       <div class="d-flex gap-1">
-        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page() - 1)">← Prev</button>
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page() - 1)">← {{ 'UI.u_prev' | translate }}</button>
         <button *ngFor="let p of pageNumbers()" class="btn btn-sm" [class.btn-primary]="p === page()" [class.btn-outline-secondary]="p !== page()" (click)="setPage(p)">{{ p }}</button>
-        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()" (click)="setPage(page() + 1)">Next →</button>
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()" (click)="setPage(page() + 1)">{{ 'UI.u_next' | translate }} →</button>
       </div>
     </div>
   </div>
@@ -176,7 +176,7 @@
   <div class="modal-header-custom">
     <h5 class="mb-0">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      {{ 'DEVICES.ADD_DEVICE' | translate }}
+      {{ 'UI.u_add_device' | translate }}
     </h5>
     <button class="btn-close-custom" (click)="closeAddModal()">&#x2715;</button>
   </div>
@@ -184,36 +184,36 @@
   <div *ngIf="createdDevice()" class="modal-body-custom">
     <div class="alert-success-custom mb-3">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><polyline points="20 6 9 17 4 12"/></svg>
-      Device <strong>{{ createdDevice().hostname }}</strong> added successfully!
+      {{ 'MSG.m_success_created' | translate:{name: createdDevice().hostname} }}
     </div>
     <div class="mb-3">
-      <label class="form-label">Agent API Key <span class="text-muted small">(copy now — shown only once)</span></label>
+      <label class="form-label">{{ 'UI.u_api_key' | translate }} <span class="text-muted small">({{ 'UI.u_copy_now' | translate }})</span></label>
       <div class="input-group">
         <input class="form-control form-control-dark font-monospace" [value]="createdDevice().agent_api_key" readonly style="font-size:12px;" />
         <button class="btn btn-outline-secondary btn-sm" (click)="copyToClipboard(createdDevice().agent_api_key)" title="Copy to clipboard">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         </button>
       </div>
-      <p class="text-muted small mt-2">Use this key in your agent config (<code>api_key</code> field). It cannot be retrieved later.</p>
+      <p class="text-muted small mt-2">{{ 'MSG.m_agent_config_hint' | translate }}</p>
     </div>
     <div class="mb-2">
-      <span class="me-3"><span class="text-muted small">Device ID:</span> <code class="text-info small">{{ createdDevice().id }}</code></span>
-      <span><span class="text-muted small">Status:</span> <span class="ms-1 badge bg-secondary">{{ createdDevice().status }}</span></span>
+      <span class="me-3"><span class="text-muted small">{{ 'UI.u_device_id' | translate }}:</span> <code class="text-info small">{{ createdDevice().id }}</code></span>
+      <span><span class="text-muted small">{{ 'UI.u_status' | translate }}:</span> <span class="ms-1 badge bg-secondary">{{ createdDevice().status }}</span></span>
     </div>
   </div>
 
   <!-- Form state -->
   <div *ngIf="!createdDevice()" class="modal-body-custom">
     <div class="mb-3">
-      <label class="form-label">Hostname <span class="text-danger">*</span></label>
-      <input class="form-control form-control-dark" [(ngModel)]="addForm.hostname" placeholder="e.g. web-server-01" />
+      <label class="form-label">{{ 'UI.u_hostname' | translate }} <span class="text-danger">*</span></label>
+      <input class="form-control form-control-dark" [(ngModel)]="addForm.hostname" [placeholder]="'UI.u_hostname' | translate" />
     </div>
     <div class="mb-3">
-      <label class="form-label">IP Address <span class="text-danger">*</span></label>
-      <input class="form-control form-control-dark" [(ngModel)]="addForm.ip_address" placeholder="e.g. 192.168.1.10" />
+      <label class="form-label">{{ 'UI.u_ip_address' | translate }} <span class="text-danger">*</span></label>
+      <input class="form-control form-control-dark" [(ngModel)]="addForm.ip_address" [placeholder]="'UI.u_ip_address' | translate" />
     </div>
     <div class="mb-3">
-      <label class="form-label">OS Family</label>
+      <label class="form-label">{{ 'UI.u_os' | translate }}</label>
       <select class="form-select form-select-dark" [(ngModel)]="addForm.os_family">
         <option value="linux">Linux</option>
         <option value="windows">Windows</option>
@@ -221,7 +221,7 @@
       </select>
     </div>
     <div class="mb-3">
-      <label class="form-label">Environment</label>
+      <label class="form-label">{{ 'UI.u_environment' | translate }}</label>
       <select class="form-select form-select-dark" [(ngModel)]="addForm.environment">
         <option value="production">Production</option>
         <option value="staging">Staging</option>
@@ -229,22 +229,22 @@
       </select>
     </div>
     <div class="mb-3">
-      <label class="form-label">Agent Version</label>
-      <input class="form-control form-control-dark" [(ngModel)]="addForm.agent_version" placeholder="e.g. 1.0.0" />
+      <label class="form-label">{{ 'UI.u_agent_version' | translate }}</label>
+      <input class="form-control form-control-dark" [(ngModel)]="addForm.agent_version" [placeholder]="'UI.u_agent_version' | translate" />
     </div>
   </div>
 
   <div class="modal-footer-custom">
     <button class="btn btn-outline-secondary btn-sm" (click)="closeAddModal()">
-      {{ createdDevice() ? 'Close' : 'Cancel' }}
+      {{ createdDevice() ? ('UI.u_close' | translate) : ('UI.u_cancel' | translate) }}
     </button>
     <button *ngIf="!createdDevice()" class="btn btn-primary btn-sm" (click)="submitAddDevice()" [disabled]="addLoading()">
       <span *ngIf="addLoading()" class="spinner-border spinner-border-sm me-1"></span>
-      {{ addLoading() ? 'Adding...' : 'Add Device' }}
+      {{ addLoading() ? ('UI.u_saving' | translate) : ('UI.u_add_device' | translate) }}
     </button>
     <button *ngIf="createdDevice()" class="btn btn-primary btn-sm" (click)="openAddModal()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Add Another
+      {{ 'UI.u_add_another' | translate }}
     </button>
   </div>
 </div>
@@ -255,24 +255,24 @@
   <div class="modal-header-custom">
     <h5 class="mb-0">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-      Tag {{ selectedIds().size }} Device(s)
+      {{ 'UI.u_tag' | translate }} {{ selectedIds().size }} {{ 'UI.u_devices' | translate }}
     </h5>
     <button class="btn-close-custom" (click)="showTagModal.set(false)">&#x2715;</button>
   </div>
   <div class="modal-body-custom">
     <div class="mb-3">
-      <label class="form-label">Tags <span class="text-muted small">(comma-separated)</span></label>
+      <label class="form-label">{{ 'UI.u_tags' | translate }} <span class="text-muted small">({{ 'UI.u_comma_separated' | translate }})</span></label>
       <input class="form-control form-control-dark" [(ngModel)]="tagInput"
-        placeholder="e.g. production, critical, web-tier"
+        [placeholder]="'UI.u_tags' | translate"
         (keydown.enter)="bulkTag()" />
-      <div class="form-text text-muted">Tags will be added to all {{ selectedIds().size }} selected device(s).</div>
+      <div class="form-text text-muted">{{ 'MSG.m_tag_selected' | translate:{count: selectedIds().size} }}</div>
     </div>
   </div>
   <div class="modal-footer-custom">
-    <button class="btn btn-outline-secondary btn-sm" (click)="showTagModal.set(false)">Cancel</button>
+    <button class="btn btn-outline-secondary btn-sm" (click)="showTagModal.set(false)">{{ 'UI.u_cancel' | translate }}</button>
     <button class="btn btn-primary btn-sm" (click)="bulkTag()" [disabled]="!tagInput.trim()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="20 6 9 17 4 12"/></svg>
-      Apply Tags
+      {{ 'UI.u_apply_tags' | translate }}
     </button>
   </div>
 </div>
@@ -283,24 +283,24 @@
   <div class="modal-header-custom">
     <h5 class="mb-0">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      Assign Group — {{ selectedIds().size }} Device(s)
+      {{ 'UI.u_assign_group' | translate }} — {{ selectedIds().size }} {{ 'UI.u_devices' | translate }}
     </h5>
     <button class="btn-close-custom" (click)="showGroupModal.set(false)">&#x2715;</button>
   </div>
   <div class="modal-body-custom">
     <div class="mb-3">
-      <label class="form-label">Group ID <span class="text-danger">*</span></label>
+      <label class="form-label">{{ 'UI.u_group_id' | translate }} <span class="text-danger">*</span></label>
       <input class="form-control form-control-dark" [(ngModel)]="groupInput"
-        placeholder="e.g. grp-web-servers"
+        [placeholder]="'UI.u_group_id' | translate"
         (keydown.enter)="bulkGroup()" />
       <div class="form-text text-muted">All {{ selectedIds().size }} selected device(s) will be assigned to this group.</div>
     </div>
   </div>
   <div class="modal-footer-custom">
-    <button class="btn btn-outline-secondary btn-sm" (click)="showGroupModal.set(false)">Cancel</button>
+    <button class="btn btn-outline-secondary btn-sm" (click)="showGroupModal.set(false)">{{ 'UI.u_cancel' | translate }}</button>
     <button class="btn btn-primary btn-sm" (click)="bulkGroup()" [disabled]="!groupInput.trim()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="20 6 9 17 4 12"/></svg>
-      Assign Group
+      {{ 'UI.u_assign_group' | translate }}
     </button>
   </div>
 </div>

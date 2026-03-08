@@ -1,40 +1,40 @@
 <div class="modal-overlay" (click)="close.emit()">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h5 class="mb-0">Edit Device: {{ device.hostname }}</h5>
+      <h5 class="mb-0">{{ 'UI.u_edit_modal_title' | translate }}: {{ device.hostname }}</h5>
       <button class="close-btn" (click)="close.emit()">&#x2715;</button>
     </div>
     
     <form [formGroup]="editForm" (ngSubmit)="save()" class="modal-body">
       <div class="mb-3">
-        <label class="form-label">Hostname</label>
+        <label class="form-label">{{ 'UI.u_hostname' | translate }}</label>
         <input type="text" class="form-control" formControlName="hostname" />
       </div>
       
       <div class="mb-3">
-        <label class="form-label">IP Address</label>
+        <label class="form-label">{{ 'UI.u_ip_address' | translate }}</label>
         <input type="text" class="form-control" formControlName="ip_address" />
       </div>
       
       <div class="mb-3">
-        <label class="form-label">Environment</label>
+        <label class="form-label">{{ 'UI.u_environment' | translate }}</label>
         <select class="form-select" formControlName="environment">
-          <option value="production">Production</option>
-          <option value="staging">Staging</option>
-          <option value="development">Development</option>
-          <option value="test">Test</option>
+          <option value="production">{{ 'UI.u_production' | translate }}</option>
+          <option value="staging">{{ 'UI.u_staging' | translate }}</option>
+          <option value="development">{{ 'UI.u_development' | translate }}</option>
+          <option value="test">{{ 'UI.u_test' | translate }}</option>
         </select>
       </div>
       
       <div class="mb-3">
-        <label class="form-label">Tags (comma separated)</label>
-        <input type="text" class="form-control" formControlName="tags" placeholder="web, prod, linux" />
+        <label class="form-label">{{ 'UI.u_tags_hint' | translate }}</label>
+        <input type="text" class="form-control" formControlName="tags" [placeholder]="'UI.u_tags_hint' | translate" />
       </div>
 
       <div class="modal-footer px-0 pb-0">
-        <button type="button" class="btn btn-outline-secondary" (click)="close.emit()">Cancel</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="close.emit()">{{ 'UI.u_cancel' | translate }}</button>
         <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid || submitting">
-          {{ submitting ? 'Saving...' : 'Save Changes' }}
+          {{ submitting ? ('UI.u_saving' | translate) : ('UI.u_save_changes_btn' | translate) }}
         </button>
       </div>
     </form>

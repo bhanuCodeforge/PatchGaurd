@@ -2,10 +2,10 @@
 
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="page-title mb-0">{{ 'AUDIT.TITLE' | translate }}</h2>
+    <h2 class="page-title mb-0">{{ 'UI.u_audit_log' | translate }}</h2>
     <button class="btn btn-outline-secondary btn-sm" (click)="exportCSV()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      {{ 'AUDIT.EXPORT' | translate }}
+      {{ 'UI.u_export' | translate }}
     </button>
   </div>
 
@@ -18,17 +18,17 @@
       <input class="search-input" [(ngModel)]="search" (ngModelChange)="applyFilter()" [placeholder]="'AUDIT.SEARCH_PLACEHOLDER' | translate" />
     </div>
     <select class="pg-select" [(ngModel)]="actionFilter" (ngModelChange)="applyFilter()">
-      <option value="">All Actions</option>
-      <option value="deploy">Deploy</option>
-      <option value="approve">Approve</option>
-      <option value="delete">Delete</option>
-      <option value="login">Login</option>
-      <option value="update">Update</option>
+      <option value="">{{ 'UI.u_all_actions' | translate }}</option>
+      <option value="deploy">{{ 'UI.u_deploy' | translate }}</option>
+      <option value="approve">{{ 'UI.u_approve' | translate }}</option>
+      <option value="delete">{{ 'UI.u_delete_label' | translate }}</option>
+      <option value="login">{{ 'UI.u_login' | translate }}</option>
+      <option value="update">{{ 'UI.u_update' | translate }}</option>
     </select>
     <select class="pg-select" [(ngModel)]="statusFilter" (ngModelChange)="applyFilter()">
-      <option value="">All Status</option>
-      <option value="success">Success</option>
-      <option value="failure">Failure</option>
+      <option value="">{{ 'UI.u_all_status' | translate }}</option>
+      <option value="success">{{ 'UI.u_success' | translate }}</option>
+      <option value="failure">{{ 'UI.u_failed' | translate }}</option>
     </select>
     <input type="date" class="pg-select" [(ngModel)]="dateFrom" (ngModelChange)="applyFilter()" />
     <input type="date" class="pg-select" [(ngModel)]="dateTo" (ngModelChange)="applyFilter()" />
@@ -41,8 +41,8 @@
       @if (logs.length === 0) {
         <app-empty-state
           icon="📋"
-          title="No audit logs"
-          description="No audit logs found. Logs will appear as actions are performed."
+          [title]="'UI.u_no_data' | translate"
+          [description]="'UI.u_no_data' | translate"
         ></app-empty-state>
       } @else {
         <!-- Table -->
@@ -51,13 +51,13 @@
             <table class="table table-dark table-hover table-sm mb-0">
               <thead>
                 <tr>
-                  <th>{{ 'AUDIT.TIME' | translate }}</th>
-                  <th>{{ 'AUDIT.ACTOR' | translate }}</th>
-                  <th>{{ 'AUDIT.ACTION' | translate }}</th>
-                  <th>{{ 'AUDIT.RESOURCE' | translate }}</th>
-                  <th>{{ 'AUDIT.DESCRIPTION' | translate }}</th>
-                  <th>{{ 'AUDIT.IP' | translate }}</th>
-                  <th>{{ 'AUDIT.STATUS' | translate }}</th>
+                  <th>{{ 'UI.u_time' | translate }}</th>
+                  <th>{{ 'UI.u_actor' | translate }}</th>
+                  <th>{{ 'UI.u_action' | translate }}</th>
+                  <th>{{ 'UI.u_resource' | translate }}</th>
+                  <th>{{ 'UI.u_description' | translate }}</th>
+                  <th>{{ 'UI.u_ip' | translate }}</th>
+                  <th>{{ 'UI.u_status' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -90,9 +90,9 @@
         <!-- Pagination -->
         @if (logs.length > pageSize) {
           <div class="d-flex justify-content-center align-items-center gap-3 py-3">
-            <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page() - 1)">← Prev</button>
-            <span class="text-muted small">Page {{ page() }} of {{ totalPages() }}</span>
-            <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()" (click)="setPage(page() + 1)">Next →</button>
+            <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page() - 1)">← {{ 'UI.u_prev' | translate }}</button>
+            <span class="text-muted small">{{ 'UI.u_page' | translate }} {{ page() }} {{ 'UI.u_of' | translate }} {{ totalPages() }}</span>
+            <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()" (click)="setPage(page() + 1)">{{ 'UI.u_next' | translate }} →</button>
           </div>
         }
       }

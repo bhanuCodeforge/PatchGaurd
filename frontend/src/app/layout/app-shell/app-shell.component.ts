@@ -5,27 +5,28 @@ import { filter, map } from 'rxjs/operators';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { TopbarComponent } from '../topbar/topbar.component';
 import { ToastContainerComponent } from '../../shared/components/toast-container.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, TopbarComponent, ToastContainerComponent],
+  imports: [CommonModule, RouterOutlet, SidebarComponent, TopbarComponent, ToastContainerComponent, TranslateModule],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
 })
 export class AppShellComponent implements OnInit {
   private router = inject(Router);
-  pageTitle = 'Dashboard';
+  pageTitle = 'UI.u_dashboard';
 
   private titleMap: Record<string, string> = {
-    '/dashboard': 'Dashboard',
-    '/devices': 'Device Inventory',
-    '/patches': 'Patch Catalog',
-    '/deployments': 'Deployments',
-    '/compliance': 'Compliance Report',
-    '/audit': 'Audit Log',
-    '/settings/users': 'User Management',
-    '/settings': 'Settings',
+    '/dashboard': 'UI.u_dashboard',
+    '/devices': 'UI.u_devices',
+    '/patches': 'UI.u_patches',
+    '/deployments': 'UI.u_deployments',
+    '/compliance': 'UI.u_compliance',
+    '/audit': 'UI.u_audit_log',
+    '/settings/users': 'UI.u_user_management',
+    '/settings': 'UI.u_settings',
   };
 
   ngOnInit() {

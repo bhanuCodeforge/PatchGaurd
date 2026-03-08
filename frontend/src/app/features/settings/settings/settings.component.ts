@@ -1,4 +1,4 @@
-﻿import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -18,10 +18,10 @@ export class SettingsComponent {
 
   activeSection = 'profile';
   sections = [
-    { id: 'profile', label: 'Profile', icon: '👤' },
-    { id: 'security', label: 'Security', icon: '🔒' },
-    { id: 'notifications', label: 'Notifications', icon: '🔔' },
-    { id: 'system', label: 'System Info', icon: 'ℹ️' },
+    { id: 'profile', label: 'UI.u_profile_tab', icon: '👤' },
+    { id: 'security', label: 'UI.u_security_tab', icon: '🔒' },
+    { id: 'notifications', label: 'UI.u_notifications_tab', icon: '🔔' },
+    { id: 'system', label: 'UI.u_system_info_tab', icon: 'ℹ️' },
   ];
 
   profile = {
@@ -47,27 +47,27 @@ export class SettingsComponent {
   ];
 
   saveProfile() {
-    this.ns.success('Saved', 'Profile updated.');
+    this.ns.success('UI.u_saved', 'MSG.m_profile_updated');
   }
 
   changePassword() {
     if (!this.pwd.current || !this.pwd.new) {
-      this.ns.error('Validation', 'All fields required.');
+      this.ns.error('UI.u_validation', 'MSG.m_fields_required');
       return;
     }
     if (this.pwd.new !== this.pwd.confirm) {
-      this.ns.error('Validation', 'Passwords do not match.');
+      this.ns.error('UI.u_validation', 'MSG.m_pwd_mismatch');
       return;
     }
     if (this.pwd.new.length < 12) {
-      this.ns.error('Validation', 'Password must be at least 12 characters.');
+      this.ns.error('UI.u_validation', 'MSG.m_pwd_min');
       return;
     }
-    this.ns.success('Changed', 'Password updated. Please log in again.');
+    this.ns.success('UI.u_changed', 'MSG.m_pwd_updated');
     this.auth.logout();
   }
 
   saveNotifPrefs() {
-    this.ns.success('Saved', 'Notification preferences saved.');
+    this.ns.success('UI.u_saved', 'MSG.m_notif_saved');
   }
 }

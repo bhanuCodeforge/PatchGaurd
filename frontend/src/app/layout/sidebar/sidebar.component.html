@@ -2,14 +2,14 @@
   <div class="sidebar-logo">
     <div class="logo-icon">🛡️</div>
     <div class="logo-text">
-      <span class="logo-name">PatchGuard</span>
-      <span class="logo-sub">Enterprise</span>
+      <span class="logo-name">{{ 'UI.u_name' | translate }}</span>
+      <span class="logo-sub">{{ 'UI.u_enterprise' | translate }}</span>
     </div>
   </div>
 
   <nav class="sidebar-nav">
     <div class="nav-section">
-      <span class="nav-label">{{ 'NAV.OVERVIEW' | translate }}</span>
+      <span class="nav-label">{{ 'UI.u_overview' | translate }}</span>
       <a *ngFor="let item of overviewItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
         <span class="nav-icon" [innerHTML]="item.icon"></span>
         <span class="nav-text">{{ item.label | translate }}</span>
@@ -18,7 +18,7 @@
     </div>
 
     <div class="nav-section">
-      <span class="nav-label">{{ 'NAV.MANAGE' | translate }}</span>
+      <span class="nav-label">{{ 'UI.u_manage' | translate }}</span>
       <a *ngFor="let item of manageItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
         <span class="nav-icon" [innerHTML]="item.icon"></span>
         <span class="nav-text">{{ item.label | translate }}</span>
@@ -26,7 +26,7 @@
     </div>
 
     <div class="nav-section">
-      <span class="nav-label">{{ 'NAV.REPORTS' | translate }}</span>
+      <span class="nav-label">{{ 'UI.u_reports' | translate }}</span>
       <a *ngFor="let item of reportItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
         <span class="nav-icon" [innerHTML]="item.icon"></span>
         <span class="nav-text">{{ item.label | translate }}</span>
@@ -34,7 +34,7 @@
     </div>
 
     <div class="nav-section" *ngIf="isAdmin()">
-      <span class="nav-label">{{ 'NAV.SYSTEM' | translate }}</span>
+      <span class="nav-label">{{ 'UI.u_system' | translate }}</span>
       <a *ngFor="let item of systemItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
         <span class="nav-icon" [innerHTML]="item.icon"></span>
         <span class="nav-text">{{ item.label | translate }}</span>
