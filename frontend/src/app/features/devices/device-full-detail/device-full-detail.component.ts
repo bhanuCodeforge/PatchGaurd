@@ -24,28 +24,32 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     TranslateModule,
     StatusBadgeComponent,
     LoadingSkeletonComponent,
-    RelativeTimePipe
+    RelativeTimePipe,
   ],
   templateUrl: './device-full-detail.component.html',
   styleUrl: './device-full-detail.component.scss',
   animations: [
     trigger('listAnimation', [
       transition('* <=> *', [
-        query(':enter', [
-          style({ opacity: 0, transform: 'translateY(15px)' }),
-          stagger('50ms', [
-            animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-          ])
-        ], { optional: true })
-      ])
+        query(
+          ':enter',
+          [
+            style({ opacity: 0, transform: 'translateY(15px)' }),
+            stagger('50ms', [
+              animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })),
+            ]),
+          ],
+          { optional: true },
+        ),
+      ]),
     ]),
     trigger('tabChange', [
       transition(':enter', [
         style({ opacity: 0, scale: 0.98 }),
-        animate('200ms ease-out', style({ opacity: 1, scale: 1 }))
-      ])
-    ])
-  ]
+        animate('200ms ease-out', style({ opacity: 1, scale: 1 })),
+      ]),
+    ]),
+  ],
 })
 export class DeviceFullDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -69,9 +73,9 @@ export class DeviceFullDetailComponent implements OnInit {
   patchCounts = computed(() => {
     const ps = this.patches();
     return {
-      installed: ps.filter(p => p.state === 'installed').length,
-      pending:   ps.filter(p => p.state === 'pending' || p.state === 'missing').length,
-      failed:    ps.filter(p => p.state === 'failed').length,
+      installed: ps.filter((p) => p.state === 'installed').length,
+      pending: ps.filter((p) => p.state === 'pending' || p.state === 'missing').length,
+      failed: ps.filter((p) => p.state === 'failed').length,
     };
   });
 
@@ -90,16 +94,18 @@ export class DeviceFullDetailComponent implements OnInit {
   }
 
   setupWebsocket(id: string) {
-    this.wsSub = this.ws.messages$.subscribe(msg => {
+    this.wsSub = this.ws.messages$.subscribe((msg) => {
       const current = this.device();
       if (!current || msg.payload?.device_id !== id) return;
 
       if (msg.event === 'agent_heartbeat') {
-        this.device.update(d => d ? { ...d, metadata: { ...d.metadata, ...msg.payload } } : null);
+        this.device.update((d) =>
+          d ? { ...d, metadata: { ...d.metadata, ...msg.payload } } : null,
+        );
       } else if (msg.event === 'agent_inventory_info') {
-        this.device.update(d => d ? { ...d, inventory_data: msg.payload.inventory } : null);
+        this.device.update((d) => (d ? { ...d, inventory_data: msg.payload.inventory } : null));
       } else if (msg.event === 'status_change') {
-        this.device.update(d => d ? { ...d, status: msg.payload.status } : null);
+        this.device.update((d) => (d ? { ...d, status: msg.payload.status } : null));
       } else if (msg.event === 'scan_results') {
         this.ns.success('Scan Complete', `New patches discovered for ${current.hostname}`);
         this.loadPatches(id);
@@ -114,9 +120,9 @@ export class DeviceFullDetailComponent implements OnInit {
         this.device.set(d);
         this.editData = { hostname: d.hostname, description: d.description || '' };
         // Populate current config from metadata if available
-        this.configData = { 
-          log_level: d.metadata?.log_level || 'info', 
-          heartbeat_interval: d.metadata?.heartbeat_interval || 60 
+        this.configData = {
+          log_level: d.metadata?.log_level || 'info',
+          heartbeat_interval: d.metadata?.heartbeat_interval || 60,
         };
         this.loadPatches(id);
         this.loadDeployments(id);
@@ -125,28 +131,32 @@ export class DeviceFullDetailComponent implements OnInit {
       error: () => {
         this.ns.error('Error', 'Failed to load device details.');
         this.router.navigate(['/devices']);
-      }
+      },
     });
   }
 
   loadPatches(id: string) {
-    this.deviceSvc.getDevicePatches(id).subscribe(r => this.patches.set(r.results || []));
+    this.deviceSvc.getDevicePatches(id).subscribe((r) => this.patches.set(r.results || []));
   }
 
   loadDeployments(id: string) {
-    this.deviceSvc.getDeviceDeployments(id).subscribe(dls => this.deployments.set(dls || []));
+    this.deviceSvc.getDeviceDeployments(id).subscribe((dls) => this.deployments.set(dls || []));
   }
 
   scan() {
     const d = this.device();
     if (!d) return;
-    this.deviceSvc.scanTarget(d.id).subscribe(() => this.ns.success('Scan Started', `Remote scan initiated for ${d.hostname}`));
+    this.deviceSvc
+      .scanTarget(d.id)
+      .subscribe(() => this.ns.success('Scan Started', `Remote scan initiated for ${d.hostname}`));
   }
 
   reboot() {
     const d = this.device();
     if (!d) return;
-    this.deviceSvc.rebootTarget(d.id).subscribe(() => this.ns.info('Reboot', `Reboot command sent to ${d.hostname}`));
+    this.deviceSvc
+      .rebootTarget(d.id)
+      .subscribe(() => this.ns.info('Reboot', `Reboot command sent to ${d.hostname}`));
   }
 
   delete() {
@@ -156,7 +166,7 @@ export class DeviceFullDetailComponent implements OnInit {
       next: () => {
         this.ns.success('Deleted', `Device ${d.hostname} has been removed.`);
         this.router.navigate(['/devices']);
-      }
+      },
     });
   }
 
@@ -173,7 +183,7 @@ export class DeviceFullDetailComponent implements OnInit {
         this.isEditing.set(false);
         this.ns.success('Updated', 'Device properties updated.');
       },
-      error: () => this.ns.error('Error', 'Failed to update device.')
+      error: () => this.ns.error('Error', 'Failed to update device.'),
     });
   }
 
@@ -184,7 +194,7 @@ export class DeviceFullDetailComponent implements OnInit {
       next: () => {
         this.ns.success('Config Sent', 'Agent configuration update command published.');
       },
-      error: () => this.ns.error('Error', 'Failed to send config update.')
+      error: () => this.ns.error('Error', 'Failed to send config update.'),
     });
   }
 
@@ -192,9 +202,8 @@ export class DeviceFullDetailComponent implements OnInit {
     const apps = this.device()?.inventory_data?.apps || [];
     const search = this.appSearch().toLowerCase();
     if (!search) return apps;
-    return apps.filter(a => 
-      (a.name?.toLowerCase().includes(search)) || 
-      (a.publisher?.toLowerCase().includes(search))
+    return apps.filter(
+      (a) => a.name?.toLowerCase().includes(search) || a.publisher?.toLowerCase().includes(search),
     );
   }
 }
