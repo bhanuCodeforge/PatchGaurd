@@ -191,6 +191,7 @@
     "u_system_info_tab": "System Info",
     "u_language_tab": "Language",
     "u_display_name": "Display Name",
+    "u_password_label": "Password",
     "u_email_label": "Email",
     "u_save_changes": "Save Changes",
     "u_current_password": "Current Password",
@@ -284,7 +285,17 @@
     "u_app_name": "Application Name",
     "u_publisher": "Publisher",
     "u_version": "Version",
-    "u_reboot_title": "Reboot Device"
+    "u_reboot_title": "Reboot Device",
+    "u_serial_number": "Serial Number",
+    "u_last_login_title": "Last Login",
+    "u_system_identity": "System & Identity",
+    "u_power_battery": "Power & Battery",
+    "u_battery_level": "Battery Level",
+    "u_power_status": "Power Status",
+    "u_network_interfaces": "Network Interfaces",
+    "u_storage_disks": "Storage & Disks",
+    "u_plugged_in": "Plugged In",
+    "u_on_battery": "On Battery"
   },
   "MSG": {
     "m_reboot_confirm": "Are you sure you want to reboot {{hostname}}? This will interrupt all services running on this device.",

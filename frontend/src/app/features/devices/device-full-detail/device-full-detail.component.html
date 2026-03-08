@@ -61,6 +61,17 @@
     (cancel)="showRebootDialog.set(false)"
   ></app-confirm-dialog>
 
+  <app-confirm-dialog
+    [visible]="showDeleteDialog()"
+    [title]="'UI.u_delete_device_btn' | translate"
+    [message]="'m_confirm_delete' | translate:{name: device()?.hostname}"
+    [confirmLabel]="'UI.u_delete_label' | translate"
+    [confirmText]="device()?.hostname || ''"
+    severity="danger"
+    (confirm)="confirmDelete()"
+    (cancel)="showDeleteDialog.set(false)"
+  ></app-confirm-dialog>
+
   <!-- ── Spec grid ──────────────────────────────────────────────────────── -->
   <div class="dd-spec-grid">
     <div class="dd-spec-cell">
@@ -172,6 +183,9 @@
     <button class="dd-tab" [class.active]="activeTab() === 'inventory'" (click)="activeTab.set('inventory')">
       {{ 'UI.u_inventory_tab' | translate }}
     </button>
+    <button class="dd-tab" [class.active]="activeTab() === 'network'" (click)="activeTab.set('network')">
+      {{ 'UI.u_network_interfaces' | translate }}
+    </button>
     <button class="dd-tab" [class.active]="activeTab() === 'settings'" (click)="activeTab.set('settings')">
       {{ 'UI.u_agent_settings' | translate }}
     </button>
@@ -270,48 +284,141 @@
   </div>
   }
 
+  <!-- ── Network tab ───────────────────────────────────────────────────── -->
+  @if (activeTab() === 'network') {
+  <div class="dd-tab-panel" @tabChange>
+    <div class="dd-inv-section">
+      <div class="dd-inv-section-title">{{ 'UI.u_network_interfaces' | translate }}</div>
+      <div class="dd-inv-grid">
+        <div class="dd-inv-cell" *ngFor="let net of d.inventory_data?.['network']">
+          <span class="dd-inv-lbl">{{ net.interface }}</span>
+          <div class="dd-inv-val">{{ net.ip }}</div>
+          <div class="small text-muted" *ngIf="net.is_wifi">
+            📶 WiFi: {{ net.ssid || 'Unknown' }} ({{ net.signal || '—' }})
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+
   <!-- ── Inventory tab ─────────────────────────────────────────────────── -->
   @if (activeTab() === 'inventory') {
   <div class="dd-tab-panel" @tabChange>
-    <div class="dd-inv-grid">
-      <div class="dd-inv-cell">
-        <span class="dd-inv-lbl">{{ 'UI.u_hostname' | translate }}</span>
-        <span class="dd-inv-val text-primary">{{ d.hostname }}</span>
+    
+    <!-- Section: System -->
+    <div class="dd-inv-section">
+      <div class="dd-inv-section-title">{{ 'UI.u_system_identity' | translate }}</div>
+      <div class="dd-inv-grid">
+        <div class="dd-inv-cell">
+          <span class="dd-inv-lbl">{{ 'UI.u_hostname' | translate }}</span>
+          <span class="dd-inv-val text-primary">{{ d.hostname }}</span>
+        </div>
+        <div class="dd-inv-cell">
+          <span class="dd-inv-lbl">{{ 'UI.u_serial_number' | translate }}</span>
+          <span class="dd-inv-val">{{ d.metadata?.serial_number || '—' }}</span>
+        </div>
+        <div class="dd-inv-cell">
+          <span class="dd-inv-lbl">{{ 'UI.u_last_login_title' | translate }}</span>
+          <span class="dd-inv-val">
+            {{ d.inventory_data?.['last_login']?.DisplayName || '—' }}
+            <small class="d-block text-muted" *ngIf="d.inventory_data?.['last_login']?.LastLogon">
+              {{ d.inventory_data?.['last_login']?.LastLogon | date:'short' }}
+            </small>
+          </span>
+        </div>
+        <div class="dd-inv-cell">
+          <span class="dd-inv-lbl">{{ 'UI.u_os' | translate }}</span>
+          <span class="dd-inv-val">{{ d.os_name || d.os_family }}</span>
+        </div>
+        <div class="dd-inv-cell">
+          <span class="dd-inv-lbl">{{ 'UI.u_last_sync' | translate }}</span>
+          <span class="dd-inv-val">{{ d.last_seen | relativeTime }}</span>
+        </div>
       </div>
-      <div class="dd-inv-cell">
-        <span class="dd-inv-lbl">{{ 'UI.u_os' | translate }}</span>
-        <span class="dd-inv-val">{{ d.os_name || d.os_family }}</span>
+    </div>
+
+    <!-- Section: Power -->
+    <div class="dd-inv-section" *ngIf="d.inventory_data?.['battery']">
+      <div class="dd-inv-section-title">{{ 'UI.u_power_battery' | translate }}</div>
+      <div class="dd-inv-grid">
+        <div class="dd-inv-cell">
+          <span class="dd-inv-lbl">{{ 'UI.u_battery_level' | translate }}</span>
+          <div class="d-flex align-items-center gap-2 mt-1">
+            <div class="dd-mini-bar-track flex-grow-1">
+              <div class="dd-mini-bar-fill" 
+                   [style.width]="d.inventory_data?.['battery']?.percent + '%'"
+                   [class.bg-success]="(d.inventory_data?.['battery']?.percent || 0) > 20"
+                   [class.bg-danger]="(d.inventory_data?.['battery']?.percent || 0) <= 20"></div>
+            </div>
+            <span class="dd-inv-val">{{ d.inventory_data?.['battery']?.percent }}%</span>
+          </div>
+        </div>
+        <div class="dd-inv-cell">
+          <span class="dd-inv-lbl">{{ 'UI.u_power_status' | translate }}</span>
+          <span class="dd-inv-val">
+            <span class="badge" [class.bg-success]="d.inventory_data?.['battery']?.power_plugged" [class.bg-warning]="!d.inventory_data?.['battery']?.power_plugged">
+              {{ d.inventory_data?.['battery']?.power_plugged ? ('UI.u_plugged_in' | translate) : ('UI.u_on_battery' | translate) }}
+            </span>
+          </span>
+        </div>
       </div>
-      <div class="dd-inv-cell">
-        <span class="dd-inv-lbl">Kernel</span>
-        <span class="dd-inv-val">{{ d.metadata?.uptime || '—' }} (uptime)</span>
+    </div>
+
+    <!-- Section: Network -->
+    <div class="dd-inv-section">
+      <div class="dd-inv-section-title">{{ 'UI.u_network_interfaces' | translate }}</div>
+      <div class="dd-inv-grid">
+        <div class="dd-inv-cell" *ngFor="let net of d.inventory_data?.network">
+          <span class="dd-inv-lbl">{{ net.interface }}</span>
+          <div class="dd-inv-val">{{ net.ip }}</div>
+          <div class="small text-muted" *ngIf="net.is_wifi">
+            📶 WiFi: {{ net.ssid || 'Unknown' }} ({{ net.signal || '—' }})
+          </div>
+        </div>
       </div>
-      <div class="dd-inv-cell">
-        <span class="dd-inv-lbl">{{ 'UI.u_ip_address' | translate }}</span>
-        <span class="dd-inv-val">{{ d.ip_address }}</span>
-      </div>
-      <div class="dd-inv-cell">
-        <span class="dd-inv-lbl">{{ 'UI.u_mac_address' | translate }}</span>
-        <span class="dd-inv-val">{{ d.mac_address || '—' }}</span>
-      </div>
-      <div class="dd-inv-cell">
-        <span class="dd-inv-lbl">{{ 'UI.u_last_sync' | translate }}</span>
-        <span class="dd-inv-val">{{ d.last_seen | relativeTime }}</span>
+    </div>
+
+    <!-- Section: Storage -->
+    <div class="dd-inv-section">
+      <div class="dd-inv-section-title">{{ 'UI.u_storage_disks' | translate }}</div>
+      <div class="dd-inv-grid">
+        <div class="dd-inv-cell" *ngFor="let disk of d.inventory_data?.storage">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <span class="dd-inv-lbl">{{ disk.mountpoint }} ({{ disk.device }})</span>
+              <div class="dd-inv-val">{{ disk.fstype }}</div>
+            </div>
+            <span class="small" [class.text-danger]="disk.percent > 90">{{ disk.percent }}%</span>
+          </div>
+          <div class="dd-mini-bar-track mt-2">
+            <div class="dd-mini-bar-fill" 
+                 [style.width]="disk.percent + '%'"
+                 [class.bg-danger]="disk.percent > 90"
+                 [class.bg-warning]="disk.percent > 70 && disk.percent <= 90"
+                 [class.bg-primary]="disk.percent <= 70"></div>
+          </div>
+          <div class="x-small text-muted mt-1">
+            {{ (disk.used / 1073741824) | number:'1.1-1' }}GB / {{ (disk.total / 1073741824) | number:'1.0-0' }}GB
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Installed apps -->
-    <div class="dd-inv-section-title">Installed applications ({{ d.inventory_data?.apps?.length || 0 }})</div>
-    <div class="dd-app-list">
-      @for (app of filteredApps; track $index) {
-      <div class="dd-app-row">
-        <span class="dd-app-name">{{ app.name }}</span>
-        <span class="dd-app-ver text-muted">{{ app.version || '—' }}</span>
-        <span class="dd-app-pub text-muted">{{ app.publisher || '—' }}</span>
+    <div class="dd-inv-section">
+      <div class="dd-inv-section-title">Installed applications ({{ d.inventory_data?.apps?.length || 0 }})</div>
+      <div class="dd-app-list">
+        @for (app of filteredApps; track $index) {
+        <div class="dd-app-row">
+          <span class="dd-app-name">{{ app.name }}</span>
+          <span class="dd-app-ver text-muted">{{ app.version || '—' }}</span>
+          <span class="dd-app-pub text-muted">{{ app.publisher || '—' }}</span>
+        </div>
+        } @empty {
+        <div class="dd-empty">{{ 'UI.u_no_apps_found' | translate }}</div>
+        }
       </div>
-      } @empty {
-      <div class="dd-empty">{{ 'UI.u_no_apps_found' | translate }}</div>
-      }
     </div>
   </div>
   }
@@ -319,34 +426,49 @@
   <!-- ── Agent settings tab ────────────────────────────────────────────── -->
   @if (activeTab() === 'settings') {
   <div class="dd-tab-panel" @tabChange>
-    <p class="text-muted small mb-4">Values will be pushed to the agent via WebSocket in real-time.</p>
-    <div class="row g-3" style="max-width:600px">
-      <div class="col-md-6">
-        <label class="dd-inv-lbl mb-1">Log Level</label>
-        <select class="form-select form-select-sm bg-dark text-white border-secondary"
-          [(ngModel)]="configData.log_level">
-          <option value="debug">Debug</option>
-          <option value="info">Info</option>
-          <option value="warning">Warning</option>
-          <option value="error">Error</option>
-        </select>
+    
+    <!-- Config Card -->
+    <div class="dd-settings-card">
+      <div class="dd-settings-hint">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Values will be pushed to the agent via WebSocket in real-time.</span>
       </div>
-      <div class="col-md-6">
-        <label class="dd-inv-lbl mb-1">Heartbeat Interval (sec)</label>
-        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary"
-          [(ngModel)]="configData.heartbeat_interval" min="5" max="3600">
+
+      <div class="dd-settings-grid">
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Log Level</label>
+          <select class="dd-input-sm dd-select-sm" [(ngModel)]="configData.log_level">
+            <option value="debug">Debug</option>
+            <option value="info">Info</option>
+            <option value="warning">Warning</option>
+            <option value="error">Error</option>
+          </select>
+        </div>
+
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Heartbeat Interval (sec)</label>
+          <input type="number" class="dd-input-sm" [(ngModel)]="configData.heartbeat_interval" min="5" max="3600">
+        </div>
       </div>
-      <div class="col-12">
-        <button class="btn btn-sm btn-primary" (click)="updateConfig()" [disabled]="d.status !== 'online'">{{
-          'UI.u_push_config' | translate }}</button>
-      </div>
+
+      <button class="dd-btn-push" (click)="pushConfig()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        {{ 'UI.u_push_config' | translate }}
+      </button>
     </div>
-    <div class="mt-4 pt-4 border-top border-secondary border-opacity-25">
-      <h6 class="text-danger mb-2">{{ 'UI.u_danger_zone' | translate }}</h6>
-      <p class="small text-muted mb-2">{{ 'UI.u_delete_device_desc' | translate }}</p>
-      <button class="btn btn-sm btn-outline-danger" (click)="delete()">{{ 'UI.u_delete_device_btn' | translate
-        }}</button>
+
+    <!-- Danger Zone -->
+    <div class="dd-danger-zone">
+      <div class="dd-danger-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        {{ 'UI.u_danger_zone' | translate }}
+      </div>
+      <p class="dd-danger-desc">{{ 'UI.u_delete_device_desc' | translate }}</p>
+      <button class="dd-btn-delete" (click)="deleteDevice()">
+        {{ 'UI.u_delete_device_btn' | translate }}
+      </button>
     </div>
+
   </div>
   }
 

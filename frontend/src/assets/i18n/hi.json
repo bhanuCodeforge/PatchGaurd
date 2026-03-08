@@ -190,6 +190,7 @@
     "u_system_info_tab": "सिस्टम जानकारी",
     "u_language_tab": "भाषा",
     "u_display_name": "प्रदर्शन नाम",
+    "u_password_label": "पासवर्ड",
     "u_email_label": "ईमेल",
     "u_save_changes": "परिवर्तन सहेजें",
     "u_current_password": "वर्तमान पासवर्ड",
@@ -290,7 +291,17 @@
     "u_app_name": "एप्लिकेशन नाम",
     "u_publisher": "प्रकाशक",
     "u_version": "संस्करण",
-    "u_reboot_title": "उपकरण पुनरारंभ करें"
+    "u_reboot_title": "उपकरण पुनरारंभ करें",
+    "u_serial_number": "सीरियल नंबर",
+    "u_last_login_title": "अंतिम लॉगिन",
+    "u_system_identity": "सिस्टम और पहचान",
+    "u_power_battery": "पावर और बैटरी",
+    "u_battery_level": "बैटरी स्तर",
+    "u_power_status": "पावर स्थिति",
+    "u_network_interfaces": "नेटवर्क इंटरफेस",
+    "u_storage_disks": "स्टोरेज और डिस्क",
+    "u_plugged_in": "प्लग इन",
+    "u_on_battery": "बैटरी पर"
   },
   "MSG": {
     "m_reboot_confirm": "क्या आप वाकई {{hostname}} को पुनरारंभ करना चाहते हैं? इससे इस उपकरण पर चल रही सभी सेवाएँ बाधित हो जाएँगी।",

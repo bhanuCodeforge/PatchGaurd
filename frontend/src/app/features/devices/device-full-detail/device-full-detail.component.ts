@@ -73,6 +73,7 @@ export class DeviceFullDetailComponent implements OnInit {
   editData = { hostname: '', description: '' };
   configData = { log_level: 'info', heartbeat_interval: 60 };
   showRebootDialog = signal(false);
+  showDeleteDialog = signal(false);
 
   patchCounts = computed(() => {
     const ps = this.patches();
@@ -173,9 +174,15 @@ export class DeviceFullDetailComponent implements OnInit {
       });
   }
 
-  delete() {
+  deleteDevice() {
+    this.showDeleteDialog.set(true);
+  }
+
+  confirmDelete() {
     const d = this.device();
-    if (!d || !confirm(`Are you sure you want to delete ${d.hostname}?`)) return;
+    if (!d) return;
+
+    this.showDeleteDialog.set(false);
     this.deviceSvc.deleteDevice(d.id).subscribe({
       next: () => {
         this.ns.success('Deleted', `Device ${d.hostname} has been removed.`);
@@ -201,7 +208,7 @@ export class DeviceFullDetailComponent implements OnInit {
     });
   }
 
-  updateConfig() {
+  pushConfig() {
     const d = this.device();
     if (!d) return;
     this.deviceSvc.updateAgentConfig(d.id, this.configData).subscribe({

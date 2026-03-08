@@ -129,7 +129,7 @@ class DeviceViewSet(viewsets.ModelViewSet):
             # Update metadata json with all spec fields
             spec_fields = (
                 "cpu_usage", "ram_usage", "disk_usage", "agent_version",
-                "cpu_count", "total_ram", "total_disk", "uptime"
+                "cpu_count", "total_ram", "total_disk", "uptime", "serial_number"
             )
             for field in spec_fields:
                 if field in meta:
