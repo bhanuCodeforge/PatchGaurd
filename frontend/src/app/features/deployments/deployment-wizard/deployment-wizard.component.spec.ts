@@ -24,7 +24,7 @@ describe('DeploymentWizardComponent', () => {
       providers: [
         provideRouter([]),
         { provide: PatchService, useValue: { getPatches: () => of({ results: [] }) } },
-        { provide: DeviceService, useValue: { getDevices: () => of({ results: [] }) } },
+        { provide: DeviceService, useValue: { getDeviceGroups: () => of({ results: [] }) } },
         { provide: DeploymentService, useValue: { createDeployment: () => of({}) } },
         { provide: NotificationService, useValue: { success: () => {}, error: () => {} } },      ],
     }).compileComponents();

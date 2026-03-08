@@ -1,27 +1,187 @@
-// Live-specific (global: .pg-card, .live-badge, .live-dot, .page-title, .legend-dot, .table-dark)
-.breadcrumb-link { font-size: 12px; color: #60a5fa; text-decoration: none; &:hover { text-decoration: underline; } }
-.btn-purple { background: rgba(139,92,246,.15); color: #a78bfa; border: 1px solid rgba(139,92,246,.3); &:hover { background: rgba(139,92,246,.25); } }
-
-.kpi-mini { background: #1f2937; border: 1px solid #374151; border-radius: 10px; padding: 16px; text-align: center;
-  .kpi-val { font-size: 28px; font-weight: 700; color: #d1d5db; }
-  .kpi-lbl { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; margin-top: 3px; }
+﻿// Live Deployment Monitor Premium Styles
+.live-monitor-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 64px);
+  overflow: hidden;
+  background: #0f172a;
 }
 
-.card-header-sm { padding: 12px 16px; border-bottom: 1px solid #374151; font-size: 13px; font-weight: 600; color: #9ca3af; }
+.monitor-header {
+  padding: 20px 32px;
+  background: #111827;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
-.heatmap  { display: flex; flex-wrap: wrap; gap: 5px; padding: 12px; }
-.heat-cell { width: 22px; height: 22px; border-radius: 4px; cursor: pointer; transition: transform .1s; &:hover { transform: scale(1.15); } }
-
-.event-log { max-height: 280px; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
-.event-row { display: flex; gap: 10px; padding: 5px 8px; border-radius: 5px; font-size: 12px;
-  &:hover      { background: rgba(255,255,255,.02); }
-  &.event-error { background: rgba(239,68,68,.06); }
+  .monitor-title { font-size: 18px; font-weight: 600; color: #f8fafc; margin-bottom: 2px; }
+  .monitor-subtitle { font-size: 12px; color: #64748b; }
 }
-.event-time { color: #6b7280; flex-shrink: 0; font-size: 11px; }
-.event-msg  { color: #d1d5db; }
 
-.wave-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1f2937; &:last-child { border-bottom: none; }
-  &.active-wave { background: rgba(59,130,246,.06); padding: 8px; border-radius: 6px; }
+.monitor-content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 340px 1fr 400px;
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
 }
-.wave-label { font-size: 12px; font-weight: 600; color: #d1d5db; width: 70px; flex-shrink: 0; }
-.wave-count { font-size: 11px; color: #6b7280; width: 56px; text-align: right; flex-shrink: 0; }
+
+.sidebar-panel {
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.main-panel {
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 24px;
+}
+
+.panel-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+// Progress Card
+.progress-card {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+
+  .progress-val { font-size: 32px; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+  .progress-bar-wrap { height: 6px; background: #334155; border-radius: 3px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa); transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+}
+
+// Status Stats
+.status-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-box {
+  padding: 12px;
+  border-radius: 8px;
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.03);
+
+  .stat-label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
+  .stat-value { font-size: 18px; font-weight: 600; }
+  
+  &.stat-success .stat-value { color: #10b981; }
+  &.stat-failed .stat-value { color: #ef4444; }
+  &.stat-pending .stat-value { color: #3b82f6; }
+}
+
+// Wave List
+.wave-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wave-item {
+  padding: 12px;
+  border-radius: 8px;
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.03);
+
+  .wave-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .wave-name { font-size: 12px; font-weight: 600; color: #e2e8f0; }
+  .wave-status { font-size: 10px; color: #64748b; }
+}
+
+// Device Map Grid
+.device-map-wrap {
+  flex: 1;
+  background: #111827;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.device-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 14px);
+  grid-auto-rows: 14px;
+  gap: 4px;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.device-square {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    transform: scale(1.4);
+    z-index: 10;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+}
+
+// Live Terminal
+.terminal-wrap {
+  flex: 1;
+  background: #000;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.terminal-log {
+  flex: 1;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  overflow-y: auto;
+  color: #a1a1aa;
+
+  .log-entry {
+    margin-bottom: 4px;
+    line-height: 1.4;
+    display: flex;
+    gap: 8px;
+
+    .log-ts { color: #52525b; flex-shrink: 0; }
+    .log-msg { word-break: break-all; }
+    
+    &.level-error .log-msg { color: #f87171; }
+    &.level-warn .log-msg { color: #fbbf24; }
+    &.level-success .log-msg { color: #4ade80; }
+  }
+}
+
+.status-indicator {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  
+  &.status-in_progress { background: rgba(59,130,246,0.1); color: #3b82f6; }
+  &.status-completed { background: rgba(16,185,129,0.1); color: #10b981; }
+  &.status-failed { background: rgba(239,68,68,0.1); color: #ef4444; }
+  &.status-paused { background: rgba(245,158,11,0.1); color: #f59e0b; }
+}

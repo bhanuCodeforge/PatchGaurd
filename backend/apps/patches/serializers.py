@@ -6,7 +6,7 @@ class PatchListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Patch
-        fields = ['id', 'vendor_id', 'title', 'severity', 'status', 'vendor', 'cve_ids', 'applicable_os', 'requires_reboot', 'released_at', 'affected_device_count']
+        fields = ['id', 'vendor_id', 'title', 'severity', 'status', 'vendor', 'cve_ids', 'cvss_score', 'applicable_os', 'requires_reboot', 'released_at', 'affected_device_count']
 
     def get_affected_device_count(self, obj):
         return DevicePatchStatus.objects.filter(patch=obj, state=DevicePatchStatus.State.MISSING).count()
@@ -24,7 +24,7 @@ class PatchDetailSerializer(serializers.ModelSerializer):
         model = Patch
         fields = [
             'id', 'vendor_id', 'title', 'description', 'severity', 'status',
-            'vendor', 'kb_article', 'cve_ids', 'applicable_os', 
+            'vendor', 'kb_article', 'cve_ids', 'cvss_score', 'applicable_os', 
             'package_name', 'package_version', 'file_url', 'requires_reboot',
             'approved_by', 'approved_by_name', 'approved_at', 'status_notes',
             'released_at', 'created_at', 'updated_at',

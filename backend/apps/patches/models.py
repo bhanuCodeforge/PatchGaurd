@@ -24,6 +24,7 @@ class Patch(models.Model):
     vendor = models.CharField(max_length=100)
     kb_article = models.URLField(blank=True)
     cve_ids = models.JSONField(default=list, blank=True)
+    cvss_score = models.FloatField(null=True, blank=True)
     applicable_os = models.JSONField(default=list)
     package_name = models.CharField(max_length=200, blank=True)
     package_version = models.CharField(max_length=100, blank=True)

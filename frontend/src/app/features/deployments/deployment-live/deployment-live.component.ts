@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
@@ -27,62 +27,62 @@ export class DeploymentLiveComponent implements OnInit, OnDestroy {
   deployment = signal<any>(null);
   targets = signal<any[]>([]);
   events = signal<{ ts: string; message: string; level: string }[]>([]);
-  stats = signal({ total: 0, success: 0, failed: 0, pending: 0 });
+  stats = signal({ total: 0, success: 0, failed: 0, pending: 0, in_progress: 0 });
+
+  waves = computed(() => this.deployment()?.wave_summary || []);
 
   private subs: Subscription[] = [];
   deploymentId = '';
 
   progressPct() {
-    const s = this.stats();
-    return s.total ? Math.round(((s.success + s.failed) / s.total) * 100) : 0;
-  }
-  successPct() {
-    const s = this.stats();
-    return s.total ? (s.success / s.total) * 100 : 0;
-  }
-  failedPct() {
-    const s = this.stats();
-    return s.total ? (s.failed / s.total) * 100 : 0;
+    return this.deployment()?.progress_percentage || 0;
   }
 
   heatColor(status: string) {
     const m: Record<string, string> = {
-      success: '#22c55e',
+      completed: '#10b981',
       failed: '#ef4444',
       in_progress: '#3b82f6',
-      pending: '#374151',
-      skipped: '#6b7280',
+      queued: '#1e293b',
+      skipped: '#4b5563',
     };
-    return m[status] ?? '#374151';
+    return m[status] ?? '#1e293b';
   }
 
   ngOnInit() {
     this.deploymentId = this.route.snapshot.paramMap.get('id') ?? '';
     this.load();
-    const poll = interval(10000)
+    
+    // Slower polling for full object consistency
+    const poll = interval(15000)
       .pipe(switchMap(() => this.deploySvc.getDeploymentById(this.deploymentId)))
-      .subscribe((d) => {
-        this.deployment.set(d);
-        if (d.status !== 'in_progress') this.loadTargets();
-      });
+      .subscribe((d) => this.deployment.set(d));
     this.subs.push(poll);
+
+    // Real-time updates via WebSocket
     const ws = this.wsSvc.messages$.subscribe((msg: any) => {
       if (msg?.deployment_id === this.deploymentId) {
-        this.events.update((ev) =>
-          [
-            {
-              ts: new Date().toISOString(),
-              message: msg.message ?? JSON.stringify(msg),
-              level: msg.level ?? 'info',
-            },
-            ...ev,
-          ].slice(0, 200),
-        );
-        if (msg.type === 'deployment_target_update') this.loadTargets();
-        if (msg.type === 'deployment_status') this.load();
+        this.handleWsMessage(msg);
       }
     });
     this.subs.push(ws);
+  }
+
+  private handleWsMessage(msg: any) {
+    // Add to event log
+    this.events.update((ev) => [
+      {
+        ts: new Date().toISOString(),
+        message: msg.message || msg.text || 'Process update received',
+        level: msg.level || 'info',
+      },
+      ...ev,
+    ].slice(0, 100));
+
+    // Refresh data on significant changes
+    if (msg.type === 'deployment_target_update' || msg.type === 'deployment_status' || msg.type === 'deployment_wave_advance') {
+      this.load();
+    }
   }
 
   load() {
@@ -97,13 +97,15 @@ export class DeploymentLiveComponent implements OnInit, OnDestroy {
   }
 
   loadTargets() {
-    this.deploySvc.getTargets(this.deploymentId).subscribe((r: any) => {
+    this.deploySvc.getTargets(this.deploymentId, { page_size: 1000 }).subscribe((r: any) => {
       const list = r.results ?? r;
       this.targets.set(list);
-      const s = { total: list.length, success: 0, failed: 0, pending: 0 };
+      
+      const s = { total: list.length, success: 0, failed: 0, pending: 0, in_progress: 0 };
       for (const t of list) {
-        if (t.status === 'success') s.success++;
+        if (t.status === 'success' || t.status === 'completed') s.success++;
         else if (t.status === 'failed') s.failed++;
+        else if (t.status === 'in_progress') s.in_progress++;
         else s.pending++;
       }
       this.stats.set(s);
@@ -111,26 +113,33 @@ export class DeploymentLiveComponent implements OnInit, OnDestroy {
   }
 
   pause() {
-    this.deploySvc
-      .pause(this.deploymentId)
-      .subscribe({ next: () => this.load(), error: () => this.ns.error('Error', 'Pause failed.') });
+    this.deploySvc.pause(this.deploymentId).subscribe({ 
+      next: () => { this.ns.success('Paused', 'Deployment execution halted.'); this.load(); }, 
+      error: () => this.ns.error('Error', 'Pause failed.') 
+    });
   }
+
+  resume() {
+    this.deploySvc.resume(this.deploymentId).subscribe({ 
+      next: () => { this.ns.success('Resumed', 'Deployment execution resumed.'); this.load(); }, 
+      error: () => this.ns.error('Error', 'Resume failed.') 
+    });
+  }
+
   cancel() {
-    this.deploySvc
-      .cancel(this.deploymentId)
-      .subscribe({
-        next: () => this.load(),
-        error: () => this.ns.error('Error', 'Cancel failed.'),
-      });
+    this.deploySvc.cancel(this.deploymentId).subscribe({
+      next: () => { this.ns.success('Cancelled', 'Deployment has been stopped.'); this.load(); },
+      error: () => this.ns.error('Error', 'Cancel failed.'),
+    });
   }
+
   rollback() {
-    this.deploySvc
-      .rollback(this.deploymentId)
-      .subscribe({
-        next: () => this.load(),
-        error: () => this.ns.error('Error', 'Rollback failed.'),
-      });
+    this.deploySvc.rollback(this.deploymentId).subscribe({
+      next: () => { this.ns.success('Rolling Back', 'Patch removal initiated.'); this.load(); },
+      error: () => this.ns.error('Error', 'Rollback failed.'),
+    });
   }
+
   ngOnDestroy() {
     this.subs.forEach((s) => s.unsubscribe());
   }
