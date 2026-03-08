@@ -283,9 +283,11 @@
     "u_tags_hint": "Tags (comma separated)",
     "u_app_name": "Application Name",
     "u_publisher": "Publisher",
-    "u_version": "Version"
+    "u_version": "Version",
+    "u_reboot_title": "Reboot Device"
   },
   "MSG": {
+    "m_reboot_confirm": "Are you sure you want to reboot {{hostname}}? This will interrupt all services running on this device.",
     "m_last_30_days": "Last 30 days",
     "m_running": "running",
     "m_vendor_feeds": "from vendor feeds",

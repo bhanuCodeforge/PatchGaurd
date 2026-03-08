@@ -15,6 +15,7 @@ from .serializers import (
     DeviceListSerializer, DeviceDetailSerializer, DeviceCreateSerializer,
     DeviceBulkTagSerializer
 )
+from common.pagination import StandardPageNumberPagination
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
 from apps.patches.models import DevicePatchStatus
 from apps.patches.serializers import DevicePatchStatusSerializer
@@ -59,10 +60,10 @@ class DeviceViewSet(viewsets.ModelViewSet):
         return Response(serializer.get_compliance_summary(device))
 
     @extend_schema(summary="List patches", description="List all DevicePatchStatus for this device.")
-    @action(detail=True, methods=["get"])
+    @action(detail=True, methods=["get"], pagination_class=StandardPageNumberPagination)
     def patches(self, request, pk=None):
         device = self.get_object()
-        statuses = DevicePatchStatus.objects.filter(device=device).select_related('patch')
+        statuses = DevicePatchStatus.objects.filter(device=device).select_related('patch').order_by('patch__vendor_id')
         page = self.paginate_queryset(statuses)
         if page is not None:
             serializer = DevicePatchStatusSerializer(page, many=True)

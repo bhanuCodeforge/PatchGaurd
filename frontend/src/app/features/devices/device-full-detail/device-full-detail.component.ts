@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DeviceService } from '../../../core/services/device.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge.component';
@@ -10,6 +10,7 @@ import { LoadingSkeletonComponent } from '../../../shared/components/loading-ske
 import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
 import { Device } from '../../../core/models/types';
 import { WebsocketService } from '../../../core/services/websocket.service';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog.component';
 import { Subscription } from 'rxjs';
 
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
@@ -25,6 +26,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     StatusBadgeComponent,
     LoadingSkeletonComponent,
     RelativeTimePipe,
+    ConfirmDialogComponent,
   ],
   templateUrl: './device-full-detail.component.html',
   styleUrl: './device-full-detail.component.scss',
@@ -57,6 +59,7 @@ export class DeviceFullDetailComponent implements OnInit {
   private deviceSvc = inject(DeviceService);
   private ns = inject(NotificationService);
   private ws = inject(WebsocketService);
+  private translate = inject(TranslateService);
   private wsSub?: Subscription;
 
   loading = signal(true);
@@ -69,6 +72,7 @@ export class DeviceFullDetailComponent implements OnInit {
   appSearch = signal('');
   editData = { hostname: '', description: '' };
   configData = { log_level: 'info', heartbeat_interval: 60 };
+  showRebootDialog = signal(false);
 
   patchCounts = computed(() => {
     const ps = this.patches();
@@ -152,11 +156,21 @@ export class DeviceFullDetailComponent implements OnInit {
   }
 
   reboot() {
+    this.showRebootDialog.set(true);
+  }
+
+  confirmReboot() {
     const d = this.device();
     if (!d) return;
+
+    this.showRebootDialog.set(false);
     this.deviceSvc
       .rebootTarget(d.id)
-      .subscribe(() => this.ns.info('Reboot', `Reboot command sent to ${d.hostname}`));
+      .subscribe(() => {
+        const title = this.translate.instant('UI.u_reboot_title');
+        const msg = this.translate.instant('MSG.m_reboot_confirm', { hostname: d.hostname });
+        this.ns.info(title, msg);
+      });
   }
 
   delete() {

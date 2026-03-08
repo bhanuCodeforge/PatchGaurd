@@ -1,16 +1,17 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DeviceService } from '../../../core/services/device.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge.component';
 import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog.component';
 
 @Component({
   selector: 'app-device-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, StatusBadgeComponent, RelativeTimePipe],
+  imports: [CommonModule, RouterLink, TranslateModule, StatusBadgeComponent, RelativeTimePipe, ConfirmDialogComponent],
   templateUrl: './device-detail.component.html',
   styleUrl: './device-detail.component.scss',
 })
@@ -23,6 +24,9 @@ export class DeviceDetailComponent {
   private deviceSvc = inject(DeviceService);
   private ns = inject(NotificationService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
+
+  showRebootDialog = false;
 
   onOverlay(e: MouseEvent) {
     if ((e.target as HTMLElement).classList.contains('flyout-overlay')) this.close.emit();
@@ -35,7 +39,18 @@ export class DeviceDetailComponent {
   }
 
   reboot() {
-    this.ns.info('Reboot', `Reboot command sent to ${this.device.hostname}`);
+    this.showRebootDialog = true;
+  }
+
+  confirmReboot() {
+    this.showRebootDialog = false;
+    this.deviceSvc
+      .rebootTarget(this.device.id)
+      .subscribe(() => {
+        const title = this.translate.instant('UI.u_reboot_title');
+        const msg = this.translate.instant('MSG.m_reboot_confirm', { hostname: this.device.hostname });
+        this.ns.info(title, msg);
+      });
   }
 
   delete() {

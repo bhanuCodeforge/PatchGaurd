@@ -224,12 +224,17 @@ class PatchAgent:
                 mem = psutil.virtual_memory().percent
                 disk = self._disk_usage()
 
+                info = self.plugin.get_system_info()
                 payload = {
                     "cpu_usage": cpu,
                     "ram_usage": mem,
                     "disk_usage": disk,
-                    "agent_version": "1.0.0",
+                    "agent_version": self.version,
                     "status": "online",
+                    "cpu_count": info.get("cpu_count"),
+                    "total_ram": info.get("total_ram"),
+                    "total_disk": info.get("total_disk"),
+                    "uptime": info.get("uptime"),
                 }
 
                 async with aiohttp.ClientSession() as session:
@@ -357,6 +362,7 @@ class PatchAgent:
         interval = self.config.get("heartbeat_interval", 60)
         while self._connected:
             try:
+                info = self.plugin.get_system_info()
                 await self.send_json({
                     "event": "heartbeat",
                     "payload": {
@@ -366,6 +372,11 @@ class PatchAgent:
                         "disk_usage": self._disk_usage(),
                         "status": "online",
                         "timestamp": time.time(),
+                        "agent_version": self.version,
+                        "cpu_count": info.get("cpu_count"),
+                        "total_ram": info.get("total_ram"),
+                        "total_disk": info.get("total_disk"),
+                        "uptime": info.get("uptime"),
                     }
                 })
             except Exception as e:

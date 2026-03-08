@@ -51,6 +51,16 @@
     </div>
   </div>
 
+  <app-confirm-dialog
+    [visible]="showRebootDialog()"
+    [title]="'UI.u_reboot_title' | translate"
+    [message]="'MSG.m_reboot_confirm' | translate:{hostname: device()?.hostname}"
+    [confirmLabel]="'UI.u_confirm' | translate"
+    severity="warning"
+    (confirm)="confirmReboot()"
+    (cancel)="showRebootDialog.set(false)"
+  ></app-confirm-dialog>
+
   <!-- ── Spec grid ──────────────────────────────────────────────────────── -->
   <div class="dd-spec-grid">
     <div class="dd-spec-cell">
