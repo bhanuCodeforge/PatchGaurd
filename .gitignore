@@ -1,4 +1,4 @@
-# ─── Python ───
+﻿# ─── Python ───
 __pycache__/
 *.py[cod]
 *$py.class
@@ -27,7 +27,7 @@ db.sqlite3-journal
 *.pot
 *.mo
 
-# ─── Node / Angular ───
+# â”€â”€â”€ Node / Angular â”€â”€â”€
 node_modules/
 frontend/dist/
 frontend/.angular/
@@ -82,6 +82,9 @@ coverage.xml
 # ─── Celery ───
 celerybeat-schedule
 celerybeat.pid
+celerybeat-schedule*
+celerybeat-schedule-shm
+celerybeat-schedule-wal
 
 # ─── SSL (keep directory, ignore certs) ───
 nginx/ssl/*.pem
