@@ -301,7 +301,9 @@
     "u_network_interfaces": "नेटवर्क इंटरफेस",
     "u_storage_disks": "स्टोरेज और डिस्क",
     "u_plugged_in": "प्लग इन",
-    "u_on_battery": "बैटरी पर"
+    "u_on_battery": "बैटरी पर",
+    "u_search_patch": "पैच खोजें",
+    "u_search_audit": "ऑडिट खोजें"
   },
   "MSG": {
     "m_reboot_confirm": "क्या आप वाकई {{hostname}} को पुनरारंभ करना चाहते हैं? इससे इस उपकरण पर चल रही सभी सेवाएँ बाधित हो जाएँगी।",

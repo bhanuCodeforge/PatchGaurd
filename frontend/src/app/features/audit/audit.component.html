@@ -4,7 +4,11 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="page-title mb-0">{{ 'UI.u_audit_log' | translate }}</h2>
     <button class="btn btn-outline-secondary btn-sm" (click)="exportCSV()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+      </svg>
       {{ 'UI.u_export' | translate }}
     </button>
   </div>
@@ -12,10 +16,13 @@
   <!-- Filters -->
   <div class="filter-bar d-flex flex-wrap gap-2 mb-3">
     <div class="search-wrap flex-grow-1">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="search-icon">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
       </svg>
-      <input class="search-input" [(ngModel)]="search" (ngModelChange)="applyFilter()" [placeholder]="'AUDIT.SEARCH_PLACEHOLDER' | translate" />
+      <input class="search-input" [(ngModel)]="search" (ngModelChange)="applyFilter()"
+        [placeholder]="'UI.u_search_audit' | translate" />
     </div>
     <select class="pg-select" [(ngModel)]="actionFilter" (ngModelChange)="applyFilter()">
       <option value="">{{ 'UI.u_all_actions' | translate }}</option>
@@ -35,67 +42,68 @@
   </div>
 
   @if (loading()) {
-    <app-loading-skeleton variant="table"></app-loading-skeleton>
+  <app-loading-skeleton variant="table"></app-loading-skeleton>
   } @else {
-    @if (filtered(); as logs) {
-      @if (logs.length === 0) {
-        <app-empty-state
-          icon="📋"
-          [title]="'UI.u_no_data' | translate"
-          [description]="'UI.u_no_data' | translate"
-        ></app-empty-state>
-      } @else {
-        <!-- Table -->
-        <div class="pg-card">
-          <div class="table-responsive">
-            <table class="table table-dark table-hover table-sm mb-0">
-              <thead>
-                <tr>
-                  <th>{{ 'UI.u_time' | translate }}</th>
-                  <th>{{ 'UI.u_actor' | translate }}</th>
-                  <th>{{ 'UI.u_action' | translate }}</th>
-                  <th>{{ 'UI.u_resource' | translate }}</th>
-                  <th>{{ 'UI.u_description' | translate }}</th>
-                  <th>{{ 'UI.u_ip' | translate }}</th>
-                  <th>{{ 'UI.u_status' | translate }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (log of paginated(); track log.id) {
-                  <tr>
-                    <td class="td-time">{{ log.timestamp | relativeTime }}</td>
-                    <td>
-                      <div class="actor-name">{{ log.actor }}</div>
-                      <div class="actor-role">{{ log.actor_role }}</div>
-                    </td>
-                    <td>
-                      <span class="action-pill" [class]="'action-' + log.action">{{ log.action }}</span>
-                    </td>
-                    <td>
-                      <div>{{ log.resource_type }}</div>
-                      <div class="resource-id">{{ log.resource_id | slice:0:12 }}</div>
-                    </td>
-                    <td class="td-desc">{{ log.description | slice:0:80 }}</td>
-                    <td class="td-ip">{{ log.ip_address }}</td>
-                    <td>
-                      <span class="status-pill" [class.pill-success]="log.status === 'success'" [class.pill-fail]="log.status === 'failure'">{{ log.status }}</span>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
+  @if (filtered(); as logs) {
+  @if (logs.length === 0) {
+  <app-empty-state icon="📋" [title]="'UI.u_no_data' | translate"
+    [description]="'UI.u_no_data' | translate"></app-empty-state>
+  } @else {
+  <!-- Table -->
+  <div class="pg-card">
+    <div class="table-responsive">
+      <table class="table table-dark table-hover table-sm mb-0">
+        <thead>
+          <tr>
+            <th>{{ 'UI.u_time' | translate }}</th>
+            <th>{{ 'UI.u_actor' | translate }}</th>
+            <th>{{ 'UI.u_action' | translate }}</th>
+            <th>{{ 'UI.u_resource' | translate }}</th>
+            <th>{{ 'UI.u_description' | translate }}</th>
+            <th>{{ 'UI.u_ip' | translate }}</th>
+            <th>{{ 'UI.u_status' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of paginated(); track log.id) {
+          <tr>
+            <td class="td-time">{{ log.timestamp | relativeTime }}</td>
+            <td>
+              <div class="actor-name">{{ log.actor }}</div>
+              <div class="actor-role">{{ log.actor_role }}</div>
+            </td>
+            <td>
+              <span class="action-pill" [class]="'action-' + log.action">{{ log.action }}</span>
+            </td>
+            <td>
+              <div>{{ log.resource_type }}</div>
+              <div class="resource-id">{{ log.resource_id | slice:0:12 }}</div>
+            </td>
+            <td class="td-desc">{{ log.description | slice:0:80 }}</td>
+            <td class="td-ip">{{ log.ip_address }}</td>
+            <td>
+              <span class="status-pill" [class.pill-success]="log.status === 'success'"
+                [class.pill-fail]="log.status === 'failure'">{{ log.status }}</span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-        <!-- Pagination -->
-        @if (logs.length > pageSize) {
-          <div class="d-flex justify-content-center align-items-center gap-3 py-3">
-            <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page() - 1)">← {{ 'UI.u_prev' | translate }}</button>
-            <span class="text-muted small">{{ 'UI.u_page' | translate }} {{ page() }} {{ 'UI.u_of' | translate }} {{ totalPages() }}</span>
-            <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()" (click)="setPage(page() + 1)">{{ 'UI.u_next' | translate }} →</button>
-          </div>
-        }
-      }
-    }
+  <!-- Pagination -->
+  @if (logs.length > pageSize) {
+  <div class="d-flex justify-content-center align-items-center gap-3 py-3">
+    <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page() - 1)">← {{
+      'UI.u_prev' | translate }}</button>
+    <span class="text-muted small">{{ 'UI.u_page' | translate }} {{ page() }} {{ 'UI.u_of' | translate }} {{
+      totalPages() }}</span>
+    <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()"
+      (click)="setPage(page() + 1)">{{ 'UI.u_next' | translate }} →</button>
+  </div>
+  }
+  }
+  }
   }
 </div>

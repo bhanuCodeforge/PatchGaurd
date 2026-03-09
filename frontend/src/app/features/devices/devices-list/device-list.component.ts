@@ -80,10 +80,10 @@ export class DeviceListComponent implements OnInit, OnDestroy {
   private search$ = new Subject<string>();
 
   statusOptions = [
-    { label: 'DEVICES.ALL', value: '' },
-    { label: 'DEVICES.ONLINE', value: 'online' },
-    { label: 'DEVICES.OFFLINE', value: 'offline' },
-    { label: 'DEVICES.MAINTENANCE', value: 'maintenance' },
+    { label: 'UI.u_all', value: '' },
+    { label: 'UI.u_online', value: 'online' },
+    { label: 'UI.u_offline', value: 'offline' },
+    { label: 'UI.u_maintenance', value: 'maintenance' },
   ];
 
   osOptions = ['All', 'Linux', 'Windows', 'macOS'];

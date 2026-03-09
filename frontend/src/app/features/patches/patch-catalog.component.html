@@ -84,7 +84,7 @@
         <line x1="21" y1="21" x2="16.65" y2="16.65" />
       </svg>
       <input class="search-input" [(ngModel)]="searchTerm" (ngModelChange)="loadPatches()"
-        [placeholder]="'PATCHES.SEARCH_PLACEHOLDER' | translate" />
+        [placeholder]="'UI.u_search_patch' | translate" />
       <button *ngIf="searchTerm" class="search-clear" (click)="searchTerm=''; loadPatches()">&#x2715;</button>
     </div>
     <select class="pg-select" [(ngModel)]="severityFilter" (ngModelChange)="loadPatches()">

@@ -8,27 +8,22 @@
 #   Replace 'localhost' with the hostname or IP of the server.
 #   e.g. server_url: "ws://192.168.1.100:8001/ws/agent"
 # -----------------------------------------------------------------------
-
-server_url: "ws://localhost:8001/ws/agent"
-rest_url: "http://localhost:8000/api/v1"   # REST API base (for heartbeat + auto-register)
-
 # IMPORTANT: these two values are device-specific.
 # Copy the api_key and device_id from the Device record in the admin UI
 # or GET /api/v1/devices/{id}/ and update here before starting the agent.
-api_key: "wOiW2c6m4rWQqgZr6nwuXjWDGLa9EDSW"
-device_id_override: "c9744198-772a-4984-ae76-7a24a703282b"
-
-heartbeat_interval: 60                     # WebSocket heartbeat (seconds)
-rest_heartbeat_interval: 300               # POST heartbeat to REST every N seconds (0 = disabled)
-log_level: "info"                          # debug | info | warning | error
-
-tags:
-  - "production"
-  - "web-server"
-
 # Auto-register: set to true if api_key is blank and the device is not yet
 # registered. The agent will POST to /api/v1/devices/register/ on first start.
+rest_url: http://localhost:8000/api/v1
+server_url: ws://localhost:8001/ws/agent
+api_key: wOiW2c6m4rWQqgZr6nwuXjWDGLa9EDSW
 auto_register: false
-auto_register_hostname: null              # defaults to socket.gethostname()
-auto_register_os_family: null            # defaults to detected OS family
-auto_register_environment: "production"  # production | staging | development
+auto_register_environment: production
+auto_register_hostname: null
+auto_register_os_family: null
+device_id_override: c9744198-772a-4984-ae76-7a24a703282b
+heartbeat_interval: 5
+log_level: info
+rest_heartbeat_interval: 300
+tags:
+- production
+- web-server

@@ -313,7 +313,9 @@
     "u_sla_violations": "SLA Violations",
     "u_password_policy": "Password Policy",
     "u_min_length": "Min 12 characters",
-    "u_complexity": "Must contain upper, lower, digit, and special char"
+    "u_complexity": "Must contain upper, lower, digit, and special char",
+    "u_search_patch": "Search patches",
+    "u_search_audit": "Search audit"
   },
   "MSG": {
     "m_reboot_confirm": "Are you sure you want to reboot {{hostname}}? This will interrupt all services running on this device.",
