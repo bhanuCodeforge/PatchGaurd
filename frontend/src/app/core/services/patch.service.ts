@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { Patch, PaginatedResponse } from '../models/types';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PatchService {
   constructor(private api: ApiService) {}
@@ -27,6 +27,10 @@ export class PatchService {
 
   bulkApprove(patchIds: string[]): Observable<any> {
     return this.api.post<any>('/patches/bulk_approve/', { patch_ids: patchIds });
+  }
+
+  bulkReject(patchIds: string[], reason: string): Observable<any> {
+    return this.api.post<any>('/patches/bulk_reject/', { patch_ids: patchIds, reason });
   }
 
   getStats(): Observable<any> {

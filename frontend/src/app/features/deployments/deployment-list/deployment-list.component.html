@@ -59,7 +59,16 @@
               </div>
             </td>
             <td class="text-muted small">{{ d.created_at | relativeTime }}</td>
-            <td>
+            <td class="d-flex gap-1 align-items-center">
+              <button *ngIf="d.status === 'draft' && isAdmin()"
+                class="btn btn-xs btn-outline-success" (click)="approveDeployment(d, $event)" title="Approve">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Approve
+              </button>
+              <button *ngIf="d.status === 'scheduled'"
+                class="btn btn-xs btn-outline-primary" (click)="executeDeployment(d, $event)" title="Execute Now">
+                ▶ Execute
+              </button>
               <a class="btn btn-xs btn-outline-secondary" [routerLink]="['/deployments', d.id]">{{ 'UI.u_view' | translate }} →</a>
             </td>
           </tr>

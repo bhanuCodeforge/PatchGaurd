@@ -73,6 +73,14 @@ class DeploymentViewSet(viewsets.ModelViewSet):
         deployment.status = Deployment.Status.SCHEDULED
         deployment.approved_by = request.user
         deployment.save()
+        
+        from apps.accounts.models import AuditLog
+        AuditLog.objects.create(
+            user=request.user,
+            action=f"Approved deployment: {deployment.name}",
+            resource_type="deployment",
+            resource_id=deployment.id
+        )
         return Response({"status": "Deployment approved and scheduled."})
 
     @extend_schema(summary="Execute deployment immediately")
@@ -81,6 +89,16 @@ class DeploymentViewSet(viewsets.ModelViewSet):
         deployment = self.get_object()
         if deployment.status not in [Deployment.Status.SCHEDULED, Deployment.Status.DRAFT]:
             return Response({"error": "Cannot execute deployment in current state."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Parity Check: Approval Enforcement (Sec 7.8)
+        from apps.accounts.models import SystemSetting, User
+        require_approval = SystemSetting.get_bool("REQUIRE_DEPLOYMENT_APPROVAL", default=False)
+        
+        if require_approval and deployment.status == Deployment.Status.DRAFT:
+            if request.user.role != User.Role.ADMIN:
+                return Response({
+                    "error": "Deployment requires Administrator approval before execution."
+                }, status=status.HTTP_403_FORBIDDEN)
         
         deployment.status = Deployment.Status.IN_PROGRESS
         deployment.started_at = timezone.now()
@@ -227,6 +245,14 @@ class DashboardStatsView(APIView):
             for row in Device.objects.values("os_family").annotate(count=Count("id"))
         }
 
+        # SLA Violations: Critical patches NOT installed and released more than 72 hours ago
+        sla_threshold = timezone.now() - timezone.timedelta(hours=72)
+        sla_violations = DevicePatchStatus.objects.filter(
+            state=DevicePatchStatus.State.MISSING,
+            patch__severity='critical',
+            patch__released_at__lt=sla_threshold
+        ).count()
+
         return Response({
             "total_devices": total_devices,
             "online_devices": online_devices,
@@ -238,6 +264,7 @@ class DashboardStatsView(APIView):
             "by_os": by_os,
             "offline_devices": Device.objects.filter(status=Device.Status.OFFLINE).count(),
             "maintenance_devices": Device.objects.filter(status=Device.Status.MAINTENANCE).count(),
+            "sla_violations": sla_violations,
         })
 
 class ComplianceReportView(APIView):
@@ -267,6 +294,15 @@ class ComplianceReportView(APIView):
         sev_counts = {row['patch__severity']: row['count'] for row in missing_by_sev}
         total_missing = sum(sev_counts.values()) or 1
         
+        # 30-Day Trend
+        from apps.patches.models import ComplianceSnapshot
+        thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
+        trend_qs = ComplianceSnapshot.objects.filter(timestamp__gte=thirty_days_ago).order_by('timestamp')
+        trend_data = [{
+            "date": s.timestamp.strftime("%Y-%m-%d"),
+            "compliance": s.overall_compliance
+        } for s in trend_qs]
+
         return Response({
             "overall": round(overall, 1),
             "compliant_devices": compliant_devices,
@@ -276,4 +312,5 @@ class ComplianceReportView(APIView):
             "high_pct": round((sev_counts.get('high', 0) / total_missing * 100), 1),
             "medium_pct": round((sev_counts.get('medium', 0) / total_missing * 100), 1),
             "low_pct": round((sev_counts.get('low', 0) / total_missing * 100), 1),
+            "trend": trend_data
         })

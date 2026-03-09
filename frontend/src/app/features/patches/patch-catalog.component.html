@@ -5,23 +5,35 @@
     <div>
       <h2 class="page-title mb-0">{{ 'UI.u_patches' | translate }}</h2>
       <p class="text-muted small mb-0 mt-1">
-        {{ stats()?.total ?? 0 }} {{ 'UI.u_patches' | translate | lowercase }} {{ 'UI.u_catalogued' | translate }} &middot;
-        {{ stats()?.critical_pending_count ?? 0 }} {{ 'UI.u_critical' | translate | lowercase }} {{ 'UI.u_pending' | translate | lowercase }}
+        {{ stats()?.total ?? 0 }} {{ 'UI.u_patches' | translate | lowercase }} {{ 'UI.u_catalogued' | translate }}
+        &middot;
+        {{ stats()?.critical_pending_count ?? 0 }} {{ 'UI.u_critical' | translate | lowercase }} {{ 'UI.u_pending' |
+        translate | lowercase }}
       </p>
     </div>
     <div class="d-flex gap-2">
       <button class="btn btn-sm btn-outline-secondary" (click)="loadPatches()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          <polyline points="23 4 23 10 17 10" />
+          <polyline points="1 20 1 14 7 14" />
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
         </svg>
         {{ 'UI.u_scan_now' | translate }}
       </button>
-      <button class="btn btn-sm btn-outline-primary" *ngIf="selectedIds().size > 1 && canWrite()" (click)="bulkApprove()">
+      <button class="btn btn-sm btn-outline-primary" *ngIf="selectedIds().size > 1 && canWrite()"
+        (click)="bulkApprove()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-          <polyline points="20 6 9 17 4 12"/>
+          <polyline points="20 6 9 17 4 12" />
         </svg>
-        {{ 'UI.u_bulk_actions' | translate }} ({{ selectedIds().size }})
+        Bulk Approve ({{ selectedIds().size }})
+      </button>
+      <button class="btn btn-sm btn-outline-danger" *ngIf="selectedIds().size > 1 && canWrite()"
+        (click)="openBulkReject()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+        Bulk Reject ({{ selectedIds().size }})
       </button>
     </div>
   </div>
@@ -66,8 +78,10 @@
   <!-- Filters -->
   <div class="d-flex flex-wrap gap-2 mb-3">
     <div class="search-wrap">
-      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
       </svg>
       <input class="search-input" [(ngModel)]="searchTerm" (ngModelChange)="loadPatches()"
         [placeholder]="'PATCHES.SEARCH_PLACEHOLDER' | translate" />
@@ -81,7 +95,7 @@
       <option value="low">{{ 'UI.u_low' | translate }}</option>
     </select>
     <select class="pg-select" [(ngModel)]="vendorFilter" (ngModelChange)="loadPatches()">
-      <option value="">{{ 'PATCHES.ALL_VENDORS' | translate }}</option>
+      <option value="">{{ 'UI.u_all_vendors' | translate }}</option>
       <option value="Microsoft">Microsoft</option>
       <option value="Red Hat">Red Hat</option>
       <option value="Canonical">Canonical</option>
@@ -93,8 +107,8 @@
   <div class="pg-card">
     <app-loading-skeleton *ngIf="loading()" variant="table" [rows]="rows"></app-loading-skeleton>
 
-    <app-empty-state *ngIf="!loading() && patches().length === 0" icon="&#x1F4E6;"
-      [title]="'UI.u_no_data' | translate" [description]="'UI.u_search_placeholder' | translate">
+    <app-empty-state *ngIf="!loading() && patches().length === 0" icon="&#x1F4E6;" [title]="'UI.u_no_data' | translate"
+      [description]="'UI.u_search_placeholder' | translate">
     </app-empty-state>
 
     <div *ngIf="!loading() && patches().length > 0" class="table-responsive">
@@ -114,10 +128,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let p of patches()"
-              [class.table-active]="selectedPatch()?.id === p.id"
-              (click)="openPanel(p)"
-              class="cursor-pointer">
+          <tr *ngFor="let p of patches()" [class.table-active]="selectedPatch()?.id === p.id" (click)="openPanel(p)"
+            class="cursor-pointer">
             <td (click)="$event.stopPropagation()">
               <input type="checkbox" class="form-check-input" [checked]="selectedIds().has(p.id)"
                 (change)="toggleSelect(p.id)" />
@@ -138,20 +150,25 @@
             <td class="text-muted">{{ p.affected_device_count ?? 0 }}</td>
             <td class="text-muted small">{{ p.released_at | relativeTime }}</td>
             <td (click)="$event.stopPropagation()" class="nowrap">
-              <button *ngIf="p.status !== 'approved' && canWrite()"
-                class="btn btn-xs btn-outline-success me-1" (click)="approve(p)"
-                title="Approve">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <button *ngIf="p.status !== 'approved' && canWrite()" class="btn btn-xs btn-outline-success me-1"
+                (click)="approve(p)" title="Approve">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               </button>
-              <button *ngIf="p.status === 'imported' && canWrite()"
-                class="btn btn-xs btn-outline-info me-1" (click)="markReview(p)"
-                title="Mark Reviewed">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <button *ngIf="p.status === 'imported' && canWrite()" class="btn btn-xs btn-outline-info me-1"
+                (click)="markReview(p)" title="Mark Reviewed">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
               </button>
-              <button *ngIf="p.status !== 'rejected' && canWrite()"
-                class="btn btn-xs btn-outline-danger" (click)="reject(p)"
-                title="Reject">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <button *ngIf="p.status !== 'rejected' && canWrite()" class="btn btn-xs btn-outline-danger"
+                (click)="reject(p)" title="Reject">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </td>
           </tr>
@@ -160,14 +177,17 @@
     </div>
 
     <!-- Pagination -->
-    <div *ngIf="totalPages() > 1" class="d-flex align-items-center justify-content-between px-3 py-3 border-top border-secondary border-opacity-25">
-      <span class="text-muted small">{{ 'UI.u_page' | translate }} {{ page() }} {{ 'UI.u_of' | translate }} {{ totalPages() }}</span>
+    <div *ngIf="totalPages() > 1"
+      class="d-flex align-items-center justify-content-between px-3 py-3 border-top border-secondary border-opacity-25">
+      <span class="text-muted small">{{ 'UI.u_page' | translate }} {{ page() }} {{ 'UI.u_of' | translate }} {{
+        totalPages() }}</span>
       <div class="d-flex gap-1">
-        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page()-1)">← {{ 'UI.u_prev' | translate }}</button>
-        <button *ngFor="let p of pageNumbers()" class="btn btn-sm"
-          [class.btn-primary]="p === page()" [class.btn-outline-secondary]="p !== page()"
-          (click)="setPage(p)">{{ p }}</button>
-        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()" (click)="setPage(page()+1)">{{ 'UI.u_next' | translate }} →</button>
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page()-1)">← {{
+          'UI.u_prev' | translate }}</button>
+        <button *ngFor="let p of pageNumbers()" class="btn btn-sm" [class.btn-primary]="p === page()"
+          [class.btn-outline-secondary]="p !== page()" (click)="setPage(p)">{{ p }}</button>
+        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()"
+          (click)="setPage(page()+1)">{{ 'UI.u_next' | translate }} →</button>
       </div>
     </div>
   </div>
@@ -188,7 +208,8 @@
           <span class="status-pill" [class]="'st-' + selectedPatch().status">{{ selectedPatch().status }}</span>
           <button class="close-btn" (click)="selectedPatch.set(null)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -198,13 +219,18 @@
         <div class="info-group">
           <h6 class="info-heading">{{ 'UI.u_patch_details' | translate }}</h6>
           <p class="text-white fw-500 mb-3">{{ selectedPatch().title }}</p>
-          
+
           <div class="info-grid">
-            <div class="info-row"><span class="key">{{ 'UI.u_package' | translate }}</span><span class="val font-monospace">{{ selectedPatch().package_name || '—' }}</span></div>
-            <div class="info-row"><span class="key">{{ 'UI.u_version' | translate }}</span><span class="val font-monospace">{{ selectedPatch().package_version || '—' }}</span></div>
-            <div class="info-row"><span class="key">{{ 'UI.u_released' | translate }}</span><span class="val">{{ selectedPatch().released_at | relativeTime }}</span></div>
-            <div class="info-row"><span class="key">{{ 'UI.u_auto_reboot' | translate }}</span><span class="val">{{ selectedPatch().requires_reboot ? ('UI.u_yes' | translate) : ('UI.u_no' | translate) }}</span></div>
-            <div class="info-row"><span class="key">{{ 'UI.u_os' | translate }}</span><span class="val">{{ getOsLabel(selectedPatch()) }}</span></div>
+            <div class="info-row"><span class="key">{{ 'UI.u_package' | translate }}</span><span
+                class="val font-monospace">{{ selectedPatch().package_name || '—' }}</span></div>
+            <div class="info-row"><span class="key">{{ 'UI.u_version' | translate }}</span><span
+                class="val font-monospace">{{ selectedPatch().package_version || '—' }}</span></div>
+            <div class="info-row"><span class="key">{{ 'UI.u_released' | translate }}</span><span class="val">{{
+                selectedPatch().released_at | relativeTime }}</span></div>
+            <div class="info-row"><span class="key">{{ 'UI.u_auto_reboot' | translate }}</span><span class="val">{{
+                selectedPatch().requires_reboot ? ('UI.u_yes' | translate) : ('UI.u_no' | translate) }}</span></div>
+            <div class="info-row"><span class="key">{{ 'UI.u_os' | translate }}</span><span class="val">{{
+                getOsLabel(selectedPatch()) }}</span></div>
           </div>
         </div>
 
@@ -221,17 +247,19 @@
         </div>
 
         <!-- Approval / Rejection Audit -->
-        <div class="info-group border-top border-secondary border-opacity-25 pt-3" *ngIf="selectedPatch().status !== 'imported'">
+        <div class="info-group border-top border-secondary border-opacity-25 pt-3"
+          *ngIf="selectedPatch().status !== 'imported'">
           <h6 class="info-heading d-flex align-items-center gap-2">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
             Status & Approval
           </h6>
           <div class="audit-card mt-2">
             <div class="d-flex justify-content-between mb-2">
               <span class="text-muted small">Current Status</span>
-              <span class="status-pill mini" [class]="'st-' + selectedPatch().status">{{ selectedPatch().status }}</span>
+              <span class="status-pill mini" [class]="'st-' + selectedPatch().status">{{ selectedPatch().status
+                }}</span>
             </div>
             <div class="audit-item" *ngIf="selectedPatch().approved_by_name">
               <div class="audit-meta">
@@ -252,14 +280,15 @@
       </div>
 
       <div class="flyout-footer flex-wrap" *ngIf="canWrite()">
-        <button class="btn btn-sm btn-success"
-          (click)="approve(selectedPatch())"
+        <button class="btn btn-sm btn-success" (click)="approve(selectedPatch())"
           [disabled]="selectedPatch().status === 'approved' || selectedPatch().status === 'rejected'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="20 6 9 17 4 12"/></svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="me-1">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
           {{ 'PATCHES.APPROVE_PATCH' | translate }}
         </button>
-        <button class="btn btn-sm btn-outline-info"
-          (click)="markReview(selectedPatch())"
+        <button class="btn btn-sm btn-outline-info" (click)="markReview(selectedPatch())"
           [disabled]="selectedPatch().status !== 'imported'">
           Mark Reviewed
         </button>
@@ -276,10 +305,33 @@
   </div>
 
   <!-- Approval Modal -->
-  <app-patch-approval-modal
-    *ngIf="confirmVisible()"
-    [action]="confirmAction"
-    (confirmed)="doConfirm($event)"
+  <app-patch-approval-modal *ngIf="confirmVisible()" [action]="confirmAction" (confirmed)="doConfirm($event)"
     (cancel)="confirmVisible.set(false)">
   </app-patch-approval-modal>
+
+  <!-- Bulk Reject Modal -->
+  <div class="modal-overlay" *ngIf="bulkRejectVisible()" (click)="bulkRejectVisible.set(false)">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-header border-bottom border-secondary border-opacity-25 pb-3">
+        <h5 class="mb-0">Bulk Reject {{ selectedIds().size }} Patches</h5>
+        <button class="close-btn" (click)="bulkRejectVisible.set(false)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body py-3">
+        <label class="form-label text-muted small">Rejection Reason <span class="text-danger">*</span></label>
+        <textarea class="form-control" rows="3" [(ngModel)]="bulkRejectReason"
+          placeholder="Provide a reason for rejecting these patches..."></textarea>
+      </div>
+      <div class="modal-footer border-top border-secondary border-opacity-25 pt-3 d-flex gap-2 justify-content-end">
+        <button class="btn btn-sm btn-outline-secondary" (click)="bulkRejectVisible.set(false)">Cancel</button>
+        <button class="btn btn-sm btn-danger" (click)="bulkReject()" [disabled]="!bulkRejectReason.trim()">
+          Reject {{ selectedIds().size }} Patches
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

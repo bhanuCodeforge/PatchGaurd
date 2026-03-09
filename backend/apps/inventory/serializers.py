@@ -6,13 +6,20 @@ import secrets
 class DeviceGroupSerializer(serializers.ModelSerializer):
     device_count = serializers.SerializerMethodField()
     parent_name = serializers.CharField(source='parent.name', read_only=True)
+    children = serializers.SerializerMethodField()
 
     class Meta:
         model = DeviceGroup
-        fields = ['id', 'name', 'description', 'dynamic_rules', 'is_dynamic', 'parent', 'parent_name', 'created_at', 'updated_at', 'device_count']
+        fields = ['id', 'name', 'description', 'dynamic_rules', 'is_dynamic', 'parent', 'parent_name', 'children', 'created_at', 'updated_at', 'device_count']
 
     def get_device_count(self, obj):
         return obj.get_devices().count()
+
+    def get_children(self, obj):
+        children = DeviceGroup.objects.filter(parent=obj)
+        if not children.exists():
+            return []
+        return DeviceGroupSerializer(children, many=True, context=self.context).data
 
 class DeviceGroupCreateSerializer(serializers.ModelSerializer):
     class Meta:

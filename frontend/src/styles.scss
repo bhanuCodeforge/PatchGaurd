@@ -58,6 +58,34 @@ body { margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', sans-serif
   --st-reviewed-bg:  #eff6ff; --st-reviewed-color:  #1d4ed8;
 }
 
+// ── AUTO-DETECT OS THEME PREFERENCE ──────────────────
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:          #f3f4f6;
+    --bg-card:     #ffffff;
+    --bg-input:    #f9fafb;
+    --bg-hover:    #f0f4ff;
+    --bg-thead:    #f8fafc;
+    --border:      #e5e7eb;
+    --border-focus:#3b82f6;
+    --text:        #111827;
+    --text-secondary: #374151;
+    --muted:       #9ca3af;
+    --muted2:      #6b7280;
+    --shadow:      rgba(0,0,0,.12);
+    --modal-bg:    #ffffff;
+    --dropdown-bg: #ffffff;
+    --scrollbar-track: #f3f4f6;
+    --scrollbar-thumb: #d1d5db;
+    --sev-critical-bg: #fef2f2; --sev-critical-color: #991b1b; --sev-critical-border: #fecaca;
+    --sev-high-bg:     #fff7ed; --sev-high-color:     #9a3412; --sev-high-border:     #fed7aa;
+    --sev-medium-bg:   #fefce8; --sev-medium-color:   #92400e; --sev-medium-border:   #fde68a;
+    --st-approved-bg:  #f0fdf4; --st-approved-color:  #15803d;
+    --st-rejected-bg:  #fef2f2; --st-rejected-color:  #b91c1c;
+    --st-reviewed-bg:  #eff6ff; --st-reviewed-color:  #1d4ed8;
+  }
+}
+
 // Apply to body
 body {
   background: var(--bg);

@@ -117,6 +117,41 @@ def execute_deployment(self, deployment_id: str):
             deployment.save(update_fields=['current_wave'])
             publish_progress(deployment)
 
+            # Pre-flight Health Checks (Sec 7.6.2)
+            run_preflight_checks(str(deployment_id))
+            # Poll for health check results with timeout
+            wave_targets = DeploymentTarget.objects.filter(
+                deployment=deployment, wave_number=w, status=DeploymentTarget.Status.QUEUED
+            ).select_related('device')
+            preflight_deadline = timezone.now() + timezone.timedelta(seconds=60)
+            while timezone.now() < preflight_deadline:
+                all_reported = True
+                for t in wave_targets:
+                    t.device.refresh_from_db()
+                    last_health = t.device.metadata.get('last_health_check') if t.device.metadata else None
+                    if not last_health or last_health.get('timestamp', '') < str(timezone.now() - timezone.timedelta(seconds=90)):
+                        all_reported = False
+                        break
+                if all_reported:
+                    break
+                time.sleep(3)
+
+            # Evaluate preflight results — skip unhealthy devices
+            for t in wave_targets:
+                t.device.refresh_from_db()
+                health = t.device.metadata.get('last_health_check', {}) if t.device.metadata else {}
+                disk_free = health.get('disk_free_pct', 100)
+                cpu_busy = health.get('cpu_pct', 0)
+                mem_used = health.get('memory_pct', 0)
+                if disk_free < 10 or cpu_busy > 95 or mem_used > 95:
+                    t.status = DeploymentTarget.Status.SKIPPED
+                    t.result_log = f"Preflight failed: disk={disk_free}%, cpu={cpu_busy}%, mem={mem_used}%"
+                    t.completed_at = timezone.now()
+                    t.save()
+                    logger.warning(f"Skipping device {t.device.hostname} - preflight failed: {t.result_log}")
+            update_deployment_counters(deployment)
+            deployment.refresh_from_db()
+
             # Collect patch vendor IDs to send to agent
             patch_ids = list(deployment.patches.values_list('vendor_id', flat=True))
 
@@ -139,7 +174,16 @@ def execute_deployment(self, deployment_id: str):
 
             # In a real app we'd spawn target polling tasks. For now, simulate asynchronous execution polling.
             logger.info(f"Deployed Wave {w}. Waiting for completion tracking via agent webhooks.")
-            # We delay the wave wait and offload to next task or queue wait.
+            
+            # Wave Delay Enforcement (1.0 Parity)
+            # We only delay if there's another wave coming
+            next_wave = waves.filter(wave_number__gt=w).first()
+            if next_wave and deployment.strategy != Deployment.Strategy.IMMEDIATE:
+                # FIX: wave_delay_minutes in model, let's use seconds for sleep
+                delay_mins = deployment.wave_delay_minutes or 0
+                delay_sec = max(30, delay_mins * 60) # Minimum 30s safety buffer
+                logger.info(f"Enforcing wave delay of {delay_sec}s before proceeding to wave {next_wave}")
+                time.sleep(delay_sec)
             
     except SoftTimeLimitExceeded:
         logger.warning(f"Time limit exceeded for deployment {deployment_id}")
@@ -167,6 +211,32 @@ def cancel_deployment_task(deployment_id: str):
                     )
                 t.save()
             publish_progress(deployment)
+    except Deployment.DoesNotExist:
+        pass
+
+@shared_task
+def run_preflight_checks(deployment_id: str):
+    """
+    Command all target devices to report live health metrics.
+    Updates targets to HEALTH_CHECK status.
+    """
+    try:
+        deployment = Deployment.objects.get(id=deployment_id)
+        targets = DeploymentTarget.objects.filter(
+            deployment=deployment, 
+            status=DeploymentTarget.Status.QUEUED
+        ).select_related('device')
+        
+        request_id = f"preflight_{deployment_id}_{int(time.time())}"
+        
+        for t in targets:
+            RedisPublisher.publish_agent_command(
+                str(t.device.id),
+                "HEALTH_CHECK",
+                {"request_id": request_id}
+            )
+            
+        logger.info(f"Pre-flight health checks requested for deployment {deployment_id}")
     except Deployment.DoesNotExist:
         pass
 

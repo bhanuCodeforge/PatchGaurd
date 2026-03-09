@@ -16,10 +16,19 @@ class DeviceFilter(django_filters.FilterSet):
     last_seen_before = django_filters.DateTimeFilter(field_name='last_seen', lookup_expr='lte')
     agent_version = django_filters.CharFilter(lookup_expr='exact')
     compliance_below = django_filters.NumberFilter(method='filter_compliance_below')
+    search = django_filters.CharFilter(method='global_search')
 
     class Meta:
         model = Device
-        fields = ['hostname', 'os_family', 'environment', 'status', 'agent_version']
+        fields = ['hostname', 'os_family', 'environment', 'status', 'agent_version', 'search']
+
+    def global_search(self, queryset, name, value):
+        from django.db.models import Q
+        return queryset.filter(
+            Q(hostname__icontains=value) |
+            Q(ip_address__icontains=value) |
+            Q(tags__icontains=value)
+        )
 
     def filter_by_tag(self, queryset, name, value):
         # Since tags is JSONField (Array replacement for sqlite compatibility or Postgres JSON)

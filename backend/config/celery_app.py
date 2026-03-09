@@ -48,4 +48,16 @@ app.conf.beat_schedule = {
         "schedule": crontab(minute="0", hour="3", day_of_month="1"), # monthly 1st at 03:00
         "options": {"queue": "reporting"},
     },
+    # Scheduled weekly compliance PDF report
+    "weekly-compliance-report": {
+        "task": "apps.patches.tasks.generate_scheduled_report",
+        "schedule": crontab(minute="0", hour="7", day_of_week="1"),  # Monday 07:00 UTC
+        "options": {"queue": "reporting"},
+    },
+    # Daily SLA breach check
+    "daily-sla-breach-check": {
+        "task": "apps.patches.tasks.check_sla_breaches",
+        "schedule": crontab(minute="0", hour="6"),  # daily 06:00 UTC
+        "options": {"queue": "reporting"},
+    },
 }

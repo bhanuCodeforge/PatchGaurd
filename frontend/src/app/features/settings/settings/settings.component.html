@@ -81,6 +81,143 @@
         </div>
       </div>
 
+      <!-- Admin: General Settings -->
+      <div *ngIf="activeSection === 'general'" class="section">
+        <h3 class="section-title">General Settings</h3>
+        <div class="row g-3" style="max-width:500px">
+          <div class="col-12">
+            <label class="form-label-sm">Organization Name</label>
+            <input class="pg-input" [(ngModel)]="generalSettings.orgName" />
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">Session Timeout (minutes)</label>
+            <input class="pg-input" type="number" [(ngModel)]="generalSettings.sessionTimeoutMin" min="5" max="480" />
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">Max Concurrent Deployments</label>
+            <input class="pg-input" type="number" [(ngModel)]="generalSettings.maxConcurrentDeployments" min="1" max="50" />
+          </div>
+          <div class="col-12 d-flex flex-column gap-2">
+            <label class="d-flex align-items-center gap-2">
+              <input type="checkbox" class="form-check-input" [(ngModel)]="generalSettings.patchApprovalRequired" />
+              <span class="text-muted small">Require approval for patches</span>
+            </label>
+            <label class="d-flex align-items-center gap-2">
+              <input type="checkbox" class="form-check-input" [(ngModel)]="generalSettings.deploymentApprovalRequired" />
+              <span class="text-muted small">Require approval for deployments</span>
+            </label>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary btn-sm" (click)="saveGeneralSettings()">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin: Vendor Feeds -->
+      <div *ngIf="activeSection === 'vendor_feeds'" class="section">
+        <h3 class="section-title">Vendor Patch Feeds</h3>
+        <div class="pref-list" style="max-width:600px">
+          <div class="pref-row" *ngFor="let f of vendorFeeds">
+            <div>
+              <div class="pref-label">{{ f.name }}</div>
+              <div class="pref-desc text-muted small">{{ f.url }} &middot; every {{ f.interval }}m</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" [(ngModel)]="f.enabled" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm mt-3" (click)="saveVendorFeeds()">Save Feed Config</button>
+      </div>
+
+      <!-- Admin: Email / SMTP -->
+      <div *ngIf="activeSection === 'email'" class="section">
+        <h3 class="section-title">Email / SMTP Configuration</h3>
+        <div class="row g-3" style="max-width:500px">
+          <div class="col-12">
+            <label class="form-label-sm">SMTP Host</label>
+            <input class="pg-input" [(ngModel)]="emailSettings.smtpHost" placeholder="smtp.example.com" />
+          </div>
+          <div class="col-6">
+            <label class="form-label-sm">Port</label>
+            <input class="pg-input" type="number" [(ngModel)]="emailSettings.smtpPort" />
+          </div>
+          <div class="col-6 d-flex align-items-end pb-1">
+            <label class="d-flex align-items-center gap-2">
+              <input type="checkbox" class="form-check-input" [(ngModel)]="emailSettings.useTls" />
+              <span class="text-muted small">Use TLS</span>
+            </label>
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">Username</label>
+            <input class="pg-input" [(ngModel)]="emailSettings.smtpUser" />
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">Password</label>
+            <input class="pg-input" type="password" [(ngModel)]="emailSettings.smtpPassword" />
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">From Address</label>
+            <input class="pg-input" type="email" [(ngModel)]="emailSettings.fromAddress" />
+          </div>
+          <div class="col-12 border-top border-secondary border-opacity-25 pt-3 mt-2">
+            <label class="form-label-sm">Test Recipient</label>
+            <div class="d-flex gap-2">
+              <input class="pg-input" type="email" [(ngModel)]="emailSettings.testRecipient" placeholder="test@example.com" />
+              <button class="btn btn-outline-secondary btn-sm text-nowrap" (click)="testEmail()">Send Test</button>
+            </div>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary btn-sm" (click)="saveEmailSettings()">Save SMTP</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin: Maintenance Windows -->
+      <div *ngIf="activeSection === 'maintenance'" class="section">
+        <h3 class="section-title">Maintenance Windows</h3>
+        <div class="pref-list" style="max-width:600px">
+          <div class="pref-row" *ngFor="let w of maintenanceWindows">
+            <div>
+              <div class="pref-label">{{ w.name }}</div>
+              <div class="pref-desc text-muted small">{{ w.start }} → {{ w.end }}</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" [(ngModel)]="w.enabled" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm mt-3" (click)="saveMaintenanceWindows()">Save Windows</button>
+      </div>
+
+      <!-- Admin: Data Retention -->
+      <div *ngIf="activeSection === 'retention'" class="section">
+        <h3 class="section-title">Data Retention Policy</h3>
+        <div class="row g-3" style="max-width:500px">
+          <div class="col-12">
+            <label class="form-label-sm">Audit Log Retention (days)</label>
+            <input class="pg-input" type="number" [(ngModel)]="retentionSettings.auditLogDays" min="30" max="3650" />
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">Deployment History (days)</label>
+            <input class="pg-input" type="number" [(ngModel)]="retentionSettings.deploymentHistoryDays" min="30" max="3650" />
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">Scan Results (days)</label>
+            <input class="pg-input" type="number" [(ngModel)]="retentionSettings.scanResultDays" min="7" max="365" />
+          </div>
+          <div class="col-12">
+            <label class="form-label-sm">Metrics Retention (days)</label>
+            <input class="pg-input" type="number" [(ngModel)]="retentionSettings.metricsRetentionDays" min="7" max="365" />
+          </div>
+          <div class="col-12">
+            <button class="btn btn-primary btn-sm" (click)="saveRetentionSettings()">Save Retention Policy</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>

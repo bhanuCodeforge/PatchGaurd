@@ -347,28 +347,40 @@ class PatchAgent:
     @trace
     async def heartbeat_loop(self):
         interval = self.config.get("heartbeat_interval", 60)
+        full_info_counter = 0
+        last_full_info: Dict[str, Any] = {}
         while self._connected:
             try:
-                info = self.plugin.get_system_info()
-                await self.send_json({
-                    "event": "heartbeat",
-                    "payload": {
-                        "device_id": self.device_id,
-                        "cpu_usage": psutil.cpu_percent(interval=0),
-                        "ram_usage": psutil.virtual_memory().percent,
-                        "disk_usage": self._disk_usage(),
-                        "status": "online",
-                        "timestamp": time.time(),
-                        "agent_version": self.version,
+                # Read dynamic interval in case it was changed via CONFIG_UPDATE
+                interval = self.config.get("heartbeat_interval", 60)
+
+                payload: Dict[str, Any] = {
+                    "device_id": self.device_id,
+                    "cpu_usage": psutil.cpu_percent(interval=0),
+                    "ram_usage": psutil.virtual_memory().percent,
+                    "disk_usage": self._disk_usage(),
+                    "status": "online",
+                    "timestamp": time.time(),
+                    "agent_version": self.version,
+                }
+
+                # Send full system info every 10th heartbeat or on first connect
+                full_info_counter += 1
+                if full_info_counter >= 10 or not last_full_info:
+                    info = self.plugin.get_system_info()
+                    payload.update({
                         "cpu_count": info.get("cpu_count"),
                         "total_ram": info.get("total_ram"),
                         "total_disk": info.get("total_disk"),
                         "uptime": info.get("uptime"),
                         "serial_number": info.get("serial_number", "—"),
                         "log_level": self.config.get("log_level", "info"),
-                        "heartbeat_interval": self.config.get("heartbeat_interval", 60),
-                    }
-                })
+                        "heartbeat_interval": interval,
+                    })
+                    last_full_info = payload.copy()
+                    full_info_counter = 0
+
+                await self.send_json({"event": "heartbeat", "payload": payload})
             except Exception as e:
                 logger.error(f"WS heartbeat error: {e}")
                 break
@@ -411,6 +423,8 @@ class PatchAgent:
                             "device_id": self.device_id,
                             "time": time.time(),
                         }})
+                    elif command == "HEALTH_CHECK":
+                        await self.run_health_check(payload)
                     elif command == "GET_SYSTEM_INFO":
                         await self.send_system_info()
                     elif command == "CONFIG_UPDATE":
@@ -428,12 +442,119 @@ class PatchAgent:
                             # If heartbeat interval changed, the loop will adapt on next sleep
                             # as it reads from self.config each iteration
                             logger.info("Agent configuration updated from server.")
+                    elif command == "UPDATE_AGENT":
+                        await self.run_self_update(payload)
                     else:
                         logger.warning(f"Unknown command: {command}")
                 except Exception as e:
                     logger.error(f"Error handling message: {e}")
         except Exception:
             pass  # Connection closed; connect() handles reconnection
+
+    @trace
+    async def run_health_check(self, payload: dict):
+        """
+        Report current resource metrics immediately to allow the server 
+        to perform pre-deployment safety checks.
+        """
+        logger.info("Running pre-flight health check...")
+        try:
+            cpu = psutil.cpu_percent(interval=1)  # 1s sample for accuracy
+            mem = psutil.virtual_memory().percent
+            disk = self._disk_usage()
+            
+            await self.send_json({
+                "event": "health_check_result",
+                "payload": {
+                    "device_id": self.device_id,
+                    "request_id": payload.get("request_id"),
+                    "cpu_usage": cpu,
+                    "ram_usage": mem,
+                    "disk_usage": disk,
+                    "status": "healthy" if (cpu < 80 and mem < 90) else "busy",
+                    "timestamp": time.time()
+                }
+            })
+        except Exception as e:
+            logger.error(f"Health check failed: {e}")
+
+    @trace
+    async def run_self_update(self, payload: dict):
+        """
+        Download and apply agent update from server.
+        Expected payload: { "download_url": "...", "version": "...", "checksum": "..." }
+        """
+        download_url = payload.get("download_url")
+        target_version = payload.get("version", "unknown")
+        expected_checksum = payload.get("checksum")
+
+        if not download_url:
+            logger.error("UPDATE_AGENT: no download_url provided")
+            return
+
+        logger.info(f"Starting self-update to version {target_version} from {download_url}")
+        await self.send_json({
+            "event": "update_progress",
+            "payload": {"device_id": self.device_id, "status": "downloading", "version": target_version}
+        })
+
+        try:
+            import hashlib
+            import subprocess
+            import sys
+            import tempfile
+
+            if _AIOHTTP:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(download_url, headers=self._rest_headers(), ssl=False) as resp:
+                        if resp.status != 200:
+                            raise RuntimeError(f"Download failed: HTTP {resp.status}")
+                        update_data = await resp.read()
+            else:
+                raise RuntimeError("aiohttp required for self-update")
+
+            # Verify checksum if provided
+            if expected_checksum:
+                actual = hashlib.sha256(update_data).hexdigest()
+                if actual != expected_checksum:
+                    raise RuntimeError(f"Checksum mismatch: expected {expected_checksum}, got {actual}")
+
+            # Write update package to temp file
+            update_path = os.path.join(tempfile.gettempdir(), f"patchguard-agent-{target_version}.tar.gz")
+            with open(update_path, "wb") as f:
+                f.write(update_data)
+
+            await self.send_json({
+                "event": "update_progress",
+                "payload": {"device_id": self.device_id, "status": "applying", "version": target_version}
+            })
+
+            # Extract and restart — platform-dependent
+            agent_dir = os.path.dirname(os.path.abspath(__file__))
+            if platform.system().lower() == "windows":
+                subprocess.Popen(
+                    ["powershell", "-Command", f"Expand-Archive -Force '{update_path}' '{agent_dir}'; Start-Process python '{os.path.join(agent_dir, 'agent.py')}'"],
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                )
+            else:
+                subprocess.Popen(
+                    ["sh", "-c", f"tar -xzf '{update_path}' -C '{agent_dir}' && exec python3 '{os.path.join(agent_dir, 'agent.py')}'"],
+                    start_new_session=True,
+                )
+
+            await self.send_json({
+                "event": "update_progress",
+                "payload": {"device_id": self.device_id, "status": "restarting", "version": target_version}
+            })
+            logger.info(f"Self-update to {target_version} applied. Restarting...")
+            self.running = False
+
+        except Exception as e:
+            logger.error(f"Self-update failed: {e}")
+            await self.send_json({
+                "event": "update_progress",
+                "payload": {"device_id": self.device_id, "status": "failed", "error": str(e), "version": target_version}
+            })
 
     @trace
     async def run_scan(self):

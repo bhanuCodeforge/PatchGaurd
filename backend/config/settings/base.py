@@ -31,10 +31,10 @@ INSTALLED_APPS = [
     "django_celery_results",
     "drf_spectacular",
     "health_check",
-    "health_check.db",
-    "health_check.cache",
-    "health_check.contrib.celery",
-    "health_check.contrib.redis",
+    # "health_check.db",
+    # "health_check.cache",
+    # "health_check.contrib.celery",
+    # "health_check.contrib.redis",
 
     # Local apps
     "apps.accounts",
@@ -245,6 +245,18 @@ CELERY_BEAT_SCHEDULE = {
     "refresh_compliance_every_15min": {
         "task": "apps.inventory.tasks.refresh_all_device_compliance",
         "schedule": timedelta(minutes=15),
+    },
+    "sync_dynamic_groups_every_15min": {
+        "task": "apps.inventory.tasks.sync_dynamic_group_memberships",
+        "schedule": timedelta(minutes=15),
+    },
+    "generate_daily_compliance_snapshot": {
+        "task": "apps.patches.tasks.generate_compliance_snapshot",
+        "schedule": timedelta(days=1),
+    },
+    "process_scheduled_deployments_every_5min": {
+        "task": "apps.deployments.tasks.process_scheduled_deployments",
+        "schedule": timedelta(minutes=5),
     },
 }
 

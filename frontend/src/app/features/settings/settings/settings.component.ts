@@ -17,11 +17,22 @@ export class SettingsComponent {
   private ns = inject(NotificationService);
 
   activeSection = 'profile';
+  isAdmin = this.auth.currentUser()?.role === 'admin';
+
   sections = [
     { id: 'profile', label: 'UI.u_profile_tab', icon: '👤' },
     { id: 'security', label: 'UI.u_security_tab', icon: '🔒' },
     { id: 'notifications', label: 'UI.u_notifications_tab', icon: '🔔' },
     { id: 'system', label: 'UI.u_system_info_tab', icon: 'ℹ️' },
+    ...(this.auth.currentUser()?.role === 'admin'
+      ? [
+          { id: 'general', label: 'General', icon: '⚙️' },
+          { id: 'vendor_feeds', label: 'Vendor Feeds', icon: '📡' },
+          { id: 'email', label: 'Email / SMTP', icon: '✉️' },
+          { id: 'maintenance', label: 'Maintenance Windows', icon: '🔧' },
+          { id: 'retention', label: 'Data Retention', icon: '🗃️' },
+        ]
+      : []),
   ];
 
   profile = {
@@ -46,6 +57,64 @@ export class SettingsComponent {
     { key: 'Build', value: new Date().toISOString().split('T')[0] },
   ];
 
+  // Admin settings
+  generalSettings = {
+    orgName: 'My Organization',
+    patchApprovalRequired: true,
+    deploymentApprovalRequired: true,
+    sessionTimeoutMin: 30,
+    maxConcurrentDeployments: 5,
+  };
+
+  vendorFeeds = [
+    {
+      name: 'Microsoft WSUS',
+      url: 'https://catalog.update.microsoft.com',
+      enabled: true,
+      interval: 360,
+    },
+    {
+      name: 'Red Hat Errata',
+      url: 'https://access.redhat.com/errata',
+      enabled: true,
+      interval: 360,
+    },
+    {
+      name: 'Ubuntu USN',
+      url: 'https://ubuntu.com/security/notices',
+      enabled: true,
+      interval: 360,
+    },
+    {
+      name: 'Apple Security',
+      url: 'https://support.apple.com/en-us/HT201222',
+      enabled: false,
+      interval: 720,
+    },
+  ];
+
+  emailSettings = {
+    smtpHost: '',
+    smtpPort: 587,
+    smtpUser: '',
+    smtpPassword: '',
+    useTls: true,
+    fromAddress: 'patchguard@example.com',
+    testRecipient: '',
+  };
+
+  maintenanceWindows = [
+    { name: 'Weekend Window', start: 'Saturday 02:00', end: 'Saturday 06:00', enabled: true },
+    { name: 'Weeknight Window', start: 'Daily 01:00', end: 'Daily 04:00', enabled: false },
+  ];
+
+  retentionSettings = {
+    auditLogDays: 365,
+    deploymentHistoryDays: 180,
+    scanResultDays: 90,
+    metricsRetentionDays: 30,
+  };
+
   saveProfile() {
     this.ns.success('UI.u_saved', 'MSG.m_profile_updated');
   }
@@ -69,5 +138,33 @@ export class SettingsComponent {
 
   saveNotifPrefs() {
     this.ns.success('UI.u_saved', 'MSG.m_notif_saved');
+  }
+
+  saveGeneralSettings() {
+    this.ns.success('UI.u_saved', 'General settings saved');
+  }
+
+  saveVendorFeeds() {
+    this.ns.success('UI.u_saved', 'Vendor feed configuration saved');
+  }
+
+  saveEmailSettings() {
+    this.ns.success('UI.u_saved', 'Email/SMTP settings saved');
+  }
+
+  testEmail() {
+    if (!this.emailSettings.testRecipient) {
+      this.ns.error('UI.u_validation', 'Enter a test recipient email');
+      return;
+    }
+    this.ns.success('UI.u_sent', 'Test email queued');
+  }
+
+  saveMaintenanceWindows() {
+    this.ns.success('UI.u_saved', 'Maintenance windows saved');
+  }
+
+  saveRetentionSettings() {
+    this.ns.success('UI.u_saved', 'Data retention policy saved');
   }
 }

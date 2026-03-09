@@ -84,3 +84,16 @@ class DevicePatchStatus(models.Model):
 
     def __str__(self):
         return f"{self.device.hostname} - {self.patch.vendor_id} - {self.state}"
+
+class ComplianceSnapshot(models.Model):
+    """Daily snapshot of compliance metrics for trend reporting."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    overall_compliance = models.FloatField()
+    total_devices = models.IntegerField()
+    compliant_devices = models.IntegerField()
+    critical_missing = models.IntegerField()
+    
+    class Meta:
+        db_table = "compliance_snapshot"
+        ordering = ["-timestamp"]

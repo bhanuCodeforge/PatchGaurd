@@ -1,43 +1,48 @@
-<aside class="sidebar">
+<aside class="sidebar" [class.collapsed]="collapsed() && !mobileOpen()" [class.mobile-open]="mobileOpen()">
   <div class="sidebar-logo">
     <div class="logo-icon">🛡️</div>
-    <div class="logo-text">
+    <div class="logo-text" *ngIf="!collapsed() || mobileOpen()">
       <span class="logo-name">{{ 'UI.u_name' | translate }}</span>
       <span class="logo-sub">{{ 'UI.u_enterprise' | translate }}</span>
     </div>
+    <button class="collapse-btn ms-auto" (click)="toggle()" title="Toggle sidebar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
   </div>
 
   <nav class="sidebar-nav">
     <div class="nav-section">
-      <span class="nav-label">{{ 'UI.u_overview' | translate }}</span>
-      <a *ngFor="let item of overviewItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+      <span class="nav-label" *ngIf="!collapsed() || mobileOpen()">{{ 'UI.u_overview' | translate }}</span>
+      <a *ngFor="let item of overviewItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item" [title]="item.label | translate">
         <span class="nav-icon" [innerHTML]="item.icon"></span>
-        <span class="nav-text">{{ item.label | translate }}</span>
-        <span *ngIf="item.badge" class="nav-badge">{{ item.badge }}</span>
+        <span class="nav-text" *ngIf="!collapsed() || mobileOpen()">{{ item.label | translate }}</span>
+        <span *ngIf="item.badge && (!collapsed() || mobileOpen())" class="nav-badge">{{ item.badge }}</span>
       </a>
     </div>
 
     <div class="nav-section">
-      <span class="nav-label">{{ 'UI.u_manage' | translate }}</span>
-      <a *ngFor="let item of manageItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+      <span class="nav-label" *ngIf="!collapsed() || mobileOpen()">{{ 'UI.u_manage' | translate }}</span>
+      <a *ngFor="let item of manageItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item" [title]="item.label | translate">
         <span class="nav-icon" [innerHTML]="item.icon"></span>
-        <span class="nav-text">{{ item.label | translate }}</span>
+        <span class="nav-text" *ngIf="!collapsed() || mobileOpen()">{{ item.label | translate }}</span>
       </a>
     </div>
 
     <div class="nav-section">
-      <span class="nav-label">{{ 'UI.u_reports' | translate }}</span>
-      <a *ngFor="let item of reportItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+      <span class="nav-label" *ngIf="!collapsed() || mobileOpen()">{{ 'UI.u_reports' | translate }}</span>
+      <a *ngFor="let item of reportItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item" [title]="item.label | translate">
         <span class="nav-icon" [innerHTML]="item.icon"></span>
-        <span class="nav-text">{{ item.label | translate }}</span>
+        <span class="nav-text" *ngIf="!collapsed() || mobileOpen()">{{ item.label | translate }}</span>
       </a>
     </div>
 
     <div class="nav-section" *ngIf="isAdmin()">
-      <span class="nav-label">{{ 'UI.u_system' | translate }}</span>
-      <a *ngFor="let item of systemItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item">
+      <span class="nav-label" *ngIf="!collapsed() || mobileOpen()">{{ 'UI.u_system' | translate }}</span>
+      <a *ngFor="let item of systemItems" [routerLink]="item.route" routerLinkActive="active" class="nav-item" [title]="item.label | translate">
         <span class="nav-icon" [innerHTML]="item.icon"></span>
-        <span class="nav-text">{{ item.label | translate }}</span>
+        <span class="nav-text" *ngIf="!collapsed() || mobileOpen()">{{ item.label | translate }}</span>
       </a>
     </div>
   </nav>
@@ -45,7 +50,7 @@
   <div class="sidebar-footer">
     <div class="user-info">
       <div class="user-avatar">{{ initials() }}</div>
-      <div class="user-meta">
+      <div class="user-meta" *ngIf="!collapsed() || mobileOpen()">
         <span class="user-name">{{ userName() }}</span>
         <span class="user-role">{{ userRole() }}</span>
       </div>

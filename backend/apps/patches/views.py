@@ -7,7 +7,8 @@ from .models import Patch, DevicePatchStatus
 from .filters import PatchFilter
 from .serializers import (
     PatchListSerializer, PatchDetailSerializer, PatchCreateSerializer,
-    PatchApprovalSerializer, DevicePatchStatusSerializer
+    PatchApprovalSerializer, DevicePatchStatusSerializer,
+    BulkPatchActionSerializer
 )
 from .state_machine import PatchStateMachine
 from drf_spectacular.utils import extend_schema
@@ -92,6 +93,34 @@ class PatchViewSet(viewsets.ModelViewSet):
         
         return Response({
             "status": f"Approved {approved_count} patches.",
+            "errors": errors
+        })
+
+    @extend_schema(
+        summary="Bulk reject patches",
+        description="Reject multiple patches at once.",
+        request=BulkPatchActionSerializer
+    )
+    @action(detail=False, methods=["post"], permission_classes=[IsOperatorOrAbove])
+    def bulk_reject(self, request):
+        serializer = BulkPatchActionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        patch_ids = serializer.validated_data['patch_ids']
+        reason = serializer.validated_data.get('reason', 'Bulk rejection')
+        
+        patches = Patch.objects.filter(id__in=patch_ids)
+        rejected_count = 0
+        errors = []
+        for patch in patches:
+            try:
+                PatchStateMachine.transition(patch, Patch.Status.REJECTED, user=request.user, reason=reason)
+                rejected_count += 1
+            except ValueError as e:
+                errors.append(f"{patch.vendor_id}: {str(e)}")
+        
+        return Response({
+            "status": f"Rejected {rejected_count} patches.",
             "errors": errors
         })
 

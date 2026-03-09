@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter, map } from 'rxjs/operators';
@@ -10,7 +10,14 @@ import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, TopbarComponent, ToastContainerComponent, TranslateModule],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    SidebarComponent,
+    TopbarComponent,
+    ToastContainerComponent,
+    TranslateModule,
+  ],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
 })
@@ -28,6 +35,25 @@ export class AppShellComponent implements OnInit {
     '/settings/users': 'UI.u_user_management',
     '/settings': 'UI.u_settings',
   };
+
+  /** Global keyboard shortcuts (Alt+1..5, Alt+S) */
+  @HostListener('window:keydown', ['$event'])
+  onKeydown(e: KeyboardEvent) {
+    if (!e.altKey) return;
+    const shortcuts: Record<string, string> = {
+      '1': '/dashboard',
+      '2': '/devices',
+      '3': '/patches',
+      '4': '/deployments',
+      '5': '/compliance',
+      s: '/settings',
+    };
+    const route = shortcuts[e.key];
+    if (route) {
+      e.preventDefault();
+      this.router.navigate([route]);
+    }
+  }
 
   ngOnInit() {
     this.router.events

@@ -691,9 +691,265 @@
   .dd-spec-grid  { grid-template-columns: repeat(2, 1fr); }
   .dd-gauges     { grid-template-columns: 1fr; }
   .dd-inv-grid   { grid-template-columns: repeat(2, 1fr); }
+  .dd-overview-stats { grid-template-columns: repeat(2, 1fr); }
+  .dd-tabs { flex-wrap: wrap; }
 }
 
 @media (max-width: 600px) {
   .dd-spec-grid  { grid-template-columns: 1fr 1fr; }
   .dd-hero       { flex-direction: column; align-items: flex-start; }
+  .dd-overview-stats { grid-template-columns: 1fr; }
 }
+
+// ── Overview stat cards ───────────────────────────────────────────────────
+
+.dd-overview-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dd-stat-card {
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color 0.2s;
+
+  &:hover { border-color: rgba(96, 165, 250, 0.3); }
+
+  &.stat-available .dd-stat-icon { color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+  &.stat-installed .dd-stat-icon { color: #10b981; background: rgba(16, 185, 129, 0.1); }
+  &.stat-failed .dd-stat-icon    { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+  &.stat-apps .dd-stat-icon      { color: #8b5cf6; background: rgba(139, 92, 246, 0.1); }
+
+  &.stat-available .dd-stat-num { color: #f59e0b; }
+  &.stat-installed .dd-stat-num { color: #10b981; }
+  &.stat-failed .dd-stat-num    { color: #ef4444; }
+  &.stat-apps .dd-stat-num      { color: #8b5cf6; }
+}
+
+.dd-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dd-stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dd-stat-num {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dd-stat-lbl {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+// ── Section header ────────────────────────────────────────────────────────
+
+.dd-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #cdd9e5;
+}
+
+.dd-link-btn {
+  background: none;
+  border: none;
+  color: #60a5fa;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  &:hover { text-decoration: underline; }
+}
+
+// ── Hero quick actions ────────────────────────────────────────────────────
+
+.dd-hero-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.dd-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  background: #0f172a;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    color: #60a5fa;
+    border-color: rgba(96, 165, 250, 0.4);
+    background: rgba(59, 130, 246, 0.08);
+  }
+}
+
+// ── Patch sub-tabs (clickable summary items) ──────────────────────────────
+
+.dd-psum-item {
+  cursor: pointer;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+
+  &:hover { background: rgba(30, 41, 59, 0.5); }
+
+  &.psum-active {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(96, 165, 250, 0.3);
+  }
+
+  &.item-recent .dd-psum-num { color: #60a5fa; }
+}
+
+// ── CVE chips ─────────────────────────────────────────────────────────────
+
+.dd-cve-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.dd-cve-chip {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 8px;
+  border-radius: 12px;
+  font-family: monospace;
+}
+
+.dd-cve-more {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+}
+
+// ── CVSS score ────────────────────────────────────────────────────────────
+
+.dd-cvss {
+  font-weight: 700;
+  font-size: 12px;
+  &.cvss-high { color: #ef4444; }
+  &.cvss-med  { color: #f59e0b; }
+}
+
+// ── Reboot badge ──────────────────────────────────────────────────────────
+
+.dd-reboot-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+// ── Error message ─────────────────────────────────────────────────────────
+
+.dd-error-msg {
+  color: #ef4444;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ── Monospace helper ──────────────────────────────────────────────────────
+
+.dd-mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12px; }
+
+// ── Apps toolbar ──────────────────────────────────────────────────────────
+
+.dd-app-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 16px;
+}
+
+.dd-search-box {
+  flex: 1;
+  max-width: 360px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: border-color 0.2s;
+
+  &:focus-within { border-color: #3b82f6; }
+
+  input {
+    background: none;
+    border: none;
+    outline: none;
+    color: #f1f5f9;
+    font-size: 13px;
+    width: 100%;
+    &::placeholder { color: #475569; }
+  }
+
+  svg { color: #475569; flex-shrink: 0; }
+}
+
+.dd-app-count {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dd-app-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+// ── WiFi badge ────────────────────────────────────────────────────────────
+
+.dd-wifi-badge {
+  font-size: 10px;
+  color: #60a5fa;
+  margin-top: 2px;
+  display: inline-block;
+}
+
+// ── Text center helper ────────────────────────────────────────────────────
+.text-center { text-align: center; }

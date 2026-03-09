@@ -58,11 +58,34 @@ class PatchCreateSerializer(serializers.ModelSerializer):
 class PatchApprovalSerializer(serializers.Serializer):
     reason = serializers.CharField(required=False, allow_blank=True)
 
+class BulkPatchActionSerializer(serializers.Serializer):
+    patch_ids = serializers.ListField(child=serializers.UUIDField())
+    reason = serializers.CharField(required=False, allow_blank=True)
+
 class DevicePatchStatusSerializer(serializers.ModelSerializer):
     device_hostname = serializers.CharField(source='device.hostname', read_only=True)
     patch_vendor_id = serializers.CharField(source='patch.vendor_id', read_only=True)
     patch_title = serializers.CharField(source='patch.title', read_only=True)
+    patch = serializers.SerializerMethodField()
 
     class Meta:
         model = DevicePatchStatus
         fields = '__all__'
+
+    def get_patch(self, obj):
+        p = obj.patch
+        return {
+            'id': str(p.id),
+            'vendor_id': p.vendor_id,
+            'title': p.title,
+            'severity': p.severity,
+            'status': p.status,
+            'vendor': p.vendor,
+            'kb_article': p.kb_article,
+            'cve_ids': p.cve_ids or [],
+            'cvss_score': p.cvss_score,
+            'requires_reboot': p.requires_reboot,
+            'package_name': p.package_name,
+            'package_version': p.package_version,
+            'released_at': p.released_at,
+        }

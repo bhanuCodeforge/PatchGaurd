@@ -25,6 +25,15 @@ export class GroupListComponent implements OnInit {
   showModal = false;
   newGroupName = '';
   newGroupDesc = '';
+  isDynamic = false;
+  
+  // Rule builder state
+  rules: any = {
+    os_family: '',
+    environment: '',
+    tags: []
+  };
+  newTag = '';
 
   ngOnInit() {
     this.loadGroups();
@@ -41,18 +50,53 @@ export class GroupListComponent implements OnInit {
     });
   }
 
+  addTag() {
+    if (!this.newTag.trim()) return;
+    if (!this.rules.tags.includes(this.newTag.trim())) {
+      this.rules.tags.push(this.newTag.trim());
+    }
+    this.newTag = '';
+  }
+
+  removeTag(tag: string) {
+    this.rules.tags = this.rules.tags.filter((t: string) => t !== tag);
+  }
+
   createGroup() {
     if (!this.newGroupName.trim()) return;
-    this.deviceSvc.createGroup({ name: this.newGroupName, description: this.newGroupDesc }).subscribe({
+    
+    // Build dynamic rules object only if isDynamic is true
+    const dynamicRules = this.isDynamic ? {} as any : {};
+    if (this.isDynamic) {
+      if (this.rules.os_family) dynamicRules.os_family = this.rules.os_family;
+      if (this.rules.environment) dynamicRules.environment = this.rules.environment;
+      if (this.rules.tags.length > 0) dynamicRules.tags = this.rules.tags;
+    }
+
+    const payload = {
+      name: this.newGroupName,
+      description: this.newGroupDesc,
+      is_dynamic: this.isDynamic,
+      dynamic_rules: dynamicRules
+    };
+
+    this.deviceSvc.createGroup(payload).subscribe({
       next: () => {
         this.ns.success('Success', `Group ${this.newGroupName} created.`);
-        this.newGroupName = '';
-        this.newGroupDesc = '';
+        this.resetForm();
         this.showModal = false;
         this.loadGroups();
       },
       error: () => this.ns.error('Error', 'Failed to create group.')
     });
+  }
+
+  resetForm() {
+    this.newGroupName = '';
+    this.newGroupDesc = '';
+    this.isDynamic = false;
+    this.rules = { os_family: '', environment: '', tags: [] };
+    this.newTag = '';
   }
 
   deleteGroup(id: string, name: string) {

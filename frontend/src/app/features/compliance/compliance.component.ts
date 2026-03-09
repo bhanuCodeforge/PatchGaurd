@@ -11,7 +11,14 @@ import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
 @Component({
   selector: 'app-compliance',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, LoadingSkeletonComponent, EmptyStateComponent, RelativeTimePipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    TranslateModule,
+    LoadingSkeletonComponent,
+    EmptyStateComponent,
+    RelativeTimePipe,
+  ],
   templateUrl: './compliance.component.html',
   styleUrl: './compliance.component.scss',
 })
@@ -29,12 +36,23 @@ export class ComplianceComponent implements OnInit {
   sevData = signal<{ label: string; pct: number; color: string }[]>([]);
   compliancePct = signal(0);
 
+  // SLA violations
+  slaBreaches = signal<any[]>([]);
+  slaLoading = signal(false);
+
+  // Active tab
+  activeTab = 'overview';
+
   ngOnInit() {
     this.reportSvc.getComplianceReport().subscribe({
       next: (r: any) => {
         this.compliancePct.set(Math.round(r.overall ?? 0));
         this.kpis.set([
-          { label: 'Overall Compliance', value: (r.overall ?? 0).toFixed(1) + '%', color: this.complianceColor(r.overall ?? 0) },
+          {
+            label: 'Overall Compliance',
+            value: (r.overall ?? 0).toFixed(1) + '%',
+            color: this.complianceColor(r.overall ?? 0),
+          },
           { label: 'Fully Patched', value: r.compliant_devices ?? '0', color: '#22c55e' },
           { label: 'Non-Compliant', value: r.non_compliant_devices ?? '0', color: '#ef4444' },
           { label: 'Total Devices', value: r.total_devices ?? '0', color: '#60a5fa' },
@@ -86,5 +104,83 @@ export class ComplianceComponent implements OnInit {
     if (pct >= 90) return '#22c55e';
     if (pct >= 70) return '#eab308';
     return '#ef4444';
+  }
+
+  loadSlaBreaches() {
+    this.slaLoading.set(true);
+    // Derive SLA breaches from non-compliant devices with critical/high missing patches
+    this.deviceSvc.getDevices({ page_size: 200 }).subscribe({
+      next: (r) => {
+        const breaches = (r.results ?? [])
+          .filter((d: any) => (d.compliance_rate ?? 100) < 90)
+          .map((d: any) => ({
+            hostname: d.hostname,
+            os_name: d.os_name,
+            compliance_rate: d.compliance_rate ?? 0,
+            missing_critical: d.missing_critical ?? 0,
+            missing_high: d.missing_high ?? 0,
+            days_overdue: d.days_since_last_patch ?? 0,
+            last_seen: d.last_seen,
+          }));
+        this.slaBreaches.set(breaches);
+        this.slaLoading.set(false);
+      },
+      error: () => this.slaLoading.set(false),
+    });
+  }
+
+  exportComplianceCsv() {
+    const headers = ['Device', 'OS', 'Compliance %', 'Patched', 'Missing', 'Last Scan'];
+    const csvRows = [headers.join(',')];
+    for (const r of this.filteredRows()) {
+      csvRows.push(
+        [
+          r.hostname,
+          r.os_name,
+          r.compliance_rate,
+          r.patched_count ?? 0,
+          r.missing_count ?? 0,
+          r.last_seen ?? '',
+        ].join(','),
+      );
+    }
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `compliance-report-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  exportSlaCsv() {
+    const headers = [
+      'Device',
+      'OS',
+      'Compliance %',
+      'Critical Missing',
+      'High Missing',
+      'Days Overdue',
+    ];
+    const csvRows = [headers.join(',')];
+    for (const b of this.slaBreaches()) {
+      csvRows.push(
+        [
+          b.hostname,
+          b.os_name,
+          b.compliance_rate,
+          b.missing_critical,
+          b.missing_high,
+          b.days_overdue,
+        ].join(','),
+      );
+    }
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sla-breaches-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 }

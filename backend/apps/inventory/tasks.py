@@ -193,3 +193,31 @@ def refresh_all_device_compliance():
     for dev_id in devices:
         refresh_device_compliance.delay(str(dev_id))
     logger.info(f"Triggered compliance refresh for {len(devices)} devices.")
+
+
+@shared_task
+@trace
+def sync_dynamic_group_memberships():
+    """
+    Periodic task to synchronize ManyToMany relationships for dynamic groups.
+    Iterates through all groups with is_dynamic=True and updates their device associations.
+    """
+    from .models import DeviceGroup, Device
+    
+    dynamic_groups = DeviceGroup.objects.filter(is_dynamic=True)
+    logger.info(f"Starting dynamic group membership sync for {dynamic_groups.count()} groups.")
+    
+    for group in dynamic_groups:
+        try:
+            # 1. Get the current matching devices based on rules
+            matching_devices = Device.objects.filter_by_rules(group.dynamic_rules)
+            
+            # 2. Sync the ManyToMany association
+            # .set() is efficient as it handles additions and removals in a single transaction
+            group.devices.set(matching_devices)
+            
+            logger.info(f"Group '{group.name}' synced: {matching_devices.count()} members.")
+        except Exception as e:
+            logger.error(f"Failed to sync group '{group.name}': {str(e)}")
+
+    logger.info("Dynamic group sync completed.")

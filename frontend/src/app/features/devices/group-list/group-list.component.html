@@ -59,7 +59,61 @@
           </div>
           <div class="mb-3">
             <label class="form-label small text-muted">{{ 'UI.u_description' | translate }}</label>
-            <textarea class="form-control bg-black text-white border-secondary" [(ngModel)]="newGroupDesc" rows="3" [placeholder]="'UI.u_description' | translate"></textarea>
+            <textarea class="form-control bg-black text-white border-secondary" [(ngModel)]="newGroupDesc" rows="2" [placeholder]="'UI.u_description' | translate"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small text-muted d-block mb-2">{{ 'UI.u_group_type' | translate }}</label>
+            <div class="d-flex gap-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="groupType" id="typeStatic" [value]="false" [(ngModel)]="isDynamic">
+                <label class="form-check-label" for="typeStatic">{{ 'UI.u_static' | translate }}</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="groupType" id="typeDynamic" [value]="true" [(ngModel)]="isDynamic">
+                <label class="form-check-label" for="typeDynamic">{{ 'UI.u_dynamic' | translate }}</label>
+              </div>
+            </div>
+            <p class="text-muted xxs mt-1">{{ (isDynamic ? 'UI.u_dynamic_desc' : 'UI.u_static_desc') | translate }}</p>
+          </div>
+
+          <div class="rule-builder-section p-3 bg-black rounded border border-secondary border-opacity-25" *ngIf="isDynamic">
+            <h6 class="small text-primary mb-3">{{ 'UI.u_rule_builder' | translate }}</h6>
+            
+            <div class="mb-3">
+              <label class="form-label xxs text-muted mb-1">{{ 'UI.u_os' | translate }}</label>
+              <select class="form-select form-select-sm bg-black text-white border-secondary" [(ngModel)]="rules.os_family">
+                <option value="">{{ 'UI.u_all_os' | translate }}</option>
+                <option value="linux">Linux</option>
+                <option value="windows">Windows</option>
+                <option value="macos">macOS</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label xxs text-muted mb-1">{{ 'UI.u_environment' | translate }}</label>
+              <select class="form-select form-select-sm bg-black text-white border-secondary" [(ngModel)]="rules.environment">
+                <option value="">{{ 'UI.u_all' | translate }}</option>
+                <option value="production">Production</option>
+                <option value="staging">Staging</option>
+                <option value="development">Development</option>
+              </select>
+            </div>
+
+            <div class="mb-0">
+              <label class="form-label xxs text-muted mb-1">{{ 'UI.u_tags' | translate }}</label>
+              <div class="input-group input-group-sm mb-2">
+                <input type="text" class="form-control bg-black text-white border-secondary" 
+                  [(ngModel)]="newTag" (keyup.enter)="addTag()" [placeholder]="'UI.u_tag' | translate">
+                <button class="btn btn-outline-secondary" type="button" (click)="addTag()">+</button>
+              </div>
+              <div class="d-flex flex-wrap gap-1">
+                <span class="badge bg-secondary d-flex align-items-center gap-1" *ngFor="let t of rules.tags">
+                  {{ t }}
+                  <i class="bi bi-x cursor-pointer" (click)="$event.stopPropagation(); removeTag(t)"></i>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
         <div class="modal-footer border-secondary border-opacity-25">

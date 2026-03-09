@@ -65,19 +65,32 @@ export class DeviceFullDetailComponent implements OnInit {
   loading = signal(true);
   device = signal<Device | null>(null);
   patches = signal<any[]>([]);
+  availablePatches = signal<any[]>([]);
+  installedPatches = signal<any[]>([]);
+  failedPatches = signal<any[]>([]);
+  recentPatches = signal<any[]>([]);
   deployments = signal<any[]>([]);
+  systemInfo = signal<any>(null);
+  installedApps = signal<any[]>([]);
   isEditing = signal(false);
-  activeTab = signal('patches');
+  activeTab = signal('overview');
+  patchSubTab = signal<'available' | 'installed' | 'failed' | 'recent'>('available');
   inventoryTab = signal('system');
   appSearch = signal('');
   editData = { hostname: '', description: '' };
   configData = { log_level: 'info', heartbeat_interval: 60 };
   showRebootDialog = signal(false);
   showDeleteDialog = signal(false);
+  activityLog = signal<any[]>([]);
+  activityLoading = signal(false);
+  appsLoading = signal(false);
+  systemInfoLoading = signal(false);
+  patchesLoading = signal(false);
 
   patchCounts = computed(() => {
     const ps = this.patches();
     return {
+      total: ps.length,
       installed: ps.filter((p) => p.state === 'installed').length,
       pending: ps.filter((p) => p.state === 'pending' || p.state === 'missing').length,
       failed: ps.filter((p) => p.state === 'failed').length,
@@ -105,7 +118,13 @@ export class DeviceFullDetailComponent implements OnInit {
 
       if (msg.event === 'agent_heartbeat') {
         this.device.update((d) =>
-          d ? { ...d, last_seen: new Date().toISOString(), metadata: { ...d.metadata, ...msg.payload } } : null,
+          d
+            ? {
+                ...d,
+                last_seen: new Date().toISOString(),
+                metadata: { ...d.metadata, ...msg.payload },
+              }
+            : null,
         );
       } else if (msg.event === 'agent_inventory_info') {
         this.device.update((d) => (d ? { ...d, inventory_data: msg.payload.inventory } : null));
@@ -124,13 +143,14 @@ export class DeviceFullDetailComponent implements OnInit {
       next: (d) => {
         this.device.set(d);
         this.editData = { hostname: d.hostname, description: d.description || '' };
-        // Populate current config from metadata if available
         this.configData = {
           log_level: d.metadata?.log_level || 'info',
           heartbeat_interval: d.metadata?.heartbeat_interval || 60,
         };
-        this.loadPatches(id);
+        this.loadAllPatches(id);
         this.loadDeployments(id);
+        this.loadSystemInfo(id);
+        this.loadInstalledApps(id);
         this.loading.set(false);
       },
       error: () => {
@@ -140,12 +160,81 @@ export class DeviceFullDetailComponent implements OnInit {
     });
   }
 
+  loadAllPatches(id: string) {
+    this.patchesLoading.set(true);
+    // Load all patches (no pagination limit for overview)
+    this.deviceSvc.getDevicePatches(id, { page_size: 500 }).subscribe({
+      next: (r) => {
+        const all = r.results || [];
+        this.patches.set(all);
+        this.availablePatches.set(
+          all.filter((p: any) => p.state === 'missing' || p.state === 'pending'),
+        );
+        this.installedPatches.set(all.filter((p: any) => p.state === 'installed'));
+        this.failedPatches.set(all.filter((p: any) => p.state === 'failed'));
+        // Recently updated = patches with last_attempt or installed_at, sorted by most recent
+        const recent = [...all]
+          .filter((p: any) => p.installed_at || p.last_attempt)
+          .sort((a: any, b: any) => {
+            const da = new Date(a.installed_at || a.last_attempt).getTime();
+            const db = new Date(b.installed_at || b.last_attempt).getTime();
+            return db - da;
+          })
+          .slice(0, 20);
+        this.recentPatches.set(recent);
+        this.patchesLoading.set(false);
+      },
+      error: () => this.patchesLoading.set(false),
+    });
+  }
+
   loadPatches(id: string) {
-    this.deviceSvc.getDevicePatches(id).subscribe((r) => this.patches.set(r.results || []));
+    this.loadAllPatches(id);
   }
 
   loadDeployments(id: string) {
     this.deviceSvc.getDeviceDeployments(id).subscribe((dls) => this.deployments.set(dls || []));
+  }
+
+  loadSystemInfo(id: string) {
+    this.systemInfoLoading.set(true);
+    this.deviceSvc.getSystemInfo(id).subscribe({
+      next: (info) => {
+        this.systemInfo.set(info);
+        this.systemInfoLoading.set(false);
+      },
+      error: () => this.systemInfoLoading.set(false),
+    });
+  }
+
+  loadInstalledApps(id: string, search: string = '') {
+    this.appsLoading.set(true);
+    const params: any = {};
+    if (search) params.search = search;
+    this.deviceSvc.getInstalledApps(id, params).subscribe({
+      next: (r) => {
+        this.installedApps.set(r.results || []);
+        this.appsLoading.set(false);
+      },
+      error: () => this.appsLoading.set(false),
+    });
+  }
+
+  searchApps(term: string) {
+    this.appSearch.set(term);
+    const d = this.device();
+    if (d) this.loadInstalledApps(d.id, term);
+  }
+
+  loadActivityLog(id: string) {
+    this.activityLoading.set(true);
+    this.deviceSvc.getDeviceActivity(id).subscribe({
+      next: (r) => {
+        this.activityLog.set(r.results || r || []);
+        this.activityLoading.set(false);
+      },
+      error: () => this.activityLoading.set(false),
+    });
   }
 
   scan() {
@@ -165,13 +254,11 @@ export class DeviceFullDetailComponent implements OnInit {
     if (!d) return;
 
     this.showRebootDialog.set(false);
-    this.deviceSvc
-      .rebootTarget(d.id)
-      .subscribe(() => {
-        const title = this.translate.instant('UI.u_reboot_title');
-        const msg = this.translate.instant('MSG.m_reboot_confirm', { hostname: d.hostname });
-        this.ns.info(title, msg);
-      });
+    this.deviceSvc.rebootTarget(d.id).subscribe(() => {
+      const title = this.translate.instant('UI.u_reboot_title');
+      const msg = this.translate.instant('MSG.m_reboot_confirm', { hostname: d.hostname });
+      this.ns.info(title, msg);
+    });
   }
 
   deleteDevice() {
@@ -220,11 +307,14 @@ export class DeviceFullDetailComponent implements OnInit {
   }
 
   get filteredApps() {
-    const apps = this.device()?.inventory_data?.apps || [];
-    const search = this.appSearch().toLowerCase();
-    if (!search) return apps;
-    return apps.filter(
-      (a) => a.name?.toLowerCase().includes(search) || a.publisher?.toLowerCase().includes(search),
-    );
+    return this.installedApps();
+  }
+
+  formatBytes(bytes: number): string {
+    if (!bytes) return '—';
+    const gb = bytes / 1073741824;
+    if (gb >= 1) return gb.toFixed(gb >= 100 ? 0 : 1) + ' GB';
+    const mb = bytes / 1048576;
+    return mb.toFixed(0) + ' MB';
   }
 }

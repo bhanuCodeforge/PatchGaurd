@@ -156,6 +156,22 @@ async def websocket_agent(websocket: WebSocket, api_key: str = Query(...)):
                             )
                         )
 
+                elif env.event == "health_check_result":
+                    # 1. Broadcast to dashboards for live UI update
+                    await manager.broadcast_to_dashboard(json.dumps({
+                        "event": "agent_health_check",
+                        "payload": {**env.payload, "device_id": device_id}
+                    }))
+                    # 2. Persist to backend for deployment task consumption
+                    # (Used by pre-flight health checks to approve/deny wave start)
+                    asyncio.create_task(
+                        _post_to_backend(
+                            f"/devices/{device_id}/ingest_health_check/",
+                            env.payload,
+                            api_key,
+                        )
+                    )
+
                 elif env.event == "pong":
                     await manager.broadcast_to_dashboard(json.dumps({
                         "event": "pong",

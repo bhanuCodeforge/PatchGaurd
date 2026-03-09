@@ -1,5 +1,14 @@
 <div class="compliance-page container-fluid py-4">
 
+  <!-- Tabs -->
+  <div class="d-flex gap-2 mb-4">
+    <button class="btn btn-sm" [class.btn-primary]="activeTab === 'overview'" [class.btn-outline-secondary]="activeTab !== 'overview'" (click)="activeTab = 'overview'">Overview</button>
+    <button class="btn btn-sm" [class.btn-primary]="activeTab === 'sla'" [class.btn-outline-secondary]="activeTab !== 'sla'" (click)="activeTab = 'sla'; loadSlaBreaches()">SLA Violations</button>
+  </div>
+
+  <!-- OVERVIEW TAB -->
+  <div *ngIf="activeTab === 'overview'">
+
   <!-- KPI Cards -->
   <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3" *ngFor="let k of kpis()">
@@ -48,6 +57,12 @@
     <div class="d-flex justify-content-between align-items-center p-3 border-bottom border-dark">
       <h6 class="mb-0 text-white">Device Compliance</h6>
       <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-secondary" (click)="exportComplianceCsv()" title="Export CSV">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Export CSV
+        </button>
         <select class="pg-select" [(ngModel)]="osFilter" (ngModelChange)="loadDevices()">
           <option value="">All OS</option>
           <option value="Linux">Linux</option>
@@ -97,4 +112,54 @@
       </table>
     </div>
   </div>
+
+  </div><!-- end overview tab -->
+
+  <!-- SLA VIOLATIONS TAB -->
+  <div *ngIf="activeTab === 'sla'">
+    <div class="pg-card">
+      <div class="d-flex justify-content-between align-items-center p-3 border-bottom border-dark">
+        <h6 class="mb-0 text-white">SLA Breach Details</h6>
+        <button class="btn btn-sm btn-outline-secondary" (click)="exportSlaCsv()" [disabled]="slaBreaches().length === 0">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Export CSV
+        </button>
+      </div>
+
+      <app-loading-skeleton *ngIf="slaLoading()" variant="table"></app-loading-skeleton>
+      <app-empty-state *ngIf="!slaLoading() && slaBreaches().length === 0" icon="✅" title="No SLA Breaches" description="All devices are within SLA targets."></app-empty-state>
+
+      <div class="table-responsive" *ngIf="!slaLoading() && slaBreaches().length > 0">
+        <table class="table table-dark table-hover table-sm mb-0">
+          <thead>
+            <tr>
+              <th>Device</th>
+              <th>OS</th>
+              <th>Compliance</th>
+              <th class="text-center">Critical Missing</th>
+              <th class="text-center">High Missing</th>
+              <th class="text-center">Days Overdue</th>
+              <th>Last Seen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let b of slaBreaches()">
+              <td class="fw-medium">{{ b.hostname }}</td>
+              <td class="text-muted small">{{ b.os_name }}</td>
+              <td>
+                <span class="small" [style.color]="complianceColor(b.compliance_rate)">{{ b.compliance_rate }}%</span>
+              </td>
+              <td class="text-danger text-center">{{ b.missing_critical }}</td>
+              <td class="text-warning text-center">{{ b.missing_high }}</td>
+              <td class="text-center">{{ b.days_overdue }}</td>
+              <td class="text-muted small">{{ b.last_seen | relativeTime }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div>

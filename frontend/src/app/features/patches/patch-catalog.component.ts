@@ -39,7 +39,9 @@ export class PatchCatalogComponent implements OnInit {
   total = signal(0);
   page = signal(1);
   pageSize = 25;
-  rows = Array(8).fill(0).map((_, i) => i);
+  rows = Array(8)
+    .fill(0)
+    .map((_, i) => i);
 
   activeTab = 'all';
   searchTerm = '';
@@ -53,16 +55,21 @@ export class PatchCatalogComponent implements OnInit {
   confirmMsg = '';
   private pendingPatch: any = null;
 
+  bulkRejectVisible = signal(false);
+  bulkRejectReason = '';
+
   stats = signal<any>(null);
 
   tabs = signal([
-    { label: 'PATCHES.AWAITING_REVIEW', value: 'imported',     count: 0 },
-    { label: 'PATCHES.APPROVED',        value: 'approved',     count: 0 },
-    { label: 'PATCHES.ALL_PATCHES',     value: 'all',          count: 0 },
-    { label: 'PATCHES.CRITICAL',        value: 'critical_sev', count: 0 },
+    { label: 'UI.u_awaiting_review', value: 'imported', count: 0 },
+    { label: 'UI.u_approved', value: 'approved', count: 0 },
+    { label: 'UI.u_all_patches', value: 'all', count: 0 },
+    { label: 'UI.u_critical', value: 'critical_sev', count: 0 },
   ]);
 
-  totalPages() { return Math.ceil(this.total() / this.pageSize); }
+  totalPages() {
+    return Math.ceil(this.total() / this.pageSize);
+  }
 
   pageNumbers(): number[] {
     const total = this.totalPages();
@@ -83,16 +90,27 @@ export class PatchCatalogComponent implements OnInit {
       next: (s) => {
         this.stats.set(s);
         // Update tab counts
-        const bySeverity = Object.fromEntries((s.by_severity || []).map((x: any) => [x.severity, x.count]));
-        const byStatus   = Object.fromEntries((s.by_status   || []).map((x: any) => [x.status,   x.count]));
-        this.tabs.update(tabs => tabs.map(t => ({
-          ...t,
-          count:
-            t.value === 'imported'     ? (byStatus['imported']  || 0) :
-            t.value === 'approved'     ? (byStatus['approved']  || 0) :
-            t.value === 'all'          ? (s.total               || 0) :
-            t.value === 'critical_sev' ? (bySeverity['critical'] || 0) : 0,
-        })));
+        const bySeverity = Object.fromEntries(
+          (s.by_severity || []).map((x: any) => [x.severity, x.count]),
+        );
+        const byStatus = Object.fromEntries(
+          (s.by_status || []).map((x: any) => [x.status, x.count]),
+        );
+        this.tabs.update((tabs) =>
+          tabs.map((t) => ({
+            ...t,
+            count:
+              t.value === 'imported'
+                ? byStatus['imported'] || 0
+                : t.value === 'approved'
+                  ? byStatus['approved'] || 0
+                  : t.value === 'all'
+                    ? s.total || 0
+                    : t.value === 'critical_sev'
+                      ? bySeverity['critical'] || 0
+                      : 0,
+          })),
+        );
         this.statsLoading.set(false);
       },
       error: () => this.statsLoading.set(false),
@@ -102,11 +120,11 @@ export class PatchCatalogComponent implements OnInit {
   loadPatches() {
     this.loading.set(true);
     const params: any = { page: this.page(), page_size: this.pageSize };
-    if (this.searchTerm)    params.search   = this.searchTerm;
+    if (this.searchTerm) params.search = this.searchTerm;
     if (this.severityFilter) params.severity = this.severityFilter;
-    if (this.vendorFilter)   params.vendor   = this.vendorFilter;
-    if (this.activeTab === 'imported')     params.status   = 'imported';
-    else if (this.activeTab === 'approved')    params.status   = 'approved';
+    if (this.vendorFilter) params.vendor = this.vendorFilter;
+    if (this.activeTab === 'imported') params.status = 'imported';
+    else if (this.activeTab === 'approved') params.status = 'approved';
     else if (this.activeTab === 'critical_sev') params.severity = 'critical';
     this.patchSvc.getPatches(params).subscribe({
       next: (r) => {
@@ -118,18 +136,33 @@ export class PatchCatalogComponent implements OnInit {
     });
   }
 
-  setTab(v: string) { this.activeTab = v; this.page.set(1); this.loadPatches(); }
-  setPage(p: number) { this.page.set(p); this.loadPatches(); }
+  setTab(v: string) {
+    this.activeTab = v;
+    this.page.set(1);
+    this.loadPatches();
+  }
+  setPage(p: number) {
+    this.page.set(p);
+    this.loadPatches();
+  }
 
   toggleSelect(id: string) {
-    this.selectedIds.update(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    this.selectedIds.update((s) => {
+      const n = new Set(s);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
   }
   toggleAll(e: Event) {
     const checked = (e.target as HTMLInputElement).checked;
-    this.selectedIds.set(checked ? new Set(this.patches().map(p => p.id)) : new Set());
+    this.selectedIds.set(checked ? new Set(this.patches().map((p) => p.id)) : new Set());
   }
-  clearSelection() { this.selectedIds.set(new Set()); }
-  openPanel(p: any) { this.selectedPatch.set(p); }
+  clearSelection() {
+    this.selectedIds.set(new Set());
+  }
+  openPanel(p: any) {
+    this.selectedPatch.set(p);
+  }
 
   markReview(p: any) {
     this.patchSvc.reviewPatch(p.id).subscribe({
@@ -183,9 +216,10 @@ export class PatchCatalogComponent implements OnInit {
   doConfirm(reason: string = '') {
     this.confirmVisible.set(false);
     if (!this.pendingPatch) return;
-    const obs = this.confirmAction === 'approve'
-      ? this.patchSvc.approvePatch(this.pendingPatch.id, reason)
-      : this.patchSvc.rejectPatch(this.pendingPatch.id, reason);
+    const obs =
+      this.confirmAction === 'approve'
+        ? this.patchSvc.approvePatch(this.pendingPatch.id, reason)
+        : this.patchSvc.rejectPatch(this.pendingPatch.id, reason);
     obs.subscribe({
       next: () => {
         this.ns.success('Done', `Patch ${this.confirmAction}d successfully.`);
@@ -196,7 +230,8 @@ export class PatchCatalogComponent implements OnInit {
         }
       },
       error: (err: any) => {
-        const msg = err?.error?.detail || err?.error?.error || `Failed to ${this.confirmAction} patch.`;
+        const msg =
+          err?.error?.detail || err?.error?.error || `Failed to ${this.confirmAction} patch.`;
         this.ns.error('Error', msg);
       },
     });
@@ -212,6 +247,30 @@ export class PatchCatalogComponent implements OnInit {
         this.clearSelection();
       },
       error: () => this.ns.error('Error', 'Bulk approve failed.'),
+    });
+  }
+
+  openBulkReject() {
+    this.bulkRejectReason = '';
+    this.bulkRejectVisible.set(true);
+  }
+
+  bulkReject() {
+    const ids = Array.from(this.selectedIds());
+    const reason = this.bulkRejectReason.trim();
+    if (!reason) {
+      this.ns.error('Required', 'A rejection reason is required.');
+      return;
+    }
+    this.bulkRejectVisible.set(false);
+    this.patchSvc.bulkReject(ids, reason).subscribe({
+      next: (res: any) => {
+        this.ns.success('Bulk Rejected', res?.status || `${ids.length} patches rejected.`);
+        this.loadPatches();
+        this.loadStats();
+        this.clearSelection();
+      },
+      error: () => this.ns.error('Error', 'Bulk reject failed.'),
     });
   }
 }
