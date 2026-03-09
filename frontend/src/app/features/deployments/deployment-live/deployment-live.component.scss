@@ -258,7 +258,7 @@ $yellow: #f59e0b;
   color: $blue;
 
   &.danger-pct {
-    color: mix($blue, $red, 60%);
+    color: color.mix($blue, $red, 60%);
   }
 }
 
