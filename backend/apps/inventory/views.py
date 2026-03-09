@@ -479,6 +479,25 @@ class DeviceViewSet(viewsets.ModelViewSet):
             status=status.HTTP_202_ACCEPTED,
         )
 
+    @extend_schema(summary="Request slow-lane inventory scan", description="Publish COLLECT_SLOW_LANE command to the agent via Redis pub/sub. The agent will immediately run a full inventory collection.")
+    @action(detail=True, methods=["post"], url_path="request_slow_lane", permission_classes=[IsOperatorOrAbove])
+    def request_slow_lane(self, request, pk=None):
+        device = self.get_object()
+        if device.status != Device.Status.ONLINE:
+            return Response(
+                {"error": f"Device '{device.hostname}' is {device.status}. Agent must be online to scan."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        from common.redis_pubsub import RedisPublisher
+        RedisPublisher.publish_agent_command(
+            str(device.id), "COLLECT_SLOW_LANE",
+            {"device_id": str(device.id), "initiated_by": str(getattr(request.user, "username", "unknown"))}
+        )
+        return Response(
+            {"status": f"Inventory scan command sent to '{device.hostname}'", "device_id": str(device.id)},
+            status=status.HTTP_202_ACCEPTED,
+        )
+
     # ------------------------------------------------------------------ #
     # Bulk operations                                                      #
     # ------------------------------------------------------------------ #

@@ -1017,6 +1017,53 @@
    SLOW-LANE CHIPS & INVENTORY SECTIONS
    ══════════════════════════════════════════════════════════════════════════ */
 
+.dd-inv-action-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dd-btn-scan {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid #6366f1;
+  border-radius: 8px;
+  color: #a5b4fc;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: rgba(99, 102, 241, 0.22);
+    color: #c7d2fe;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  svg.spin {
+    animation: spin-anim 1s linear infinite;
+  }
+}
+
+@keyframes spin-anim {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.dd-inv-offline-hint {
+  font-size: 11px;
+  color: #f59e0b;
+  opacity: 0.8;
+}
+
 .dd-slow-chips {
   display: flex;
   flex-wrap: wrap;

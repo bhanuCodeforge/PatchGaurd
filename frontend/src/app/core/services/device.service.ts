@@ -103,6 +103,10 @@ export class DeviceService {
     return this.api.get<any>(`/devices/${id}/slow_lane_section/`, params);
   }
 
+  requestSlowLaneScan(id: string): Observable<any> {
+    return this.api.post<any>(`/devices/${id}/request_slow_lane/`, {});
+  }
+
   getInstallerUrl(id: string, os: string): string {
     return `/api/v1/devices/${id}/download_installer/?os=${os}`;
   }

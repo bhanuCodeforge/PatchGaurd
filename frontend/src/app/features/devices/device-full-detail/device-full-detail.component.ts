@@ -99,6 +99,9 @@ export class DeviceFullDetailComponent implements OnInit {
   // Installer download
   installerDownloading = signal(false);
 
+  // Inventory scan
+  scanningInventory = signal(false);
+
   patchCounts = computed(() => {
     const ps = this.patches();
     return {
@@ -286,10 +289,25 @@ export class DeviceFullDetailComponent implements OnInit {
     });
   }
 
+  selectInventoryTab(deviceId: string) {
+    this.activeTab.set('inventory');
+    this.loadSlowLaneSummary(deviceId);
+    if (!this.slowActiveSection()) {
+      this.loadSlowSection('apps');
+    }
+  }
+
   loadSlowSection(section: string) {
     const d = this.device();
     if (!d) return;
     this.slowActiveSection.set(section);
+
+    if (section === 'apps') {
+      this.loadInstalledApps(d.id, this.appSearch());
+      this.slowSectionData.set(null); // Clear raw data for apps view
+      return;
+    }
+
     this.slowSectionLoading.set(true);
     this.deviceSvc.getSlowLaneSection(d.id, section).subscribe({
       next: (r) => {
@@ -297,6 +315,25 @@ export class DeviceFullDetailComponent implements OnInit {
         this.slowSectionLoading.set(false);
       },
       error: () => this.slowSectionLoading.set(false),
+    });
+  }
+
+  scanInventory() {
+    const d = this.device();
+    if (!d || this.scanningInventory()) return;
+    this.scanningInventory.set(true);
+    this.deviceSvc.requestSlowLaneScan(d.id).subscribe({
+      next: () => {
+        this.ns.success(
+          'Scan Initiated',
+          `Inventory scan command sent to ${d.hostname}. Data will refresh automatically.`,
+        );
+        this.scanningInventory.set(false);
+      },
+      error: (err) => {
+        this.ns.error('Scan Failed', err?.error?.error || 'Could not send scan command.');
+        this.scanningInventory.set(false);
+      },
     });
   }
 
