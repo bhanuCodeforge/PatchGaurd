@@ -26,6 +26,15 @@
 .device-tag { display: inline-block; padding: 2px 7px; margin-right: 3px; background: var(--border); border-radius: 4px; font-size: 11px; color: var(--muted2); }
 .tag-more   { font-size: 11px; color: var(--muted); }
 
+.installer-dl-btn {
+  padding: 4px 6px;
+  line-height: 1;
+  border-radius: 6px;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+  tr:hover & { opacity: 1; }
+}
+
 // Modals
 .modal-backdrop {
   position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1040;

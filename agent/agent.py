@@ -24,6 +24,7 @@ except ImportError:
 from plugins.linux import LinuxPlugin
 from plugins.windows import WindowsPlugin
 from plugins.macos import MacOSPlugin
+from collectors.scheduler import LaneScheduler
 from logging_utils import trace
 
 # Configure Logging
@@ -46,6 +47,7 @@ class PatchAgent:
         self._connected = False
         self._rest_session: Optional[Any] = None  # aiohttp.ClientSession
         self.version = "1.0.0"
+        self._scheduler: Optional[LaneScheduler] = None
 
     # ------------------------------------------------------------------ #
     # Config & initialisation                                              #
@@ -266,9 +268,18 @@ class PatchAgent:
                     # Trigger initial scan to sync patch state immediately
                     asyncio.create_task(self.run_scan())
 
+                    # Initialise lane scheduler (fast=5s, slow=15min)
+                    self._scheduler = LaneScheduler(
+                        send_fn=self._send_lane_event,
+                        device_id=self.device_id,
+                        fast_interval=self.config.get("fast_lane_interval", 5),
+                        slow_interval=self.config.get("slow_lane_interval", 900),
+                    )
+
                     await asyncio.gather(
                         self.heartbeat_loop(),
                         self.message_handler(),
+                        self._scheduler.start(),
                         return_exceptions=True
                     )
             except (websockets.ConnectionClosed, websockets.WebSocketException, OSError) as e:
@@ -278,6 +289,9 @@ class PatchAgent:
             finally:
                 self._connected = False
                 self.ws = None
+                if self._scheduler:
+                    self._scheduler.stop()
+                    self._scheduler = None
 
             if not self.running:
                 break
@@ -343,6 +357,10 @@ class PatchAgent:
             })
         except Exception as e:
             logger.error(f"Failed to send inventory: {e}")
+
+    async def _send_lane_event(self, event: str, payload: Dict[str, Any]):
+        """Callback used by LaneScheduler to send data over the WebSocket."""
+        await self.send_json({"event": event, "payload": payload})
 
     @trace
     async def heartbeat_loop(self):
@@ -438,6 +456,13 @@ class PatchAgent:
                             
                             if "log_level" in new_cfg:
                                 self._set_log_level()
+                            
+                            # Update lane scheduler intervals if changed
+                            if self._scheduler:
+                                self._scheduler.update_intervals(
+                                    fast=new_cfg.get("fast_lane_interval"),
+                                    slow=new_cfg.get("slow_lane_interval"),
+                                )
                             
                             # If heartbeat interval changed, the loop will adapt on next sleep
                             # as it reads from self.config each iteration
@@ -636,6 +661,8 @@ class PatchAgent:
     def stop(self):
         self.running = False
         self._connected = False
+        if self._scheduler:
+            self._scheduler.stop()
 
 
 async def _run(agent: PatchAgent):

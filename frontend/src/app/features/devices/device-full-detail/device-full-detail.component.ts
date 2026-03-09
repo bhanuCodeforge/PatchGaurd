@@ -87,6 +87,18 @@ export class DeviceFullDetailComponent implements OnInit {
   systemInfoLoading = signal(false);
   patchesLoading = signal(false);
 
+  // Fast-lane real-time metrics (updated every ~5s via WS)
+  liveMetrics = signal<any>(null);
+
+  // Slow-lane section data (loaded on demand per tab)
+  slowLaneSummary = signal<any>(null);
+  slowSectionData = signal<any>(null);
+  slowSectionLoading = signal(false);
+  slowActiveSection = signal('');
+
+  // Installer download
+  installerDownloading = signal(false);
+
   patchCounts = computed(() => {
     const ps = this.patches();
     return {
@@ -133,6 +145,35 @@ export class DeviceFullDetailComponent implements OnInit {
       } else if (msg.event === 'scan_results') {
         this.ns.success('Scan Complete', `New patches discovered for ${current.hostname}`);
         this.loadPatches(id);
+      } else if (msg.event === 'agent_metrics') {
+        // Fast-lane: real-time performance metrics (every ~5s)
+        this.liveMetrics.set(msg.payload);
+        // Also update device metadata for gauge displays
+        this.device.update((d) =>
+          d
+            ? {
+                ...d,
+                metadata: {
+                  ...d.metadata,
+                  cpu_usage: msg.payload.cpu_percent,
+                  ram_usage: msg.payload.memory_percent,
+                  disk_usage: msg.payload.disk_usage_percent,
+                  disk_read_bytes_sec: msg.payload.disk_read_bytes_sec,
+                  disk_write_bytes_sec: msg.payload.disk_write_bytes_sec,
+                  net_sent_bytes_sec: msg.payload.net_sent_bytes_sec,
+                  net_recv_bytes_sec: msg.payload.net_recv_bytes_sec,
+                  process_count: msg.payload.process_count,
+                },
+              }
+            : null,
+        );
+      } else if (msg.event === 'agent_slow_lane_data') {
+        // Slow-lane: heavy inventory data refreshed (every ~15min)
+        this.ns.info('Inventory Updated', `Slow-lane data refreshed for ${current.hostname}`);
+        // Reload affected data from backend
+        this.loadInstalledApps(id);
+        this.loadAllPatches(id);
+        this.loadSystemInfo(id);
       }
     });
   }
@@ -151,6 +192,7 @@ export class DeviceFullDetailComponent implements OnInit {
         this.loadDeployments(id);
         this.loadSystemInfo(id);
         this.loadInstalledApps(id);
+        this.loadSlowLaneSummary(id);
         this.loading.set(false);
       },
       error: () => {
@@ -237,6 +279,50 @@ export class DeviceFullDetailComponent implements OnInit {
     });
   }
 
+  loadSlowLaneSummary(id: string) {
+    this.deviceSvc.getSlowLaneSection(id).subscribe({
+      next: (r) => this.slowLaneSummary.set(r),
+      error: () => {},
+    });
+  }
+
+  loadSlowSection(section: string) {
+    const d = this.device();
+    if (!d) return;
+    this.slowActiveSection.set(section);
+    this.slowSectionLoading.set(true);
+    this.deviceSvc.getSlowLaneSection(d.id, section).subscribe({
+      next: (r) => {
+        this.slowSectionData.set(r.data);
+        this.slowSectionLoading.set(false);
+      },
+      error: () => this.slowSectionLoading.set(false),
+    });
+  }
+
+  downloadInstaller() {
+    const d = this.device();
+    if (!d || this.installerDownloading()) return;
+    const os = d.os_family || 'linux';
+    this.installerDownloading.set(true);
+    this.deviceSvc.downloadInstaller(d.id, os).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `patchguard-agent-${os}-${d.hostname}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.installerDownloading.set(false);
+        this.ns.success('Download Started', `Agent installer for ${d.hostname} (${os})`);
+      },
+      error: () => {
+        this.installerDownloading.set(false);
+        this.ns.error('Download Failed', 'Could not download the agent installer.');
+      },
+    });
+  }
+
   scan() {
     const d = this.device();
     if (!d) return;
@@ -316,5 +402,33 @@ export class DeviceFullDetailComponent implements OnInit {
     if (gb >= 1) return gb.toFixed(gb >= 100 ? 0 : 1) + ' GB';
     const mb = bytes / 1048576;
     return mb.toFixed(0) + ' MB';
+  }
+
+  formatRate(bytesPerSec: number): string {
+    if (!bytesPerSec || bytesPerSec < 0) return '0 B/s';
+    if (bytesPerSec >= 1073741824) return (bytesPerSec / 1073741824).toFixed(1) + ' GB/s';
+    if (bytesPerSec >= 1048576) return (bytesPerSec / 1048576).toFixed(1) + ' MB/s';
+    if (bytesPerSec >= 1024) return (bytesPerSec / 1024).toFixed(1) + ' KB/s';
+    return Math.round(bytesPerSec) + ' B/s';
+  }
+
+  /* ── Slow-lane helpers ── */
+  objectEntries(obj: any): [string, any][] {
+    return obj ? Object.entries(obj) : [];
+  }
+  objectKeys(obj: any): string[] {
+    return obj ? Object.keys(obj) : [];
+  }
+  isArray(v: any): boolean {
+    return Array.isArray(v);
+  }
+  isObject(v: any): boolean {
+    return v !== null && typeof v === 'object' && !Array.isArray(v);
+  }
+  formatSlowValue(v: any): string {
+    if (v === null || v === undefined) return '—';
+    if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+    if (typeof v === 'object') return JSON.stringify(v, null, 2);
+    return String(v);
   }
 }

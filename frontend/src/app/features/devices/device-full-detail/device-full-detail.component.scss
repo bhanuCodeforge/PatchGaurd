@@ -953,3 +953,238 @@
 
 // ── Text center helper ────────────────────────────────────────────────────
 .text-center { text-align: center; }
+
+// ── Live I/O metrics grid ─────────────────────────────────────────────────
+
+.dd-io-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dd-io-card {
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dd-io-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &.io-disk  { color: #a78bfa; background: rgba(167, 139, 250, 0.1); }
+  &.io-net   { color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+  &.io-proc  { color: #fb923c; background: rgba(251, 146, 60, 0.1); }
+}
+
+.dd-io-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dd-io-lbl {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.dd-io-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  gap: 10px;
+
+  .io-read  { color: #4ade80; }
+  .io-write { color: #f87171; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SLOW-LANE CHIPS & INVENTORY SECTIONS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.dd-slow-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.dd-slow-chip {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 20px;
+  color: #94a3b8;
+  padding: 5px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: #334155;
+    color: #e2e8f0;
+  }
+
+  &.active {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: #6366f1;
+    color: #a5b4fc;
+  }
+}
+
+.dd-slow-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.dd-slow-meta-sep {
+  margin: 0 4px;
+}
+
+.dd-inv-section {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.dd-inv-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 16px;
+}
+
+.dd-slow-count {
+  font-weight: 400;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.dd-inv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.dd-inv-cell {
+  background: #1e293b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dd-inv-lbl {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.dd-inv-val {
+  font-size: 13px;
+  color: #e2e8f0;
+  word-break: break-word;
+}
+
+.dd-pre {
+  white-space: pre-wrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+/* Slow-lane data table */
+.dd-table-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+}
+
+.dd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+
+  th, td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #1e293b;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  th {
+    background: #1e293b;
+    color: #94a3b8;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  td {
+    color: #cbd5e1;
+    &.small { font-size: 11px; }
+  }
+
+  tbody tr {
+    transition: background 0.1s;
+    &:hover { background: rgba(99, 102, 241, 0.05); }
+  }
+}
+
+.dd-slow-truncated {
+  text-align: center;
+  padding: 10px;
+  font-size: 11px;
+  color: #64748b;
+  border-top: 1px solid #1e293b;
+}
+
+.dd-slow-text-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dd-slow-text-item {
+  background: #1e293b;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #cbd5e1;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Download button in hero */
+.dd-download-btn {
+  color: #4ade80 !important;
+  &:hover { background: rgba(74, 222, 128, 0.1); }
+}

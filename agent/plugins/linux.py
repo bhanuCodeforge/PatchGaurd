@@ -1,4 +1,3 @@
-import os
 import subprocess
 import platform
 import shutil
@@ -77,38 +76,20 @@ class LinuxPlugin(OSPlugin):
 
     @trace
     def get_inventory(self) -> Dict[str, Any]:
-        inventory = {
-            "apps": [],
-            "network": [],
-            "storage": [],
-        }
+        """Collect basic inventory (network, storage). Heavy collection handled by slow-lane."""
+        import psutil, socket
+        inventory: Dict[str, Any] = {"apps": [], "network": [], "storage": []}
         try:
-            if self.mgr == "apt":
-                # dpkg-query logic
-                cmd = ["dpkg-query", "-W", "-f=${Package};${Version};${Maintainer}\n"]
-                res = subprocess.run(cmd, capture_output=True, text=True)
-                for line in res.stdout.splitlines():
-                    parts = line.split(";")
-                    if len(parts) >= 3:
-                        inventory["apps"].append({
-                            "name": parts[0],
-                            "version": parts[1],
-                            "publisher": parts[2]
-                        })
-            elif self.mgr in ["dnf", "yum"]:
-                # rpm logic
-                pass
-
-            # Network info (psutil is cross-platform)
-            import psutil, socket
             for name, snics in psutil.net_if_addrs().items():
                 for snic in snics:
                     if snic.family == socket.AF_INET:
-                        inventory["network"].append({
-                            "interface": name,
-                            "ip": snic.address,
-                            "netmask": snic.netmask
-                        })
+                        inventory["network"].append({"interface": name, "ip": snic.address, "netmask": snic.netmask})
+            for part in psutil.disk_partitions(all=False):
+                try:
+                    usage = psutil.disk_usage(part.mountpoint)
+                    inventory["storage"].append({"device": part.device, "mountpoint": part.mountpoint, "fstype": part.fstype, "total": usage.total, "used": usage.used, "free": usage.free, "percent": usage.percent})
+                except Exception:
+                    continue
         except Exception as e:
             print(f"Linux inventory error: {e}")
         return inventory

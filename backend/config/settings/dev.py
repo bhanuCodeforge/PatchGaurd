@@ -51,3 +51,7 @@ _celery_broker = os.getenv("CELERY_BROKER_URL", "")
 if not _celery_broker:
     CELERY_TASK_ALWAYS_EAGER = True
     CELERY_TASK_EAGER_PROPAGATES = True
+
+# Agent installer config: URLs written into the downloaded config.yaml
+AGENT_REST_URL = os.getenv("AGENT_REST_URL", "http://localhost:8000/api/v1")
+AGENT_WS_URL = os.getenv("AGENT_WS_URL", "ws://localhost:8001/ws/agent")

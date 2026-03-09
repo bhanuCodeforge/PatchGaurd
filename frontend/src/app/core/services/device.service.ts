@@ -96,4 +96,18 @@ export class DeviceService {
   exportDevices(params: any = {}): Observable<Blob> {
     return this.api.get<Blob>('/devices/export/', { ...params, responseType: 'blob' });
   }
+
+  getSlowLaneSection(id: string, section?: string): Observable<any> {
+    const params: any = {};
+    if (section) params.section = section;
+    return this.api.get<any>(`/devices/${id}/slow_lane_section/`, params);
+  }
+
+  getInstallerUrl(id: string, os: string): string {
+    return `/api/v1/devices/${id}/download_installer/?os=${os}`;
+  }
+
+  downloadInstaller(id: string, os: string): Observable<Blob> {
+    return this.api.getBlob(`/devices/${id}/download_installer/`, { os });
+  }
 }

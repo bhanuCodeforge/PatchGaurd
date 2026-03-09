@@ -178,6 +178,29 @@ async def websocket_agent(websocket: WebSocket, api_key: str = Query(...)):
                         "payload": {**env.payload, "device_id": device_id}
                     }))
 
+                elif env.event == "metrics":
+                    # Fast-lane performance metrics (every ~5s)
+                    await manager.broadcast_to_dashboard(json.dumps({
+                        "event": "agent_metrics",
+                        "payload": {**env.payload, "device_id": device_id}
+                    }))
+
+                elif env.event == "slow_lane_data":
+                    # Slow-lane heavy data (every ~15min)
+                    # 1. Broadcast to dashboards for live UI
+                    await manager.broadcast_to_dashboard(json.dumps({
+                        "event": "agent_slow_lane_data",
+                        "payload": {**env.payload, "device_id": device_id}
+                    }))
+                    # 2. Persist full inventory to backend
+                    asyncio.create_task(
+                        _post_to_backend(
+                            f"/devices/{device_id}/ingest_slow_lane/",
+                            env.payload,
+                            api_key,
+                        )
+                    )
+
             except Exception as e:
                 logger.error(f"Error handling agent event from {device_id}: {e}")
 

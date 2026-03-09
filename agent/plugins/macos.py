@@ -1,7 +1,5 @@
-import os
 import subprocess
 import platform
-import shutil
 from typing import List, Dict, Any
 from .base import OSPlugin
 from logging_utils import trace
@@ -52,25 +50,20 @@ class MacOSPlugin(OSPlugin):
 
     @trace
     def get_inventory(self) -> Dict[str, Any]:
-        inventory = {
-            "apps": [],
-            "network": [],
-            "storage": [],
-        }
+        """Collect basic inventory (network, storage). Heavy collection handled by slow-lane."""
+        import psutil, socket
+        inventory: Dict[str, Any] = {"apps": [], "network": [], "storage": []}
         try:
-            # simple app list using system_profiler
-            cmd = ["system_profiler", "SPApplicationsDataType", "-json"]
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
-            if res.status == 0:
-                import json as _json
-                data = _json.loads(res.stdout)
-                apps = data.get("SPApplicationsDataType", [])
-                for a in apps:
-                    inventory["apps"].append({
-                        "name": a.get("_name"),
-                        "version": a.get("version"),
-                        "publisher": a.get("obtained_from", "unknown")
-                    })
+            for name, snics in psutil.net_if_addrs().items():
+                for snic in snics:
+                    if snic.family == socket.AF_INET:
+                        inventory["network"].append({"interface": name, "ip": snic.address, "netmask": snic.netmask})
+            for part in psutil.disk_partitions(all=False):
+                try:
+                    usage = psutil.disk_usage(part.mountpoint)
+                    inventory["storage"].append({"device": part.device, "mountpoint": part.mountpoint, "fstype": part.fstype, "total": usage.total, "used": usage.used, "free": usage.free, "percent": usage.percent})
+                except Exception:
+                    continue
         except Exception as e:
             print(f"macOS inventory error: {e}")
         return inventory

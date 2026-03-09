@@ -52,6 +52,9 @@
         <button class="dd-icon-btn" title="Reboot" (click)="reboot()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
+        <button class="dd-icon-btn dd-download-btn" title="Download Agent Installer" (click)="downloadInstaller()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
       </div>
     </div>
   </div>
@@ -103,6 +106,10 @@
     <button class="dd-tab" [class.active]="activeTab() === 'activity'" (click)="activeTab.set('activity'); loadActivityLog(d.id)">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Activity Log
+    </button>
+    <button class="dd-tab" [class.active]="activeTab() === 'inventory'" (click)="activeTab.set('inventory'); loadSlowLaneSummary(d.id)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Security &amp; Inventory
     </button>
     <button class="dd-tab" [class.active]="activeTab() === 'settings'" (click)="activeTab.set('settings')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -198,6 +205,45 @@
         </div>
       </div>
     </div>
+
+    <!-- Live I/O metrics (Fast Lane) -->
+    @if (liveMetrics(); as m) {
+    <div class="dd-io-grid">
+      <div class="dd-io-card">
+        <div class="dd-io-icon io-disk">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        </div>
+        <div class="dd-io-body">
+          <span class="dd-io-lbl">Disk I/O</span>
+          <span class="dd-io-val">
+            <span class="io-read">&#8593; {{ formatRate(m.disk_read_bytes_sec) }}</span>
+            <span class="io-write">&#8595; {{ formatRate(m.disk_write_bytes_sec) }}</span>
+          </span>
+        </div>
+      </div>
+      <div class="dd-io-card">
+        <div class="dd-io-icon io-net">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>
+        </div>
+        <div class="dd-io-body">
+          <span class="dd-io-lbl">Network</span>
+          <span class="dd-io-val">
+            <span class="io-read">&#8593; {{ formatRate(m.net_sent_bytes_sec) }}</span>
+            <span class="io-write">&#8595; {{ formatRate(m.net_recv_bytes_sec) }}</span>
+          </span>
+        </div>
+      </div>
+      <div class="dd-io-card">
+        <div class="dd-io-icon io-proc">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
+        </div>
+        <div class="dd-io-body">
+          <span class="dd-io-lbl">Processes</span>
+          <span class="dd-io-val dd-mono">{{ m.process_count || '—' }}</span>
+        </div>
+      </div>
+    </div>
+    }
 
     <!-- Spec grid -->
     <div class="dd-spec-grid">
@@ -797,6 +843,196 @@
       </table>
       }
     </div>
+  </div>
+  }
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECURITY & INVENTORY TAB (Slow-Lane Data)
+       ══════════════════════════════════════════════════════════════════════ -->
+  @if (activeTab() === 'inventory') {
+  <div class="dd-tab-panel" @tabChange>
+
+    <!-- Section picker chips -->
+    <div class="dd-slow-chips">
+      @if (d.os_family === 'windows') {
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'defender_status'" (click)="loadSlowSection('defender_status')">🛡️ Defender</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'firewall'" (click)="loadSlowSection('firewall')">🔥 Firewall</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'services'" (click)="loadSlowSection('services')">⚙️ Services</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'drivers'" (click)="loadSlowSection('drivers')">💻 Drivers</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'installed_patches'" (click)="loadSlowSection('installed_patches')">🩹 Hotfixes</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'update_history'" (click)="loadSlowSection('update_history')">📜 Update History</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'missing_updates'" (click)="loadSlowSection('missing_updates')">⚠️ Missing Updates</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'store_apps'" (click)="loadSlowSection('store_apps')">🏪 Store Apps</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'scheduled_tasks'" (click)="loadSlowSection('scheduled_tasks')">📋 Tasks</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'local_users'" (click)="loadSlowSection('local_users')">👥 Users</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'startup_programs'" (click)="loadSlowSection('startup_programs')">🚀 Startup</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'windows_features'" (click)="loadSlowSection('windows_features')">🧩 Features</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'disk_health'" (click)="loadSlowSection('disk_health')">💾 Disk Health</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'network_info'" (click)="loadSlowSection('network_info')">🌐 Network</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'event_log_errors'" (click)="loadSlowSection('event_log_errors')">🔴 Event Errors</button>
+      }
+      @if (d.os_family === 'linux') {
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'security_updates'" (click)="loadSlowSection('security_updates')">🛡️ Security Updates</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'firewall'" (click)="loadSlowSection('firewall')">🔥 Firewall</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'services'" (click)="loadSlowSection('services')">⚙️ Services</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'installed_packages'" (click)="loadSlowSection('installed_packages')">📦 Packages</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'kernel_patches'" (click)="loadSlowSection('kernel_patches')">🐧 Kernel</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'patch_history'" (click)="loadSlowSection('patch_history')">📜 Patch History</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'running_processes'" (click)="loadSlowSection('running_processes')">🔄 Processes</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'open_ports'" (click)="loadSlowSection('open_ports')">🔓 Open Ports</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'users'" (click)="loadSlowSection('users')">👥 Users</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'cron_jobs'" (click)="loadSlowSection('cron_jobs')">⏰ Cron Jobs</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'security_config'" (click)="loadSlowSection('security_config')">🔒 Security Config</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'snap_packages'" (click)="loadSlowSection('snap_packages')">📦 Snaps</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'disk_health'" (click)="loadSlowSection('disk_health')">💾 Disk Health</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'network_info'" (click)="loadSlowSection('network_info')">🌐 Network</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'recent_errors'" (click)="loadSlowSection('recent_errors')">🔴 Recent Errors</button>
+      }
+      @if (d.os_family !== 'windows' && d.os_family !== 'linux') {
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'software_updates'" (click)="loadSlowSection('software_updates')">🛡️ Software Updates</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'firewall'" (click)="loadSlowSection('firewall')">🔥 Firewall</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'services'" (click)="loadSlowSection('services')">⚙️ Services</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'homebrew_packages'" (click)="loadSlowSection('homebrew_packages')">🍺 Homebrew</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'homebrew_outdated'" (click)="loadSlowSection('homebrew_outdated')">📦 Outdated</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'app_store_apps'" (click)="loadSlowSection('app_store_apps')">🍎 App Store</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'system_integrity'" (click)="loadSlowSection('system_integrity')">🔒 SIP / Gatekeeper</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'update_history'" (click)="loadSlowSection('update_history')">📜 Update History</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'running_processes'" (click)="loadSlowSection('running_processes')">🔄 Processes</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'open_ports'" (click)="loadSlowSection('open_ports')">🔓 Open Ports</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'users'" (click)="loadSlowSection('users')">👥 Users</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'security_config'" (click)="loadSlowSection('security_config')">🔒 Security</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'disk_health'" (click)="loadSlowSection('disk_health')">💾 Disk Health</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'login_items'" (click)="loadSlowSection('login_items')">🚀 Login Items</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'recent_errors'" (click)="loadSlowSection('recent_errors')">🔴 Recent Errors</button>
+      }
+    </div>
+
+    <!-- Last collection timestamp -->
+    @if (slowLaneSummary(); as sl) {
+    <div class="dd-slow-meta">
+      <span>Last collected: {{ sl.slow_lane_ts ? (sl.slow_lane_ts * 1000 | date:'medium') : 'Never' }}</span>
+      @if (sl.collection_time_sec) {
+        <span class="dd-slow-meta-sep">•</span>
+        <span>Collection time: {{ sl.collection_time_sec | number:'1.1-1' }}s</span>
+      }
+    </div>
+    }
+
+    <!-- Section data -->
+    @if (slowSectionLoading()) {
+      <app-loading-skeleton variant="table" [rows]="[0,1,2,3,4]"></app-loading-skeleton>
+    } @else if (slowSectionData(); as sData) {
+
+      <!-- Defender Status (Windows only - dict) -->
+      @if (slowActiveSection() === 'defender_status' && sData) {
+      <div class="dd-inv-section">
+        <div class="dd-inv-section-title">Windows Defender Status</div>
+        <div class="dd-inv-grid">
+          @for (entry of objectEntries(sData); track entry[0]) {
+          <div class="dd-inv-cell">
+            <span class="dd-inv-lbl">{{ entry[0] }}</span>
+            <span class="dd-inv-val">{{ entry[1] ?? '—' }}</span>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- Firewall (could be list or dict) -->
+      @if (slowActiveSection() === 'firewall') {
+      <div class="dd-inv-section">
+        <div class="dd-inv-section-title">Firewall Configuration</div>
+        @if (isArray(sData)) {
+        <div class="dd-table-wrap">
+          <table class="dd-table">
+            <thead><tr>@for (col of objectKeys(sData[0] || {}); track col) { <th>{{ col }}</th> }</tr></thead>
+            <tbody>
+              @for (row of sData; track $index) {
+              <tr>@for (col of objectKeys(sData[0] || {}); track col) { <td>{{ row[col] ?? '—' }}</td> }</tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        } @else {
+        <div class="dd-inv-grid">
+          @for (entry of objectEntries(sData); track entry[0]) {
+          <div class="dd-inv-cell">
+            <span class="dd-inv-lbl">{{ entry[0] }}</span>
+            <span class="dd-inv-val dd-pre">{{ formatSlowValue(entry[1]) }}</span>
+          </div>
+          }
+        </div>
+        }
+      </div>
+      }
+
+      <!-- Security Config (dict) -->
+      @if (slowActiveSection() === 'security_config' || slowActiveSection() === 'system_integrity') {
+      <div class="dd-inv-section">
+        <div class="dd-inv-section-title">Security Configuration</div>
+        <div class="dd-inv-grid">
+          @for (entry of objectEntries(sData); track entry[0]) {
+          <div class="dd-inv-cell">
+            <span class="dd-inv-lbl">{{ entry[0] }}</span>
+            <span class="dd-inv-val dd-pre">{{ formatSlowValue(entry[1]) }}</span>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- Generic list/table sections -->
+      @if (isArray(sData) && slowActiveSection() !== 'firewall') {
+      <div class="dd-inv-section">
+        <div class="dd-inv-section-title">{{ slowActiveSection() | titlecase }} <span class="dd-slow-count">({{ sData.length }})</span></div>
+        @if (sData.length > 0 && isObject(sData[0])) {
+        <div class="dd-table-wrap">
+          <table class="dd-table">
+            <thead><tr>@for (col of objectKeys(sData[0]); track col) { <th>{{ col }}</th> }</tr></thead>
+            <tbody>
+              @for (row of sData.slice(0, 200); track $index) {
+              <tr>@for (col of objectKeys(sData[0]); track col) { <td class="small">{{ formatSlowValue(row[col]) }}</td> }</tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (sData.length > 200) {
+          <div class="dd-slow-truncated">Showing 200 of {{ sData.length }} items</div>
+        }
+        } @else if (sData.length > 0) {
+          <!-- Simple string list -->
+          <div class="dd-slow-text-list">
+            @for (item of sData.slice(0, 100); track $index) {
+              <div class="dd-slow-text-item">{{ item }}</div>
+            }
+          </div>
+        } @else {
+          <div class="dd-empty">No data collected for this section</div>
+        }
+      </div>
+      }
+
+      <!-- Generic dict fallback for sections not explicitly handled above -->
+      @if (!isArray(sData) && isObject(sData) && slowActiveSection() !== 'defender_status' && slowActiveSection() !== 'firewall' && slowActiveSection() !== 'security_config' && slowActiveSection() !== 'system_integrity') {
+      <div class="dd-inv-section">
+        <div class="dd-inv-section-title">{{ slowActiveSection() | titlecase }}</div>
+        <div class="dd-inv-grid">
+          @for (entry of objectEntries(sData); track entry[0]) {
+          <div class="dd-inv-cell">
+            <span class="dd-inv-lbl">{{ entry[0] }}</span>
+            <span class="dd-inv-val dd-pre">{{ formatSlowValue(entry[1]) }}</span>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+    } @else if (slowActiveSection()) {
+      <div class="dd-empty" style="padding: 60px 0;">No data available for this section. The agent may not have completed a slow-lane collection yet.</div>
+    } @else {
+      <div class="dd-empty" style="padding: 60px 0;">Select a section above to view detailed inventory data collected by the agent.</div>
+    }
+
   </div>
   }
 

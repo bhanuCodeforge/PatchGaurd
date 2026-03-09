@@ -24,6 +24,8 @@ device_id_override: c9744198-772a-4984-ae76-7a24a703282b
 heartbeat_interval: 5
 log_level: info
 rest_heartbeat_interval: 300
+fast_lane_interval: 5
+slow_lane_interval: 900
 tags:
 - production
 - web-server

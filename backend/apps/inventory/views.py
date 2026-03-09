@@ -197,6 +197,49 @@ class DeviceViewSet(viewsets.ModelViewSet):
         return Response({"status": "heartbeat received", "device_id": str(device.id)})
 
     @extend_schema(
+        summary="Ingest fast-lane metrics",
+        description="Persist lightweight performance metrics from fast-lane collection (every ~5s). Updates device metadata with real-time CPU/RAM/Disk/Network/IO stats.",
+    )
+    @action(
+        detail=True, methods=["post"], url_path="ingest_metrics",
+        authentication_classes=_AGENT_AUTH,
+        permission_classes=[IsAgentOrOperatorOrAbove],
+    )
+    @trace
+    def ingest_metrics(self, request, pk=None):
+        from django.utils import timezone
+        device = self.get_object()
+        data = request.data
+
+        device.last_seen = timezone.now()
+        device.status = Device.Status.ONLINE
+
+        existing = device.metadata or {}
+        metrics_fields = (
+            "cpu_percent", "cpu_per_core", "memory_percent", "memory_used_bytes",
+            "memory_total_bytes", "disk_usage_percent", "disk_read_bytes_sec",
+            "disk_write_bytes_sec", "net_sent_bytes_sec", "net_recv_bytes_sec",
+            "process_count",
+        )
+        for field in metrics_fields:
+            if field in data:
+                existing[field] = data[field]
+
+        # Also map to legacy field names for backward compatibility
+        if "cpu_percent" in data:
+            existing["cpu_usage"] = data["cpu_percent"]
+        if "memory_percent" in data:
+            existing["ram_usage"] = data["memory_percent"]
+        if "disk_usage_percent" in data:
+            existing["disk_usage"] = data["disk_usage_percent"]
+
+        existing["last_metrics_ts"] = data.get("timestamp")
+        device.metadata = existing
+        device.save(update_fields=["last_seen", "status", "metadata"])
+
+        return Response({"status": "metrics accepted", "device_id": str(device.id)})
+
+    @extend_schema(
         summary="Ingest scan results",
         description=(
             "Called by agent (via X-Agent-API-Key) or realtime service after a scan completes. "
@@ -276,6 +319,98 @@ class DeviceViewSet(viewsets.ModelViewSet):
         device.save(update_fields=["metadata"])
         
         return Response({"status": "health check accepted", "device_id": str(device.id)})
+
+    @extend_schema(
+        summary="Ingest slow-lane data",
+        description=(
+            "Persist heavy slow-lane inventory data collected by the agent every ~15 minutes. "
+            "Includes installed apps, patches, missing updates, services, security config, etc."
+        ),
+    )
+    @action(
+        detail=True, methods=["post"], url_path="ingest_slow_lane",
+        authentication_classes=_AGENT_AUTH,
+        permission_classes=[IsAgentOrOperatorOrAbove],
+    )
+    @trace
+    def ingest_slow_lane(self, request, pk=None):
+        device = self.get_object()
+        data = request.data.get("data", request.data)
+
+        if not data:
+            return Response(
+                {"status": "no data in payload", "device_id": str(device.id)},
+                status=status.HTTP_200_OK,
+            )
+
+        # Merge slow-lane data into inventory_data
+        existing_inv = device.inventory_data or {}
+        existing_inv["slow_lane"] = data
+        existing_inv["slow_lane_ts"] = request.data.get("timestamp")
+        existing_inv["slow_lane_collection_time"] = request.data.get("collection_time_sec")
+
+        # Also extract key lists into top-level inventory keys for backward compatibility
+        # with the installed_apps and system_info endpoints
+        if "registry_apps" in data:
+            # Windows: merge registry apps into inventory apps list
+            apps = []
+            for a in (data.get("registry_apps") or []):
+                apps.append({
+                    "name": a.get("DisplayName"),
+                    "version": a.get("DisplayVersion"),
+                    "publisher": a.get("Publisher"),
+                    "install_date": a.get("InstallDate"),
+                    "size_mb": a.get("Size_MB"),
+                })
+            existing_inv["apps"] = apps
+        elif "installed_packages" in data:
+            # Linux: merge installed packages into inventory apps list
+            existing_inv["apps"] = data.get("installed_packages") or []
+        elif "homebrew_packages" in data or "app_store_apps" in data:
+            # macOS: merge homebrew + app store into inventory apps list
+            apps = []
+            for pkg in (data.get("homebrew_packages") or []):
+                apps.append({
+                    "name": pkg.get("name"),
+                    "version": (pkg.get("versions") or [""])[0] if isinstance(pkg.get("versions"), list) else "",
+                    "publisher": pkg.get("type", "homebrew"),
+                })
+            for app in (data.get("app_store_apps") or []):
+                apps.append({
+                    "name": app.get("name"),
+                    "version": app.get("version", ""),
+                    "publisher": "App Store",
+                })
+            existing_inv["apps"] = apps
+
+        device.inventory_data = existing_inv
+        device.save(update_fields=["inventory_data"])
+
+        # If there are missing_updates / security_updates, trigger scan processing
+        missing = data.get("missing_updates") or data.get("security_updates") or []
+        if missing:
+            from .tasks import process_scan_results
+            # Convert missing updates format to scan-compatible format
+            scan_patches = []
+            for u in missing:
+                if isinstance(u, dict):
+                    scan_patches.append({
+                        "vendor_id": u.get("KB") or u.get("package") or u.get("update", ""),
+                        "title": u.get("Title") or u.get("package") or u.get("update", ""),
+                        "severity": u.get("Severity", "medium"),
+                        "installed": False,
+                    })
+            if scan_patches:
+                process_scan_results.delay(str(device.id), scan_patches)
+
+        return Response(
+            {
+                "status": "slow lane data accepted",
+                "device_id": str(device.id),
+                "sections": len(data) if isinstance(data, dict) else 0,
+            },
+            status=status.HTTP_202_ACCEPTED,
+        )
 
     # ------------------------------------------------------------------ #
     # Operator actions — send commands to agent via Redis                 #
@@ -462,6 +597,365 @@ class DeviceViewSet(viewsets.ModelViewSet):
                 d.last_seen, d.environment, ','.join(d.tags or [])
             ])
         return response
+
+    # ------------------------------------------------------------------ #
+    # Slow-lane section data (for device detail tabs)                     #
+    # ------------------------------------------------------------------ #
+
+    @extend_schema(
+        summary="Get slow-lane section data",
+        description=(
+            "Return a specific section of slow-lane inventory (e.g. services, firewall, drivers, "
+            "security_config, scheduled_tasks, local_users, event_log_errors, etc.)."
+        ),
+    )
+    @action(detail=True, methods=["get"], url_path="slow_lane_section")
+    def slow_lane_section(self, request, pk=None):
+        device = self.get_object()
+        section = request.query_params.get("section", "")
+        inv = device.inventory_data or {}
+        slow = inv.get("slow_lane", {})
+        if section:
+            data = slow.get(section, [])
+            return Response({"section": section, "data": data, "device_id": str(device.id)})
+        # No section specified — return all slow-lane keys and counts
+        summary = {}
+        for key, val in slow.items():
+            if isinstance(val, list):
+                summary[key] = len(val)
+            elif isinstance(val, dict):
+                summary[key] = len(val)
+            else:
+                summary[key] = 1
+        return Response({
+            "sections": summary,
+            "slow_lane_ts": inv.get("slow_lane_ts"),
+            "collection_time_sec": inv.get("slow_lane_collection_time"),
+            "device_id": str(device.id),
+        })
+
+    # ------------------------------------------------------------------ #
+    # Agent installer download                                             #
+    # ------------------------------------------------------------------ #
+
+    @extend_schema(
+        summary="Download agent installer",
+        description=(
+            "Download a self-contained offline installer package for the agent. "
+            "Query param ?os=windows|linux|macos. The installer includes Python "
+            "dependencies and an install script. For the current device, the API key "
+            "is pre-configured in the package."
+        ),
+        parameters=[
+            OpenApiParameter("os", OpenApiTypes.STR, description="Target OS: windows, linux, or macos"),
+        ],
+    )
+    @action(detail=True, methods=["get"], url_path="download_installer")
+    def download_installer(self, request, pk=None):
+        import zipfile
+        import io
+        import tempfile
+        import subprocess
+        from django.http import HttpResponse as DjangoHttpResponse
+        from django.conf import settings as django_settings
+
+        device = self.get_object()
+        target_os = request.query_params.get("os", device.os_family or "linux").lower()
+
+        if target_os not in ("windows", "linux", "macos"):
+            return Response({"error": "os must be windows, linux, or macos"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Build config.yaml for the device — use settings or derive from request
+        rest_url = getattr(django_settings, 'AGENT_REST_URL', None)
+        ws_url = getattr(django_settings, 'AGENT_WS_URL', None)
+        if not rest_url:
+            scheme = "https" if request.is_secure() else "http"
+            host = request.get_host()
+            rest_url = f"{scheme}://{host}/api/v1"
+        if not ws_url:
+            ws_scheme = "wss" if request.is_secure() else "ws"
+            host = request.get_host()
+            ws_url = f"{ws_scheme}://{host}/ws/agent"
+
+        config_content = (
+            f"# PatchGuard Agent Configuration — auto-generated\n"
+            f"server_url: \"{ws_url}\"\n"
+            f"rest_url: \"{rest_url}\"\n"
+            f"api_key: \"{device.agent_api_key}\"\n"
+            f"device_id_override: \"{device.id}\"\n"
+            f"auto_register: false\n"
+            f"heartbeat_interval: 60\n"
+            f"rest_heartbeat_interval: 300\n"
+            f"fast_lane_interval: 5\n"
+            f"slow_lane_interval: 900\n"
+            f"log_level: info\n"
+            f"tags: []\n"
+        )
+
+        # Create ZIP archive of the agent bundle
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            import os as _os
+            agent_dir = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.dirname(__file__))), "..", "agent")
+            agent_dir = _os.path.abspath(agent_dir)
+            req_file = _os.path.join(agent_dir, "requirements.txt")
+
+            # Add core agent files
+            for root, dirs, files in _os.walk(agent_dir):
+                # Skip __pycache__, tests, .git
+                dirs[:] = [d for d in dirs if d not in ("__pycache__", ".git", "tests")]
+                for f in files:
+                    if f.endswith((".pyc", ".pyo")):
+                        continue
+                    filepath = _os.path.join(root, f)
+                    arcname = _os.path.relpath(filepath, agent_dir)
+                    # Replace config.yaml with device-specific one
+                    if arcname == "config.yaml":
+                        zf.writestr("patchguard-agent/config.yaml", config_content)
+                    else:
+                        zf.write(filepath, f"patchguard-agent/{arcname}")
+
+            # Bundle pip wheels for offline install
+            if _os.path.isfile(req_file):
+                try:
+                    tmp_deps = tempfile.mkdtemp(prefix="pg_deps_")
+                    subprocess.run(
+                        ["pip", "download", "-r", req_file, "-d", tmp_deps,
+                         "--no-cache-dir", "--quiet"],
+                        check=True, timeout=120,
+                    )
+                    for whl in _os.listdir(tmp_deps):
+                        whl_path = _os.path.join(tmp_deps, whl)
+                        if _os.path.isfile(whl_path):
+                            zf.write(whl_path, f"patchguard-agent/deps/{whl}")
+                except Exception:
+                    # If pip download fails, include a note but don't block
+                    zf.writestr(
+                        "patchguard-agent/deps/README.txt",
+                        "Offline wheels could not be bundled.\n"
+                        "Run: pip download -r requirements.txt -d deps/\n"
+                        "Then re-run install to use offline mode.\n"
+                    )
+                finally:
+                    import shutil
+                    shutil.rmtree(tmp_deps, ignore_errors=True)
+
+            # Add OS-specific install script
+            if target_os == "windows":
+                zf.writestr("patchguard-agent/install.bat", self._windows_install_script())
+                zf.writestr("patchguard-agent/install.ps1", self._windows_install_ps1())
+            elif target_os == "linux":
+                zf.writestr("patchguard-agent/install.sh", self._linux_install_script())
+            else:  # macos
+                zf.writestr("patchguard-agent/install.sh", self._macos_install_script())
+
+            # Add a README
+            zf.writestr("patchguard-agent/INSTALL.md", self._installer_readme(target_os))
+
+        buf.seek(0)
+        filename = f"patchguard-agent-{target_os}-{device.hostname}.zip"
+        resp = DjangoHttpResponse(buf.read(), content_type="application/zip")
+        resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return resp
+
+    # ── Installer script generators ──────────────────────────────────────
+
+    @staticmethod
+    def _windows_install_script():
+        return (
+            '@echo off\n'
+            'echo === PatchGuard Agent Installer (Windows) ===\n'
+            'echo.\n'
+            'echo [1/4] Checking Python...\n'
+            'python --version >nul 2>&1 || (\n'
+            '    echo ERROR: Python not found. Install Python 3.10+ and re-run.\n'
+            '    pause\n'
+            '    exit /b 1\n'
+            ')\n'
+            'echo [2/4] Creating virtual environment...\n'
+            'python -m venv venv\n'
+            'call venv\\Scripts\\activate.bat\n'
+            'echo [3/4] Installing dependencies (offline)...\n'
+            'pip install --no-index --find-links=deps -r requirements.txt 2>nul || pip install -r requirements.txt\n'
+            'echo [4/4] Starting agent...\n'
+            'echo To run as a service, use: nssm install PatchGuardAgent "%CD%\\venv\\Scripts\\python.exe" "%CD%\\agent.py"\n'
+            'echo Starting agent manually...\n'
+            'venv\\Scripts\\python agent.py\n'
+            'pause\n'
+        )
+
+    @staticmethod
+    def _windows_install_ps1():
+        return (
+            '# PatchGuard Agent Installer (Windows PowerShell)\n'
+            'Write-Host "=== PatchGuard Agent Installer ===" -ForegroundColor Cyan\n'
+            '\n'
+            '# Check Python\n'
+            'if (-not (Get-Command python -ErrorAction SilentlyContinue)) {\n'
+            '    Write-Host "ERROR: Python not found. Install Python 3.10+ and re-run." -ForegroundColor Red\n'
+            '    exit 1\n'
+            '}\n'
+            '\n'
+            'Write-Host "[1/4] Creating virtual environment..."\n'
+            'python -m venv venv\n'
+            '.\\venv\\Scripts\\Activate.ps1\n'
+            '\n'
+            'Write-Host "[2/4] Installing dependencies..."\n'
+            'if (Test-Path deps) {\n'
+            '    Write-Host "  -> Offline deps folder found, installing from local wheels..."\n'
+            '    pip install --no-index --find-links=deps -r requirements.txt -q\n'
+            '} else {\n'
+            '    Write-Host "  -> Installing from PyPI..."\n'
+            '    pip install -r requirements.txt -q\n'
+            '}\n'
+            '\n'
+            'Write-Host "[3/4] Registering as Windows Service..."\n'
+            '$svcName = "PatchGuardAgent"\n'
+            '$pythonPath = Join-Path $PWD "venv\\Scripts\\python.exe"\n'
+            '$agentPath = Join-Path $PWD "agent.py"\n'
+            'if (Get-Command nssm -ErrorAction SilentlyContinue) {\n'
+            '    nssm install $svcName $pythonPath $agentPath\n'
+            '    nssm set $svcName AppDirectory $PWD\n'
+            '    nssm start $svcName\n'
+            '    Write-Host "Service registered and started." -ForegroundColor Green\n'
+            '} else {\n'
+            '    Write-Host "nssm not found. Install nssm for Windows service support." -ForegroundColor Yellow\n'
+            '    Write-Host "Running agent directly..."\n'
+            '    python agent.py\n'
+            '}\n'
+        )
+
+    @staticmethod
+    def _linux_install_script():
+        return (
+            '#!/bin/bash\nset -e\n'
+            'echo "=== PatchGuard Agent Installer (Linux) ==="\n'
+            'INSTALL_DIR="/opt/patchguard-agent"\n'
+            'LOG_DIR="/var/log/patchguard-agent"\n'
+            '\n'
+            'if [ "$EUID" -ne 0 ]; then echo "Run as root (sudo)."; exit 1; fi\n'
+            '\n'
+            'echo "[1/5] Creating directories..."\n'
+            'mkdir -p "$INSTALL_DIR" "$LOG_DIR"\n'
+            'cp -r . "$INSTALL_DIR/"\n'
+            '\n'
+            'echo "[2/5] Installing system dependencies..."\n'
+            'if command -v apt-get >/dev/null; then\n'
+            '    apt-get update -qq && apt-get install -y -qq python3-pip python3-venv python3-dev\n'
+            'elif command -v yum >/dev/null; then\n'
+            '    yum install -y -q python3-pip python3-devel\n'
+            'fi\n'
+            '\n'
+            'echo "[3/5] Setting up Python venv..."\n'
+            'python3 -m venv "$INSTALL_DIR/venv"\n'
+            '"$INSTALL_DIR/venv/bin/pip" install --upgrade pip -q\n'
+            'if [ -d "$INSTALL_DIR/deps" ] && [ "$(ls -A $INSTALL_DIR/deps 2>/dev/null)" ]; then\n'
+            '    echo "  -> Offline deps found, installing from local wheels..."\n'
+            '    "$INSTALL_DIR/venv/bin/pip" install --no-index --find-links="$INSTALL_DIR/deps" -r "$INSTALL_DIR/requirements.txt" -q\n'
+            'else\n'
+            '    echo "  -> Installing from PyPI..."\n'
+            '    "$INSTALL_DIR/venv/bin/pip" install -r "$INSTALL_DIR/requirements.txt" -q\n'
+            'fi\n'
+            '\n'
+            'echo "[4/5] Registering systemd service..."\n'
+            'cat <<EOF > /etc/systemd/system/patchguard-agent.service\n'
+            '[Unit]\nDescription=PatchGuard Agent\nAfter=network.target\n'
+            '[Service]\nType=simple\nUser=root\nWorkingDirectory=$INSTALL_DIR\n'
+            'ExecStart=$INSTALL_DIR/venv/bin/python $INSTALL_DIR/agent.py\n'
+            'Restart=always\nRestartSec=10\n'
+            'StandardOutput=append:$LOG_DIR/agent.log\nStandardError=append:$LOG_DIR/agent.log\n'
+            '[Install]\nWantedBy=multi-user.target\nEOF\n'
+            '\n'
+            'echo "[5/5] Starting agent..."\n'
+            'systemctl daemon-reload && systemctl enable patchguard-agent && systemctl start patchguard-agent\n'
+            'echo "Done! Status: $(systemctl is-active patchguard-agent)"\n'
+            'echo "Logs: tail -f $LOG_DIR/agent.log"\n'
+        )
+
+    @staticmethod
+    def _macos_install_script():
+        return (
+            '#!/bin/bash\nset -e\n'
+            'echo "=== PatchGuard Agent Installer (macOS) ==="\n'
+            'INSTALL_DIR="/opt/patchguard-agent"\n'
+            'LOG_DIR="/var/log/patchguard-agent"\n'
+            '\n'
+            'if [ "$EUID" -ne 0 ]; then echo "Run as root (sudo)."; exit 1; fi\n'
+            '\n'
+            'echo "[1/5] Creating directories..."\n'
+            'mkdir -p "$INSTALL_DIR" "$LOG_DIR"\n'
+            'cp -r . "$INSTALL_DIR/"\n'
+            '\n'
+            'echo "[2/5] Setting up Python venv..."\n'
+            'python3 -m venv "$INSTALL_DIR/venv"\n'
+            '"$INSTALL_DIR/venv/bin/pip" install --upgrade pip -q\n'
+            'if [ -d "$INSTALL_DIR/deps" ] && [ "$(ls -A $INSTALL_DIR/deps 2>/dev/null)" ]; then\n'
+            '    echo "  -> Offline deps found, installing from local wheels..."\n'
+            '    "$INSTALL_DIR/venv/bin/pip" install --no-index --find-links="$INSTALL_DIR/deps" -r "$INSTALL_DIR/requirements.txt" -q\n'
+            'else\n'
+            '    echo "  -> Installing from PyPI..."\n'
+            '    "$INSTALL_DIR/venv/bin/pip" install -r "$INSTALL_DIR/requirements.txt" -q\n'
+            'fi\n'
+            '\n'
+            'echo "[3/5] Creating launchd plist..."\n'
+            'cat <<EOF > /Library/LaunchDaemons/com.patchguard.agent.plist\n'
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
+            '<plist version="1.0"><dict>\n'
+            '<key>Label</key><string>com.patchguard.agent</string>\n'
+            '<key>ProgramArguments</key><array>\n'
+            '<string>$INSTALL_DIR/venv/bin/python</string>\n'
+            '<string>$INSTALL_DIR/agent.py</string>\n'
+            '</array>\n'
+            '<key>WorkingDirectory</key><string>$INSTALL_DIR</string>\n'
+            '<key>RunAtLoad</key><true/>\n'
+            '<key>KeepAlive</key><true/>\n'
+            '<key>StandardOutPath</key><string>$LOG_DIR/agent.log</string>\n'
+            '<key>StandardErrorPath</key><string>$LOG_DIR/agent.log</string>\n'
+            '</dict></plist>\nEOF\n'
+            '\n'
+            'echo "[4/5] Loading service..."\n'
+            'launchctl load /Library/LaunchDaemons/com.patchguard.agent.plist\n'
+            '\n'
+            'echo "[5/5] Done! Agent is running."\n'
+            'echo "Logs: tail -f $LOG_DIR/agent.log"\n'
+        )
+
+    @staticmethod
+    def _installer_readme(target_os):
+        os_instructions = {
+            "windows": (
+                "## Windows Installation\n\n"
+                "1. Extract this ZIP to a folder (e.g. C:\\PatchGuardAgent)\n"
+                "2. Run `install.bat` (basic) or `install.ps1` (PowerShell, recommended)\n"
+                "3. For service: install nssm (https://nssm.cc) first\n"
+                "4. Offline: deps/ folder contains pre-downloaded wheels\n"
+            ),
+            "linux": (
+                "## Linux Installation\n\n"
+                "1. Extract: `unzip patchguard-agent-linux-*.zip`\n"
+                "2. Run: `cd patchguard-agent && sudo bash install.sh`\n"
+                "3. Check: `systemctl status patchguard-agent`\n"
+                "4. Offline: deps/ folder contains pre-downloaded wheels\n"
+            ),
+            "macos": (
+                "## macOS Installation\n\n"
+                "1. Extract: `unzip patchguard-agent-macos-*.zip`\n"
+                "2. Run: `cd patchguard-agent && sudo bash install.sh`\n"
+                "3. Check: `launchctl list | grep patchguard`\n"
+                "4. Offline: deps/ folder contains pre-downloaded wheels\n"
+            ),
+        }
+        return (
+            "# PatchGuard Agent Installer\n\n"
+            "Pre-configured with your device API key.\n\n"
+            f"{os_instructions.get(target_os, '')}\n"
+            "## Requirements\n\n"
+            "- Python 3.10+\n"
+            "- No internet required if deps/ folder was bundled\n\n"
+            "## Configuration\n\n"
+            "Config is in `config.yaml`. API key and server URLs are pre-filled.\n"
+        )
 
 
 class DeviceGroupViewSet(viewsets.ModelViewSet):

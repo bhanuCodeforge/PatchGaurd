@@ -100,6 +100,7 @@
             <th class="sortable" (click)="sort('status')">{{ 'UI.u_status' | translate }} <span>{{ sortIcon('status') }}</span></th>
             <th>{{ 'UI.u_compliance' | translate }}</th>
             <th>{{ 'UI.u_tags' | translate }}</th>
+            <th style="width:48px"></th>
           </tr>
         </thead>
         <tbody>
@@ -133,6 +134,11 @@
             <td>
               <span *ngFor="let tag of (d.tags || []).slice(0, 2)" class="device-tag">{{ tag }}</span>
               <span *ngIf="(d.tags || []).length > 2" class="tag-more">+{{ d.tags.length - 2 }}</span>
+            </td>
+            <td (click)="$event.stopPropagation()">
+              <button class="btn btn-sm btn-outline-secondary installer-dl-btn" title="Download Agent Installer ({{ d.os_family }})" (click)="downloadInstaller(d, $event)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </button>
             </td>
           </tr>
         </tbody>

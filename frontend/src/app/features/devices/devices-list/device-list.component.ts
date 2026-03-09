@@ -55,8 +55,14 @@ export class DeviceListComponent implements OnInit, OnDestroy {
   // Add Device modal state
   showAddModal = signal(false);
   addLoading = signal(false);
-  createdDevice = signal<any>(null);   // holds the newly created device to display its api_key
-  addForm: { hostname: string; ip_address: string; os_family: string; environment: 'production' | 'staging' | 'development'; agent_version: string } = {
+  createdDevice = signal<any>(null); // holds the newly created device to display its api_key
+  addForm: {
+    hostname: string;
+    ip_address: string;
+    os_family: string;
+    environment: 'production' | 'staging' | 'development';
+    agent_version: string;
+  } = {
     hostname: '',
     ip_address: '',
     os_family: 'linux',
@@ -128,17 +134,24 @@ export class DeviceListComponent implements OnInit, OnDestroy {
       this.loadDevices();
     });
 
-    this.wsSub = this.ws.messages$.subscribe(msg => {
+    this.wsSub = this.ws.messages$.subscribe((msg) => {
       if (['status_change', 'agent_online', 'agent_offline'].includes(msg.event)) {
         const { device_id, status } = msg.payload;
-        const newStatus = msg.event === 'agent_online' ? 'online' : (msg.event === 'agent_offline' ? 'offline' : status);
-        
-        this.devices.update(list => list.map(d => {
-          if (d.id === device_id) {
-            return { ...d, status: newStatus, last_seen: new Date().toISOString() };
-          }
-          return d;
-        }));
+        const newStatus =
+          msg.event === 'agent_online'
+            ? 'online'
+            : msg.event === 'agent_offline'
+              ? 'offline'
+              : status;
+
+        this.devices.update((list) =>
+          list.map((d) => {
+            if (d.id === device_id) {
+              return { ...d, status: newStatus, last_seen: new Date().toISOString() };
+            }
+            return d;
+          }),
+        );
       }
     });
   }
@@ -241,17 +254,27 @@ export class DeviceListComponent implements OnInit, OnDestroy {
   }
 
   handleSaved(updated: any) {
-    this.devices.update(list => list.map(d => d.id === updated.id ? updated : d));
+    this.devices.update((list) => list.map((d) => (d.id === updated.id ? updated : d)));
     this.selectedDevice.set(updated);
   }
 
   handleDeleted(id: string) {
-    this.devices.update(list => list.filter(d => d.id !== id));
-    this.selectedIds.update(s => { const n = new Set(s); n.delete(id); return n; });
+    this.devices.update((list) => list.filter((d) => d.id !== id));
+    this.selectedIds.update((s) => {
+      const n = new Set(s);
+      n.delete(id);
+      return n;
+    });
   }
 
   openAddModal() {
-    this.addForm = { hostname: '', ip_address: '', os_family: 'linux', environment: 'production' as const, agent_version: '' };
+    this.addForm = {
+      hostname: '',
+      ip_address: '',
+      os_family: 'linux',
+      environment: 'production' as const,
+      agent_version: '',
+    };
     this.createdDevice.set(null);
     this.showAddModal.set(true);
   }
@@ -270,13 +293,16 @@ export class DeviceListComponent implements OnInit, OnDestroy {
     this.deviceSvc.createDevice(this.addForm).subscribe({
       next: (device: any) => {
         this.addLoading.set(false);
-        this.createdDevice.set(device);   // show the api_key to the user
+        this.createdDevice.set(device); // show the api_key to the user
         this.loadDevices();
       },
       error: (err: any) => {
         this.addLoading.set(false);
         const detail = err?.error?.detail ?? err?.error?.hostname?.[0] ?? 'Failed to add device.';
-        this.ns.error('Add Device Failed', typeof detail === 'string' ? detail : JSON.stringify(detail));
+        this.ns.error(
+          'Add Device Failed',
+          typeof detail === 'string' ? detail : JSON.stringify(detail),
+        );
       },
     });
   }
@@ -288,8 +314,14 @@ export class DeviceListComponent implements OnInit, OnDestroy {
   }
 
   bulkTag() {
-    const tags = this.tagInput.split(',').map(t => t.trim()).filter(Boolean);
-    if (!tags.length) { this.ns.error('Error', 'Enter at least one tag.'); return; }
+    const tags = this.tagInput
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+    if (!tags.length) {
+      this.ns.error('Error', 'Enter at least one tag.');
+      return;
+    }
     const ids = Array.from(this.selectedIds());
     this.deviceSvc.bulkTag(ids, tags, 'add').subscribe({
       next: () => {
@@ -305,7 +337,10 @@ export class DeviceListComponent implements OnInit, OnDestroy {
 
   bulkGroup() {
     const groupId = this.groupInput.trim();
-    if (!groupId) { this.ns.error('Error', 'Enter a group ID.'); return; }
+    if (!groupId) {
+      this.ns.error('Error', 'Enter a group ID.');
+      return;
+    }
     const ids = Array.from(this.selectedIds());
     this.deviceSvc.bulkGroup(ids, groupId).subscribe({
       next: () => {
@@ -315,6 +350,23 @@ export class DeviceListComponent implements OnInit, OnDestroy {
         this.clearSelection();
       },
       error: () => this.ns.error('Error', 'Bulk group assignment failed.'),
+    });
+  }
+
+  downloadInstaller(device: any, event: MouseEvent) {
+    event.stopPropagation();
+    const os = device.os_family || 'linux';
+    this.deviceSvc.downloadInstaller(device.id, os).subscribe({
+      next: (blob: Blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `patchguard-agent-${os}-${device.hostname}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.ns.success('Download Started', `Agent installer for ${device.hostname} (${os})`);
+      },
+      error: () => this.ns.error('Download Failed', 'Could not download the agent installer.'),
     });
   }
 }
