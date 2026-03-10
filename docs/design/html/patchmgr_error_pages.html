@@ -1,0 +1,79 @@
+<style>
+*{box-sizing:border-box;margin:0}
+.shell{font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:24px}
+.label{font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;margin-top:28px}
+.label:first-child{margin-top:0}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.error-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:36px 24px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.error-code{font-size:48px;font-weight:500;color:var(--color-text-tertiary);margin-bottom:4px;line-height:1}
+.error-title{font-size:15px;font-weight:500;margin-bottom:6px}
+.error-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.5;max-width:280px;margin-bottom:16px}
+.btn{padding:7px 14px;font-size:12px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);display:inline-flex;align-items:center;gap:5px}
+.btn-primary{background:var(--color-text-info);color:#fff;border-color:var(--color-text-info)}
+.btn-row{display:flex;gap:8px}
+.error-full{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:48px 24px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.error-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.error-icon svg{width:28px;height:28px}
+.reconnect-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:var(--border-radius-md);background:var(--color-background-warning);font-size:12px;color:var(--color-text-warning);margin-top:12px}
+.reconnect-bar svg{width:14px;height:14px;flex-shrink:0}
+.spinner{width:16px;height:16px;border:2px solid var(--color-border-tertiary);border-top-color:var(--color-text-warning);border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.session-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:36px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;max-width:400px;margin:0 auto}
+.lock-icon{width:48px;height:48px;border-radius:50%;background:var(--color-background-info);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.lock-icon svg{width:22px;height:22px;color:var(--color-text-info)}
+.input-row{width:100%;margin:12px 0}
+.input-row input{width:100%;padding:10px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary)}
+.btn-full{width:100%;justify-content:center}
+</style>
+<div class="shell">
+<div class="label">HTTP error pages</div>
+<div class="grid">
+<div class="error-card">
+<div class="error-code">404</div>
+<div class="error-title">Page not found</div>
+<div class="error-desc">The page you're looking for doesn't exist or has been moved.</div>
+<div class="btn-row"><button class="btn btn-primary">Go to dashboard</button><button class="btn">Go back</button></div>
+</div>
+
+<div class="error-card">
+<div class="error-code">403</div>
+<div class="error-title">Access denied</div>
+<div class="error-desc">You don't have permission to view this page. Contact your administrator to request access.</div>
+<div class="btn-row"><button class="btn btn-primary">Go to dashboard</button><button class="btn">Request access</button></div>
+</div>
+
+<div class="error-card">
+<div class="error-code">500</div>
+<div class="error-title">Something went wrong</div>
+<div class="error-desc">An unexpected error occurred. Our team has been notified. Please try again.</div>
+<div class="btn-row"><button class="btn btn-primary">Try again</button><button class="btn">View status page</button></div>
+</div>
+
+<div class="error-card">
+<div class="error-code">503</div>
+<div class="error-title">Service unavailable</div>
+<div class="error-desc">PatchGuard is temporarily unavailable for maintenance. We'll be back shortly.</div>
+<div class="reconnect-bar"><div class="spinner"></div>Auto-retrying in 28 seconds...</div>
+</div>
+</div>
+
+<div class="label">Connection lost (WebSocket disconnected)</div>
+<div class="error-full">
+<div class="error-icon" style="background:var(--color-background-warning)"><svg viewBox="0 0 24 24" fill="none" style="color:var(--color-text-warning)"><path d="M1 1l22 22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M5 12.55a11 11 0 0112.96-1.66M8.53 16.11a6 6 0 016.95 0M12 20h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="error-title">Connection lost</div>
+<div class="error-desc">The real-time connection to the server was interrupted. Live updates are paused.</div>
+<div class="reconnect-bar" style="margin-bottom:12px"><div class="spinner"></div>Reconnecting... Attempt 3 of 10</div>
+<div class="btn-row"><button class="btn btn-primary">Reconnect now</button><button class="btn">Continue offline</button></div>
+</div>
+
+<div class="label">Session expired</div>
+<div class="session-card">
+<div class="lock-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg></div>
+<div class="error-title">Session expired</div>
+<div class="error-desc">Your session has expired for security. Enter your password to continue where you left off.</div>
+<div style="display:flex;align-items:center;gap:8px;margin:8px 0;font-size:13px"><div style="width:30px;height:30px;border-radius:50%;background:var(--color-background-info);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--color-text-info)">JD</div><span>John Doe</span><span style="font-size:11px;color:var(--color-text-tertiary)">jdoe@corp.internal</span></div>
+<div class="input-row"><input type="password" placeholder="Enter your password"></div>
+<button class="btn btn-primary btn-full">Sign back in</button>
+<div style="margin-top:10px;font-size:11px"><a style="color:var(--color-text-info);cursor:pointer;text-decoration:none">Sign in as a different user</a></div>
+</div>
+</div>

@@ -1,0 +1,76 @@
+<style>
+*{box-sizing:border-box;margin:0}
+.login-shell{font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);min-height:560px;display:flex;align-items:center;justify-content:center;padding:40px}
+.login-card{width:380px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:32px}
+.logo-row{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:8px}
+.logo-row svg{width:28px;height:28px;color:var(--color-text-info)}
+.logo-row span{font-size:18px;font-weight:500}
+.subtitle{text-align:center;font-size:13px;color:var(--color-text-secondary);margin-bottom:28px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:5px}
+.form-group input{width:100%;padding:10px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:14px;background:var(--color-background-primary);color:var(--color-text-primary)}
+.form-group input:focus{outline:none;border-color:var(--color-border-info)}
+.form-group input::placeholder{color:var(--color-text-tertiary)}
+.auth-toggle{display:flex;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;margin-bottom:20px}
+.auth-opt{flex:1;text-align:center;padding:8px;font-size:13px;cursor:pointer;color:var(--color-text-secondary);background:var(--color-background-primary)}
+.auth-opt.active{background:var(--color-background-info);color:var(--color-text-info);font-weight:500}
+.btn-login{width:100%;padding:11px;font-size:14px;font-weight:500;border:none;border-radius:var(--border-radius-md);background:var(--color-text-info);color:#fff;cursor:pointer;margin-bottom:16px}
+.btn-login:hover{opacity:0.9}
+.btn-login:active{transform:scale(0.99)}
+.form-footer{display:flex;justify-content:space-between;font-size:12px;color:var(--color-text-secondary)}
+.form-footer a{color:var(--color-text-info);text-decoration:none;cursor:pointer}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;font-size:11px;color:var(--color-text-tertiary)}
+.divider::before,.divider::after{content:'';flex:1;height:0.5px;background:var(--color-border-tertiary)}
+.error-box{background:var(--color-background-danger);color:var(--color-text-danger);padding:10px 14px;border-radius:var(--border-radius-md);font-size:12px;margin-bottom:16px;display:flex;align-items:center;gap:8px;line-height:1.4}
+.error-box svg{flex-shrink:0}
+.remember{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary);margin-bottom:20px}
+.remember input{accent-color:var(--color-text-info)}
+.version{text-align:center;font-size:11px;color:var(--color-text-tertiary);margin-top:20px}
+.lockout-warn{background:var(--color-background-warning);color:var(--color-text-warning);padding:10px 14px;border-radius:var(--border-radius-md);font-size:12px;margin-bottom:16px;display:flex;align-items:center;gap:8px;line-height:1.4}
+</style>
+<div class="login-shell">
+<div>
+<div class="login-card">
+<div class="logo-row"><svg viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>PatchGuard</span></div>
+<div class="subtitle">On-premises patch management</div>
+
+<div class="auth-toggle">
+<div class="auth-opt active">Corporate (LDAP)</div>
+<div class="auth-opt">Local account</div>
+</div>
+
+<div class="error-box">
+<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v4M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+Invalid credentials. 2 attempts remaining before lockout.
+</div>
+
+<div class="form-group">
+<label>Username</label>
+<input type="text" placeholder="CORP\jdoe or jdoe@corp.internal" value="jdoe">
+</div>
+<div class="form-group">
+<label>Password</label>
+<input type="password" placeholder="Enter your password" value="••••••••••">
+</div>
+
+<div class="remember">
+<input type="checkbox" checked>
+<span>Remember this device for 7 days</span>
+</div>
+
+<button class="btn-login">Sign in</button>
+
+<div class="form-footer">
+<a>Forgot password?</a>
+<a>Request access</a>
+</div>
+
+<div class="divider">Secured connection</div>
+<div style="text-align:center;font-size:11px;color:var(--color-text-tertiary);display:flex;align-items:center;justify-content:center;gap:4px">
+<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+TLS 1.3 — patchmgr.internal.corp
+</div>
+</div>
+<div class="version">PatchGuard v1.0.0 — Your Company IT Operations</div>
+</div>
+</div>

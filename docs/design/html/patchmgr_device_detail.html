@@ -1,0 +1,195 @@
+<style>
+*{box-sizing:border-box;margin:0}
+.shell{font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;display:flex;min-height:700px}
+.backdrop{flex:1;background:var(--color-background-tertiary);opacity:0.5;padding:24px}
+.panel{width:520px;background:var(--color-background-primary);border-left:0.5px solid var(--color-border-tertiary);overflow-y:auto;display:flex;flex-direction:column}
+.panel-header{padding:20px 24px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:flex-start;position:sticky;top:0;background:var(--color-background-primary);z-index:1}
+.panel-header h2{font-size:16px;font-weight:500}
+.close-btn{width:28px;height:28px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--color-text-secondary)}
+.close-btn:hover{background:var(--color-background-secondary)}
+.status-row{display:flex;align-items:center;gap:8px;margin-top:4px}
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:500}
+.status-online{background:var(--color-background-success);color:var(--color-text-success)}
+.env-badge{background:var(--color-background-warning);color:var(--color-text-warning)}
+.panel-body{padding:20px 24px;flex:1}
+.section{margin-bottom:24px}
+.section-title{font-size:13px;font-weight:500;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.section-title span{font-size:11px;color:var(--color-text-secondary);font-weight:400}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.info-item{padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;font-size:13px}
+.info-item:nth-child(odd){padding-right:16px}
+.info-item:nth-child(even){padding-left:16px;border-left:0.5px solid var(--color-border-tertiary)}
+.info-label{color:var(--color-text-secondary)}
+.info-val{font-weight:500;text-align:right}
+.tags-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.tag{padding:3px 10px;font-size:11px;border-radius:12px;background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.tag-add{padding:3px 10px;font-size:11px;border-radius:12px;border:0.5px dashed var(--color-border-secondary);color:var(--color-text-tertiary);cursor:pointer;background:none}
+.tag-add:hover{border-color:var(--color-text-info);color:var(--color-text-info)}
+.metrics-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;text-align:center}
+.metric-val{font-size:18px;font-weight:500}
+.metric-label{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.metric-bar{width:100%;height:4px;background:var(--color-border-tertiary);border-radius:2px;margin-top:6px;overflow:hidden}
+.metric-fill{height:100%;border-radius:2px}
+.compliance-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 14px;display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.comp-ring-wrap{position:relative;width:56px;height:56px;flex-shrink:0}
+.comp-ring-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;font-weight:500}
+.comp-detail{flex:1;display:flex;flex-direction:column;gap:4px}
+.comp-row{display:flex;align-items:center;gap:6px;font-size:12px}
+.comp-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.patch-list{display:flex;flex-direction:column;gap:0}
+.patch-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px}
+.patch-item:last-child{border-bottom:none}
+.patch-status{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.patch-status.installed{background:var(--color-background-success);color:var(--color-text-success)}
+.patch-status.missing{background:var(--color-background-danger);color:var(--color-text-danger)}
+.patch-status.pending{background:var(--color-background-warning);color:var(--color-text-warning)}
+.patch-status.failed{background:var(--color-background-danger);color:var(--color-text-danger)}
+.patch-info{flex:1;min-width:0}
+.patch-name{font-weight:500;font-family:var(--font-mono);font-size:11px}
+.patch-desc{color:var(--color-text-secondary);font-size:11px;margin-top:1px}
+.sev-pill{font-size:10px;padding:1px 7px;border-radius:8px;font-weight:500}
+.sev-crit{background:var(--color-background-danger);color:var(--color-text-danger)}
+.sev-high{background:#FAEEDA;color:#854F0B}
+.sev-med{background:var(--color-background-info);color:var(--color-text-info)}
+.patch-time{font-size:11px;color:var(--color-text-tertiary);white-space:nowrap}
+.timeline{display:flex;flex-direction:column;gap:0;position:relative;padding-left:20px}
+.timeline::before{content:'';position:absolute;left:7px;top:4px;bottom:4px;width:1px;background:var(--color-border-tertiary)}
+.tl-item{display:flex;align-items:flex-start;gap:10px;padding:6px 0;font-size:12px;position:relative}
+.tl-dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--color-border-secondary);background:var(--color-background-primary);position:absolute;left:-17px;top:9px;z-index:1}
+.tl-dot.ok{background:var(--color-text-success);border-color:var(--color-text-success)}
+.tl-dot.info{background:var(--color-text-info);border-color:var(--color-text-info)}
+.tl-dot.err{background:var(--color-text-danger);border-color:var(--color-text-danger)}
+.tl-time{color:var(--color-text-tertiary);width:60px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.tl-text{color:var(--color-text-secondary);line-height:1.4}
+.tl-text b{font-weight:500;color:var(--color-text-primary)}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);display:inline-flex;align-items:center;gap:4px}
+.btn-sm:hover{background:var(--color-background-secondary)}
+.btn-sm svg{width:12px;height:12px}
+</style>
+<div class="shell">
+<div class="backdrop">
+<div style="padding:20px;font-size:13px;color:var(--color-text-tertiary)">Device list (dimmed background)</div>
+</div>
+<div class="panel">
+<div class="panel-header">
+<div>
+<h2>web-prod-01</h2>
+<div class="status-row">
+<span class="status-badge status-online"><svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="3" fill="currentColor"/></svg>Online</span>
+<span class="status-badge env-badge">Production</span>
+<span style="font-size:11px;color:var(--color-text-tertiary)">Agent v1.2.4</span>
+</div>
+</div>
+<button class="close-btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+</div>
+<div class="panel-body">
+
+<div class="section">
+<div class="section-title">System information</div>
+<div class="info-grid">
+<div class="info-item"><span class="info-label">IP address</span><span class="info-val">10.0.1.50</span></div>
+<div class="info-item"><span class="info-label">MAC address</span><span class="info-val">0A:1B:2C:3D:4E:5F</span></div>
+<div class="info-item"><span class="info-label">OS</span><span class="info-val">Ubuntu 22.04.4 LTS</span></div>
+<div class="info-item"><span class="info-label">Architecture</span><span class="info-val">x86_64</span></div>
+<div class="info-item"><span class="info-label">CPU</span><span class="info-val">8 cores (Xeon E5)</span></div>
+<div class="info-item"><span class="info-label">RAM</span><span class="info-val">32 GB</span></div>
+<div class="info-item"><span class="info-label">Last seen</span><span class="info-val" style="color:var(--color-text-success)">Just now</span></div>
+<div class="info-item"><span class="info-label">Uptime</span><span class="info-val">43 days</span></div>
+</div>
+<div class="tags-row">
+<span class="tag">web</span><span class="tag">nginx</span><span class="tag">production</span><span class="tag">us-east-1</span>
+<button class="tag-add">+ Add tag</button>
+</div>
+</div>
+
+<div class="section">
+<div class="section-title">Resource usage <span>Updated 30s ago</span></div>
+<div class="metrics-row">
+<div class="metric"><div class="metric-val">34%</div><div class="metric-label">CPU</div><div class="metric-bar"><div class="metric-fill" style="width:34%;background:#1D9E75"></div></div></div>
+<div class="metric"><div class="metric-val">72%</div><div class="metric-label">Memory</div><div class="metric-bar"><div class="metric-fill" style="width:72%;background:#EF9F27"></div></div></div>
+<div class="metric"><div class="metric-val">56%</div><div class="metric-label">Disk</div><div class="metric-bar"><div class="metric-fill" style="width:56%;background:#378ADD"></div></div></div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-title">Compliance</div>
+<div class="compliance-card">
+<div class="comp-ring-wrap">
+<svg width="56" height="56" viewBox="0 0 56 56">
+<circle cx="28" cy="28" r="22" fill="none" stroke="var(--color-border-tertiary)" stroke-width="5"/>
+<circle cx="28" cy="28" r="22" fill="none" stroke="#1D9E75" stroke-width="5" stroke-dasharray="138.2" stroke-dashoffset="13.8" stroke-linecap="round" transform="rotate(-90 28 28)"/>
+</svg>
+<div class="comp-ring-text" style="color:var(--color-text-success)">90%</div>
+</div>
+<div class="comp-detail">
+<div class="comp-row"><div class="comp-dot" style="background:#1D9E75"></div>18 patches installed</div>
+<div class="comp-row"><div class="comp-dot" style="background:#E24B4A"></div>2 patches missing (1 critical)</div>
+<div class="comp-row"><div class="comp-dot" style="background:var(--color-border-tertiary)"></div>0 not applicable</div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-title">Patch status <span>20 total</span></div>
+<div class="patch-list">
+<div class="patch-item">
+<div class="patch-status missing"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+<div class="patch-info"><div class="patch-name">CVE-2025-3891</div><div class="patch-desc">Kernel privilege escalation</div></div>
+<span class="sev-pill sev-crit">Critical</span>
+<span class="patch-time">Missing</span>
+</div>
+<div class="patch-item">
+<div class="patch-status pending"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 5.5v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/></svg></div>
+<div class="patch-info"><div class="patch-name">CVE-2025-3754</div><div class="patch-desc">glibc buffer overflow</div></div>
+<span class="sev-pill sev-high">High</span>
+<span class="patch-time">Scheduled</span>
+</div>
+<div class="patch-item">
+<div class="patch-status installed"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 8l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="patch-info"><div class="patch-name">CVE-2025-3501</div><div class="patch-desc">curl HTTP/2 injection</div></div>
+<span class="sev-pill sev-med">Medium</span>
+<span class="patch-time">Mar 28</span>
+</div>
+<div class="patch-item">
+<div class="patch-status installed"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 8l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="patch-info"><div class="patch-name">USN-6726-1</div><div class="patch-desc">OpenSSL update 3.0.13</div></div>
+<span class="sev-pill sev-high">High</span>
+<span class="patch-time">Mar 22</span>
+</div>
+<div class="patch-item">
+<div class="patch-status installed"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 8l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="patch-info"><div class="patch-name">USN-6710-2</div><div class="patch-desc">Firefox security update</div></div>
+<span class="sev-pill sev-med">Medium</span>
+<span class="patch-time">Mar 18</span>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-title">Activity timeline</div>
+<div class="timeline">
+<div class="tl-item"><div class="tl-dot ok"></div><span class="tl-time">Today</span><span class="tl-text"><b>CVE-2025-3501</b> installed successfully</span></div>
+<div class="tl-item"><div class="tl-dot info"></div><span class="tl-time">Mar 30</span><span class="tl-text">Agent upgraded to <b>v1.2.4</b></span></div>
+<div class="tl-item"><div class="tl-dot ok"></div><span class="tl-time">Mar 28</span><span class="tl-text"><b>USN-6726-1</b> installed, device rebooted</span></div>
+<div class="tl-item"><div class="tl-dot err"></div><span class="tl-time">Mar 25</span><span class="tl-text"><b>CVE-2025-3891</b> install failed: dependency conflict</span></div>
+<div class="tl-item"><div class="tl-dot info"></div><span class="tl-time">Mar 20</span><span class="tl-text">Added to group <b>Production Linux servers</b></span></div>
+<div class="tl-item"><div class="tl-dot info"></div><span class="tl-time">Mar 15</span><span class="tl-text">Device registered. First agent check-in.</span></div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-title">Actions</div>
+<div class="btn-row">
+<button class="btn-sm"><svg viewBox="0 0 16 16" fill="none"><path d="M2 12l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Scan now</button>
+<button class="btn-sm"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2v12M4 10l4 4 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Deploy patches</button>
+<button class="btn-sm"><svg viewBox="0 0 16 16" fill="none"><path d="M4 2v12M8 2v12M12 2v12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Reboot</button>
+<button class="btn-sm"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Maintenance mode</button>
+<button class="btn-sm" style="color:var(--color-text-danger);border-color:var(--color-border-danger)"><svg viewBox="0 0 16 16" fill="none"><path d="M3 5h10M6 5V3h4v2M5 5v8h6V5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Decommission</button>
+</div>
+</div>
+
+</div>
+</div>
+</div>

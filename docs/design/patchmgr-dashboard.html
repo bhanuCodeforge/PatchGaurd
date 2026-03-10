@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PatchGuard Dashboard</title>
+<style>
+:root{
+--bg0:#fff;--bg1:#f5f5f0;--bg2:#eeeee8;
+--bgi:#E6F1FB;--bgd:#FCEBEB;--bgs:#E1F5EE;--bgw:#FAEEDA;
+--t0:#1a1a1a;--t1:#6b6b66;--t2:#9c9a92;
+--ti:#185FA5;--td:#A32D2D;--ts:#0F6E56;--tw:#854F0B;
+--b1:rgba(0,0,0,0.1);--b2:rgba(0,0,0,0.2);
+}
+@media(prefers-color-scheme:dark){:root{
+--bg0:#1a1a1a;--bg1:#2a2a28;--bg2:#222220;
+--bgi:#0C447C;--bgd:#501313;--bgs:#04342C;--bgw:#412402;
+--t0:#e8e6de;--t1:#9c9a92;--t2:#6b6b66;
+--ti:#85B7EB;--td:#F09595;--ts:#5DCAA5;--tw:#FAC775;
+--b1:rgba(255,255,255,0.1);--b2:rgba(255,255,255,0.2);
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--t0);background:var(--bg2)}
+.shell{display:flex;min-height:100vh}
+.side{width:220px;background:var(--bg0);border-right:0.5px solid var(--b1);padding:20px 0;flex-shrink:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;overflow-y:auto}
+.logo{padding:0 20px 20px;font-size:15px;font-weight:500;display:flex;align-items:center;gap:8px}
+.logo svg{width:20px;height:20px}
+.nav-section{font-size:11px;color:var(--t2);padding:16px 20px 6px;text-transform:uppercase;letter-spacing:0.5px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;cursor:pointer;color:var(--t1);text-decoration:none}
+.nav-item:hover{background:var(--bg1)}
+.nav-item.active{background:var(--bgi);color:var(--ti);font-weight:500}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.badge-count{margin-left:auto;background:var(--bgd);color:var(--td);font-size:11px;padding:1px 7px;border-radius:10px;font-weight:500}
+.nav-spacer{flex:1}
+.main{margin-left:220px;flex:1;padding:24px 28px;min-width:0}
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.top-bar h1{font-size:20px;font-weight:500}
+.top-right{display:flex;align-items:center;gap:12px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--bgi);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--ti)}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--bg1);border-radius:8px;padding:14px 16px}
+.kpi-label{font-size:12px;color:var(--t1);margin-bottom:4px}
+.kpi-val{font-size:22px;font-weight:500}
+.kpi-sub{font-size:11px;margin-top:2px}
+.kpi-sub.up{color:var(--ts)}
+.kpi-sub.down{color:var(--td)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:var(--bg0);border:0.5px solid var(--b1);border-radius:12px;padding:16px 20px}
+.card-title{font-size:14px;font-weight:500;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.card-title span{font-size:12px;color:var(--t1);font-weight:400}
+.gauge-wrap{display:flex;align-items:center;gap:20px}
+.gauge-legend{display:flex;flex-direction:column;gap:6px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t1)}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px}
+.bar-label{width:70px;color:var(--t1);text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:8px;background:var(--bg1);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+.bar-val{width:36px;font-size:11px;color:var(--t1)}
+.dep-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--b1)}
+.dep-item:last-child{border-bottom:none}
+.dep-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dep-icon svg{width:14px;height:14px}
+.dep-info{flex:1;min-width:0}
+.dep-name{font-size:13px;font-weight:500}
+.dep-meta{font-size:11px;color:var(--t1)}
+.dep-status{font-size:11px;padding:3px 10px;border-radius:10px;font-weight:500;white-space:nowrap}
+.s-progress{background:var(--bgi);color:var(--ti)}
+.s-complete{background:var(--bgs);color:var(--ts)}
+.s-scheduled{background:var(--bgw);color:var(--tw)}
+.tbl{width:100%;font-size:12px;border-collapse:collapse}
+.tbl th{text-align:left;color:var(--t2);font-weight:400;padding:6px 0;border-bottom:0.5px solid var(--b1)}
+.tbl td{padding:7px 0;border-bottom:0.5px solid var(--b1)}
+.severity{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.sev-crit{background:#E24B4A}
+.sev-high{background:#EF9F27}
+.sev-med{background:#378ADD}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#1D9E75;display:inline-block;margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.progress-mini{width:60px;height:4px;background:var(--bg1);border-radius:2px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:4px}
+.progress-mini-fill{height:100%;background:var(--ti);border-radius:2px}
+
+@media(max-width:900px){
+.side{display:none}
+.main{margin-left:0}
+.kpi-row{grid-template-columns:repeat(2,1fr)}
+.grid-2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="side">
+<div class="logo"><svg viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="16" height="16" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>PatchGuard</div>
+<div class="nav-section">Overview</div>
+<a class="nav-item active" href="#"><svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>Dashboard</a>
+<div class="nav-section">Manage</div>
+<a class="nav-item" href="#"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/><line x1="2" y1="6.5" x2="14" y2="6.5" stroke="currentColor" stroke-width="1.2"/><circle cx="5" cy="10" r="1" fill="currentColor"/></svg>Devices<span style="margin-left:auto;font-size:11px;color:var(--t2)">1,247</span></a>
+<a class="nav-item" href="#"><svg viewBox="0 0 16 16" fill="none"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.2"/><path d="M5 5h6M5 8h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Patches<span class="badge-count">12</span></a>
+<a class="nav-item" href="#"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2v12M4 10l4 4 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Deployments</a>
+<div class="nav-section">Reports</div>
+<a class="nav-item" href="#"><svg viewBox="0 0 16 16" fill="none"><path d="M2 14V6l4-4 4 4v8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 8h3a1 1 0 011 1v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Compliance</a>
+<a class="nav-item" href="#"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Audit log</a>
+<div class="nav-spacer"></div>
+<div class="nav-section">System</div>
+<a class="nav-item" href="#"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Settings</a>
+</div>
+
+<div class="main">
+<div class="top-bar">
+<h1>Dashboard</h1>
+<div class="top-right">
+<span style="font-size:12px;color:var(--t2)"><span class="live-dot"></span>Live</span>
+<span style="font-size:12px;color:var(--t1)">Last sync: 2 min ago</span>
+<div class="avatar">JD</div>
+</div>
+</div>
+
+<div class="kpi-row">
+<div class="kpi"><div class="kpi-label">Total devices</div><div class="kpi-val">1,247</div><div class="kpi-sub up">+23 this week</div></div>
+<div class="kpi"><div class="kpi-label">Online now</div><div class="kpi-val">1,183</div><div class="kpi-sub" style="color:var(--ts)">94.9% uptime</div></div>
+<div class="kpi"><div class="kpi-label">Compliance rate</div><div class="kpi-val" style="color:var(--ts)">87.3%</div><div class="kpi-sub up">+2.1% from last week</div></div>
+<div class="kpi"><div class="kpi-label">Critical pending</div><div class="kpi-val" style="color:var(--td)">12</div><div class="kpi-sub down">4 new since yesterday</div></div>
+</div>
+
+<div class="grid-2">
+<div class="card">
+<div class="card-title">Compliance breakdown<span>Last 30 days</span></div>
+<div class="gauge-wrap">
+<svg width="120" height="120" viewBox="0 0 120 120">
+<circle cx="60" cy="60" r="50" fill="none" stroke="var(--b1)" stroke-width="10"/>
+<circle cx="60" cy="60" r="50" fill="none" stroke="#1D9E75" stroke-width="10" stroke-dasharray="274.9" stroke-dashoffset="34.9" stroke-linecap="round" transform="rotate(-90 60 60)"/>
+<circle cx="60" cy="60" r="50" fill="none" stroke="#EF9F27" stroke-width="10" stroke-dasharray="274.9" stroke-dashoffset="247.4" stroke-linecap="round" transform="rotate(224 60 60)"/>
+<circle cx="60" cy="60" r="50" fill="none" stroke="#E24B4A" stroke-width="10" stroke-dasharray="274.9" stroke-dashoffset="261.1" stroke-linecap="round" transform="rotate(260 60 60)"/>
+<text x="60" y="56" text-anchor="middle" style="font-size:22px;font-weight:500;fill:var(--t0)">87.3%</text>
+<text x="60" y="72" text-anchor="middle" style="font-size:11px;fill:var(--t1)">compliant</text>
+</svg>
+<div class="gauge-legend">
+<div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div>Patched (1,089)</div>
+<div class="legend-item"><div class="legend-dot" style="background:#EF9F27"></div>Pending (112)</div>
+<div class="legend-item"><div class="legend-dot" style="background:#E24B4A"></div>Failed (46)</div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">Devices by OS</div>
+<div class="bar-row"><span class="bar-label">Linux</span><div class="bar-track"><div class="bar-fill" style="width:58%;background:#534AB7"></div></div><span class="bar-val">724</span></div>
+<div class="bar-row"><span class="bar-label">Windows</span><div class="bar-track"><div class="bar-fill" style="width:32%;background:#378ADD"></div></div><span class="bar-val">399</span></div>
+<div class="bar-row"><span class="bar-label">macOS</span><div class="bar-track"><div class="bar-fill" style="width:10%;background:#1D9E75"></div></div><span class="bar-val">124</span></div>
+</div>
+</div>
+
+<div class="grid-2">
+<div class="card">
+<div class="card-title">Active deployments<span>3 running</span></div>
+<div class="dep-item">
+<div class="dep-icon" style="background:var(--bgd);color:var(--td)"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2v12M4 10l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="dep-info"><div class="dep-name">CVE-2025-3891 critical fix</div><div class="dep-meta"><div class="progress-mini"><div class="progress-mini-fill" style="width:72%"></div></div>72% — Wave 3 of 4</div></div>
+<div class="dep-status s-progress"><span class="live-dot"></span>In progress</div>
+</div>
+<div class="dep-item">
+<div class="dep-icon" style="background:var(--bgi);color:var(--ti)"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2v12M4 10l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="dep-info"><div class="dep-name">March kernel updates</div><div class="dep-meta"><div class="progress-mini"><div class="progress-mini-fill" style="width:34%"></div></div>34% — Wave 1 (canary)</div></div>
+<div class="dep-status s-progress"><span class="live-dot"></span>Canary</div>
+</div>
+<div class="dep-item">
+<div class="dep-icon" style="background:var(--bgw);color:var(--tw)"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+<div class="dep-info"><div class="dep-name">OpenSSL 3.2.x rollout</div><div class="dep-meta">Scheduled for tonight 02:00 UTC</div></div>
+<div class="dep-status s-scheduled">Scheduled</div>
+</div>
+<div class="dep-item">
+<div class="dep-icon" style="background:var(--bgs);color:var(--ts)"><svg viewBox="0 0 16 16" fill="none"><path d="M4 8l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="dep-info"><div class="dep-name">Windows Defender update</div><div class="dep-meta">Completed 45 min ago — 399/399 devices</div></div>
+<div class="dep-status s-complete">Complete</div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">Critical patches pending<span class="badge-count">12</span></div>
+<table class="tbl">
+<thead><tr><th>Patch</th><th>Severity</th><th>Affected</th><th>Age</th></tr></thead>
+<tbody>
+<tr><td style="font-weight:500">CVE-2025-3891</td><td><span class="severity sev-crit"></span>Critical</td><td>187</td><td style="color:var(--td)">3d</td></tr>
+<tr><td style="font-weight:500">CVE-2025-4012</td><td><span class="severity sev-crit"></span>Critical</td><td>124</td><td style="color:var(--td)">2d</td></tr>
+<tr><td style="font-weight:500">CVE-2025-3754</td><td><span class="severity sev-high"></span>High</td><td>312</td><td>5d</td></tr>
+<tr><td style="font-weight:500">CVE-2025-3698</td><td><span class="severity sev-high"></span>High</td><td>89</td><td>4d</td></tr>
+<tr><td style="font-weight:500">CVE-2025-3501</td><td><span class="severity sev-med"></span>Medium</td><td>456</td><td>7d</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<style>
+*{box-sizing:border-box;margin:0}
+.shell{font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:24px}
+.label{font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;margin-top:28px}
+.label:first-child{margin-top:0}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skel{border-radius:var(--border-radius-md);background:linear-gradient(90deg,var(--color-background-secondary) 25%,var(--color-border-tertiary) 50%,var(--color-background-secondary) 75%);background-size:800px 100%;animation:shimmer 1.5s infinite linear}
+.skel-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 20px}
+.skel-kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.skel-kpi{border-radius:var(--border-radius-md);padding:14px 16px}
+.skel-line{height:12px;border-radius:6px;margin-bottom:8px}
+.skel-line-lg{height:20px;border-radius:6px;margin-bottom:8px}
+.skel-circle{border-radius:50%}
+.skel-table{width:100%}
+.skel-row{display:flex;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary);align-items:center}
+.skel-row:last-child{border-bottom:none}
+.grid-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-bottom:16px}
+
+.dialog-backdrop{background:rgba(0,0,0,0.12);border-radius:var(--border-radius-lg);padding:40px;display:flex;align-items:center;justify-content:center;min-height:320px}
+.dialog{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:24px;width:420px;max-width:100%}
+.dialog-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.dialog-icon svg{width:20px;height:20px}
+.dialog-title{font-size:16px;font-weight:500;margin-bottom:6px}
+.dialog-msg{font-size:13px;color:var(--color-text-secondary);line-height:1.5;margin-bottom:16px}
+.dialog-footer{display:flex;justify-content:flex-end;gap:8px}
+.btn{padding:8px 16px;font-size:13px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-danger{background:var(--color-text-danger);color:#fff;border-color:var(--color-text-danger)}
+.btn-primary{background:var(--color-text-info);color:#fff;border-color:var(--color-text-info)}
+.btn-warn{background:var(--color-text-warning);color:#fff;border-color:var(--color-text-warning)}
+.dialog-input{width:100%;padding:8px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:13px;margin-bottom:12px;background:var(--color-background-primary);color:var(--color-text-primary)}
+.dialog-detail{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:14px;font-size:12px}
+.dialog-detail-row{display:flex;justify-content:space-between;padding:3px 0}
+.dialog-detail-label{color:var(--color-text-secondary)}
+.dialog-detail-val{font-weight:500}
+.warn-text{font-size:12px;color:var(--color-text-danger);margin-bottom:12px;display:flex;align-items:flex-start;gap:6px;line-height:1.4}
+.warn-text svg{flex-shrink:0;margin-top:2px}
+.dialog-check{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary);margin-bottom:14px}
+.dialog-check input{accent-color:var(--color-text-danger)}
+</style>
+<div class="shell">
+
+<div class="label">Dashboard loading skeleton</div>
+<div class="skel-card">
+<div style="display:flex;justify-content:space-between;margin-bottom:16px"><div class="skel skel-line" style="width:120px"></div><div class="skel skel-line" style="width:80px"></div></div>
+<div class="skel-kpi-row">
+<div class="skel" style="height:70px"></div>
+<div class="skel" style="height:70px"></div>
+<div class="skel" style="height:70px"></div>
+<div class="skel" style="height:70px"></div>
+</div>
+<div class="grid-2">
+<div class="skel" style="height:160px"></div>
+<div class="skel" style="height:160px"></div>
+</div>
+</div>
+
+<div class="label">Table loading skeleton</div>
+<div class="skel-card">
+<div style="display:flex;gap:8px;margin-bottom:14px"><div class="skel skel-line" style="width:200px;height:32px"></div><div class="skel skel-line" style="width:90px;height:32px"></div><div class="skel skel-line" style="width:90px;height:32px"></div></div>
+<div class="skel-table">
+<div class="skel-row"><div class="skel skel-circle" style="width:16px;height:16px;flex-shrink:0"></div><div class="skel skel-line" style="width:140px;flex-shrink:0"></div><div class="skel skel-line" style="width:90px"></div><div class="skel skel-line" style="width:80px"></div><div class="skel skel-line" style="width:60px"></div><div class="skel skel-line" style="width:50px"></div></div>
+<div class="skel-row"><div class="skel skel-circle" style="width:16px;height:16px;flex-shrink:0"></div><div class="skel skel-line" style="width:120px;flex-shrink:0"></div><div class="skel skel-line" style="width:90px"></div><div class="skel skel-line" style="width:70px"></div><div class="skel skel-line" style="width:60px"></div><div class="skel skel-line" style="width:50px"></div></div>
+<div class="skel-row"><div class="skel skel-circle" style="width:16px;height:16px;flex-shrink:0"></div><div class="skel skel-line" style="width:150px;flex-shrink:0"></div><div class="skel skel-line" style="width:90px"></div><div class="skel skel-line" style="width:90px"></div><div class="skel skel-line" style="width:60px"></div><div class="skel skel-line" style="width:50px"></div></div>
+<div class="skel-row"><div class="skel skel-circle" style="width:16px;height:16px;flex-shrink:0"></div><div class="skel skel-line" style="width:110px;flex-shrink:0"></div><div class="skel skel-line" style="width:90px"></div><div class="skel skel-line" style="width:80px"></div><div class="skel skel-line" style="width:60px"></div><div class="skel skel-line" style="width:50px"></div></div>
+</div>
+</div>
+
+<div class="label">Confirmation dialogs</div>
+<div class="grid-2">
+<div class="dialog-backdrop">
+<div class="dialog">
+<div class="dialog-icon" style="background:var(--color-background-danger)"><svg viewBox="0 0 24 24" fill="none" style="color:var(--color-text-danger)"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="dialog-title">Decommission device?</div>
+<div class="dialog-msg">This will permanently remove <b style="font-weight:500">web-prod-01</b> from PatchGuard. The agent will be disconnected and all patch history archived.</div>
+<div class="dialog-detail">
+<div class="dialog-detail-row"><span class="dialog-detail-label">Hostname</span><span class="dialog-detail-val">web-prod-01</span></div>
+<div class="dialog-detail-row"><span class="dialog-detail-label">IP</span><span class="dialog-detail-val">10.0.1.50</span></div>
+<div class="dialog-detail-row"><span class="dialog-detail-label">Environment</span><span class="dialog-detail-val">Production</span></div>
+</div>
+<div class="warn-text"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2L1 14h14L8 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8 7v3M8 12v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>This action cannot be undone.</div>
+<div class="dialog-check"><input type="checkbox"> I understand this device will be permanently removed</div>
+<div class="dialog-footer"><button class="btn">Cancel</button><button class="btn btn-danger">Decommission</button></div>
+</div>
+</div>
+
+<div class="dialog-backdrop">
+<div class="dialog">
+<div class="dialog-icon" style="background:var(--color-background-warning)"><svg viewBox="0 0 24 24" fill="none" style="color:var(--color-text-warning)"><rect x="4" y="5" width="6" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="14" y="5" width="6" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg></div>
+<div class="dialog-title">Pause deployment?</div>
+<div class="dialog-msg">This will stop sending patch commands to remaining devices. Devices currently installing will finish their current operation.</div>
+<div class="dialog-detail">
+<div class="dialog-detail-row"><span class="dialog-detail-label">Deployment</span><span class="dialog-detail-val">CVE-2025-3891 critical fix</span></div>
+<div class="dialog-detail-row"><span class="dialog-detail-label">Progress</span><span class="dialog-detail-val">72% (808/1,123)</span></div>
+<div class="dialog-detail-row"><span class="dialog-detail-label">Current wave</span><span class="dialog-detail-val">Wave 3 of 4</span></div>
+</div>
+<div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:14px">You can resume the deployment at any time from the deployment detail page.</div>
+<div class="dialog-footer"><button class="btn">Keep running</button><button class="btn btn-warn">Pause deployment</button></div>
+</div>
+</div>
+
+<div class="dialog-backdrop">
+<div class="dialog">
+<div class="dialog-icon" style="background:var(--color-background-danger)"><svg viewBox="0 0 24 24" fill="none" style="color:var(--color-text-danger)"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+<div class="dialog-title">Cancel deployment?</div>
+<div class="dialog-msg">This will abort the deployment. 315 devices will remain unpatched. This action cannot be reversed — you'll need to create a new deployment.</div>
+<div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:4px">Type the deployment name to confirm:</div>
+<input class="dialog-input" type="text" placeholder="CVE-2025-3891 critical fix">
+<div class="dialog-footer"><button class="btn">Go back</button><button class="btn btn-danger">Cancel deployment</button></div>
+</div>
+</div>
+
+<div class="dialog-backdrop">
+<div class="dialog">
+<div class="dialog-icon" style="background:var(--color-background-success)"><svg viewBox="0 0 24 24" fill="none" style="color:var(--color-text-success)"><path d="M7 12l4 4 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="dialog-title">Approve and deploy?</div>
+<div class="dialog-msg">This will approve <b style="font-weight:500">CVE-2025-3891</b> and immediately create a canary deployment to all affected production devices.</div>
+<div class="dialog-detail">
+<div class="dialog-detail-row"><span class="dialog-detail-label">Severity</span><span class="dialog-detail-val" style="color:var(--color-text-danger)">Critical (CVSS 9.8)</span></div>
+<div class="dialog-detail-row"><span class="dialog-detail-label">Affected devices</span><span class="dialog-detail-val">187</span></div>
+<div class="dialog-detail-row"><span class="dialog-detail-label">Strategy</span><span class="dialog-detail-val">Canary (5%)</span></div>
+<div class="dialog-detail-row"><span class="dialog-detail-label">Requires reboot</span><span class="dialog-detail-val">Yes</span></div>
+</div>
+<div class="dialog-footer"><button class="btn">Review first</button><button class="btn btn-primary">Approve and deploy</button></div>
+</div>
+</div>
+</div>
+</div>

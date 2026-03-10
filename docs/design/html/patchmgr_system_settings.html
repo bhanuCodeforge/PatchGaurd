@@ -1,0 +1,163 @@
+<style>
+*{box-sizing:border-box;margin:0}
+.shell{font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;padding:24px}
+.top h2{font-size:18px;font-weight:500;margin-bottom:16px}
+.layout{display:grid;grid-template-columns:180px minmax(0,1fr);gap:0}
+.settings-nav{border-right:0.5px solid var(--color-border-tertiary);padding-right:16px}
+.nav-item{padding:8px 12px;font-size:13px;cursor:pointer;color:var(--color-text-secondary);border-radius:var(--border-radius-md);margin-bottom:2px}
+.nav-item:hover{background:var(--color-background-secondary)}
+.nav-item.active{background:var(--color-background-info);color:var(--color-text-info);font-weight:500}
+.settings-body{padding-left:24px}
+.section{margin-bottom:28px}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.section-title{font-size:15px;font-weight:500}
+.section-desc{font-size:12px;color:var(--color-text-secondary);margin-bottom:14px;line-height:1.4}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 20px;margin-bottom:12px}
+.form-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-bottom:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:12px;color:var(--color-text-secondary)}
+.form-group input,.form-group select{padding:8px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary)}
+.form-group input:focus{outline:none;border-color:var(--color-border-info)}
+.form-help{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-info{flex:1}
+.toggle-label{font-size:13px;font-weight:500}
+.toggle-desc{font-size:11px;color:var(--color-text-secondary);margin-top:1px}
+.toggle{width:36px;height:20px;border-radius:10px;background:var(--color-border-secondary);position:relative;cursor:pointer;flex-shrink:0}
+.toggle.on{background:var(--color-text-info)}
+.toggle-knob{width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:transform 0.2s}
+.toggle.on .toggle-knob{transform:translateX(16px)}
+.btn{padding:7px 14px;font-size:13px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:var(--color-text-info);color:#fff;border-color:var(--color-text-info)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.status-indicator{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:8px}
+.status-ok{background:var(--color-background-success);color:var(--color-text-success)}
+.status-err{background:var(--color-background-danger);color:var(--color-text-danger)}
+.maint-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.maint-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 14px}
+.maint-name{font-size:13px;font-weight:500;margin-bottom:4px}
+.maint-time{font-size:12px;color:var(--color-text-secondary)}
+.maint-days{font-size:11px;color:var(--color-text-tertiary);margin-top:4px;display:flex;gap:4px}
+.day-chip{padding:1px 6px;border-radius:4px;background:var(--color-background-secondary)}
+.day-chip.active{background:var(--color-background-info);color:var(--color-text-info)}
+.save-bar{display:flex;justify-content:flex-end;gap:8px;padding-top:16px;border-top:0.5px solid var(--color-border-tertiary);margin-top:16px}
+</style>
+<div class="shell">
+<div class="top"><h2>Settings</h2></div>
+<div class="layout">
+<div class="settings-nav">
+<div class="nav-item active">LDAP / Active Directory</div>
+<div class="nav-item">Notifications</div>
+<div class="nav-item">Maintenance windows</div>
+<div class="nav-item">Agent configuration</div>
+<div class="nav-item">Vendor feeds</div>
+<div class="nav-item">SLA policies</div>
+<div class="nav-item">Backup &amp; restore</div>
+<div class="nav-item">License</div>
+</div>
+<div class="settings-body">
+
+<div class="section">
+<div class="section-header">
+<div class="section-title">LDAP / Active Directory</div>
+<span class="status-indicator status-ok"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M4 8l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Connected</span>
+</div>
+<div class="section-desc">Authenticate users against your corporate directory. Groups are synced every 15 minutes.</div>
+<div class="card">
+<div class="form-row">
+<div class="form-group"><label>Server URI</label><input type="text" value="ldap://dc01.corp.internal:389"><div class="form-help">Use ldaps:// for TLS</div></div>
+<div class="form-group"><label>Bind DN template</label><input type="text" value="CORP\{username}"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Search base</label><input type="text" value="DC=corp,DC=internal"></div>
+<div class="form-group"><label>User search filter</label><input type="text" value="(sAMAccountName={username})"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Admin group (CN)</label><input type="text" value="PatchMgr-Admins"></div>
+<div class="form-group"><label>Operator group (CN)</label><input type="text" value="PatchMgr-Operators"></div>
+</div>
+<div style="display:flex;gap:8px;margin-top:8px">
+<button class="btn btn-sm">Test connection</button>
+<button class="btn btn-sm">Sync now</button>
+<span style="font-size:11px;color:var(--color-text-tertiary);display:flex;align-items:center;margin-left:8px">Last sync: 8 min ago — 24 users imported</span>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-title">Notifications</div>
+<div class="section-desc">Configure how the team gets alerted about deployments, failures, and compliance changes.</div>
+<div class="card">
+<div class="toggle-row">
+<div class="toggle-info"><div class="toggle-label">Email notifications</div><div class="toggle-desc">Send deployment status and failure alerts to operators</div></div>
+<div class="toggle on"><div class="toggle-knob"></div></div>
+</div>
+<div class="toggle-row">
+<div class="toggle-info"><div class="toggle-label">Slack integration</div><div class="toggle-desc">Post to #ops-patches channel on deployment events</div></div>
+<div class="toggle on"><div class="toggle-knob"></div></div>
+</div>
+<div class="toggle-row">
+<div class="toggle-info"><div class="toggle-label">Critical patch alerts</div><div class="toggle-desc">Immediate notification when critical CVEs are imported</div></div>
+<div class="toggle on"><div class="toggle-knob"></div></div>
+</div>
+<div class="toggle-row">
+<div class="toggle-info"><div class="toggle-label">Compliance threshold alert</div><div class="toggle-desc">Alert when any group drops below 80% compliance</div></div>
+<div class="toggle on"><div class="toggle-knob"></div></div>
+</div>
+<div class="toggle-row">
+<div class="toggle-info"><div class="toggle-label">Agent offline alerts</div><div class="toggle-desc">Alert when a production device goes offline for 15+ min</div></div>
+<div class="toggle"><div class="toggle-knob"></div></div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-header"><div class="section-title">Maintenance windows</div><button class="btn btn-sm"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Add window</button></div>
+<div class="section-desc">Deployments with maintenance strategy will only execute within these windows.</div>
+<div class="maint-grid">
+<div class="maint-card">
+<div class="maint-name">Nightly window</div>
+<div class="maint-time">02:00 – 06:00 UTC</div>
+<div class="maint-days"><span class="day-chip active">Mon</span><span class="day-chip active">Tue</span><span class="day-chip active">Wed</span><span class="day-chip active">Thu</span><span class="day-chip active">Fri</span><span class="day-chip">Sat</span><span class="day-chip">Sun</span></div>
+</div>
+<div class="maint-card">
+<div class="maint-name">Weekend window</div>
+<div class="maint-time">00:00 – 08:00 UTC</div>
+<div class="maint-days"><span class="day-chip">Mon</span><span class="day-chip">Tue</span><span class="day-chip">Wed</span><span class="day-chip">Thu</span><span class="day-chip">Fri</span><span class="day-chip active">Sat</span><span class="day-chip active">Sun</span></div>
+</div>
+</div>
+</div>
+
+<div class="section">
+<div class="section-title">Agent configuration</div>
+<div class="section-desc">Global defaults for all remote agents. Individual agents inherit these unless overridden.</div>
+<div class="card">
+<div class="form-row">
+<div class="form-group"><label>Heartbeat interval</label><select><option>30 seconds</option><option selected>60 seconds</option><option>120 seconds</option></select></div>
+<div class="form-group"><label>Offline threshold</label><select><option>5 minutes</option><option selected>10 minutes</option><option>30 minutes</option></select></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>Max concurrent installs per device</label><select><option selected>1</option><option>2</option><option>3</option></select></div>
+<div class="form-group"><label>Install timeout</label><select><option>10 minutes</option><option selected>30 minutes</option><option>60 minutes</option></select></div>
+</div>
+<div class="toggle-row" style="margin-top:8px">
+<div class="toggle-info"><div class="toggle-label">Auto-reboot after kernel patches</div><div class="toggle-desc">Agents will schedule a reboot within the maintenance window</div></div>
+<div class="toggle on"><div class="toggle-knob"></div></div>
+</div>
+<div class="toggle-row">
+<div class="toggle-info"><div class="toggle-label">Auto-update agents</div><div class="toggle-desc">Push new agent versions automatically when available</div></div>
+<div class="toggle on"><div class="toggle-knob"></div></div>
+</div>
+</div>
+</div>
+
+<div class="save-bar">
+<button class="btn">Discard changes</button>
+<button class="btn btn-primary">Save settings</button>
+</div>
+
+</div>
+</div>
+</div>

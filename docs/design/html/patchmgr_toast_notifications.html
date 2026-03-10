@@ -1,0 +1,96 @@
+<style>
+*{box-sizing:border-box;margin:0}
+.shell{font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:32px 24px;min-height:600px;position:relative}
+.label{font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;margin-top:24px}
+.label:first-child{margin-top:0}
+.toast-stack{display:flex;flex-direction:column;gap:10px;max-width:420px}
+.toast{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);position:relative}
+.toast-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.toast-icon svg{width:12px;height:12px}
+.toast-body{flex:1;min-width:0}
+.toast-title{font-size:13px;font-weight:500;margin-bottom:2px}
+.toast-msg{font-size:12px;color:var(--color-text-secondary);line-height:1.4}
+.toast-actions{display:flex;gap:8px;margin-top:8px}
+.toast-btn{padding:4px 12px;font-size:11px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)}
+.toast-btn:hover{background:var(--color-background-secondary)}
+.toast-btn-primary{background:var(--color-text-info);color:#fff;border-color:var(--color-text-info)}
+.toast-close{position:absolute;top:10px;right:10px;width:18px;height:18px;border:none;background:none;cursor:pointer;color:var(--color-text-tertiary);display:flex;align-items:center;justify-content:center;border-radius:4px}
+.toast-close:hover{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.toast-close svg{width:10px;height:10px}
+.toast-progress{position:absolute;bottom:0;left:0;height:2px;border-radius:0 0 var(--border-radius-lg) var(--border-radius-lg);transition:width 5s linear}
+.t-success .toast-icon{background:var(--color-background-success);color:var(--color-text-success)}
+.t-success .toast-progress{background:var(--color-text-success)}
+.t-error .toast-icon{background:var(--color-background-danger);color:var(--color-text-danger)}
+.t-error .toast-progress{background:var(--color-text-danger)}
+.t-warning .toast-icon{background:var(--color-background-warning);color:var(--color-text-warning)}
+.t-warning .toast-progress{background:var(--color-text-warning)}
+.t-info .toast-icon{background:var(--color-background-info);color:var(--color-text-info)}
+.t-info .toast-progress{background:var(--color-text-info)}
+.t-deploy{border-left:3px solid var(--color-text-info);border-radius:0}
+.t-critical{border-left:3px solid var(--color-text-danger);border-radius:0}
+.t-offline{border-left:3px solid var(--color-text-warning);border-radius:0}
+.timer-bar{font-size:10px;color:var(--color-text-tertiary);margin-top:4px;display:flex;align-items:center;gap:4px}
+.live-dot{width:6px;height:6px;border-radius:50%;display:inline-block;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.preview-container{background:var(--color-background-tertiary);border-radius:var(--border-radius-md);padding:20px;margin-top:6px}
+</style>
+<div class="shell">
+<div class="label">Standard toasts (auto-dismiss in 5s)</div>
+<div class="toast-stack">
+<div class="toast t-success">
+<div class="toast-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M4 8l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="toast-body"><div class="toast-title">Deployment started</div><div class="toast-msg">CVE-2025-3891 critical fix is now deploying to 1,123 devices.</div></div>
+<button class="toast-close"><svg viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+<div class="toast-progress" style="width:65%"></div>
+</div>
+
+<div class="toast t-success">
+<div class="toast-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M4 8l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="toast-body"><div class="toast-title">Patch approved</div><div class="toast-msg">CVE-2025-4012 has been approved and is ready for deployment.</div></div>
+<button class="toast-close"><svg viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+<div class="toast-progress" style="width:30%"></div>
+</div>
+
+<div class="toast t-error">
+<div class="toast-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+<div class="toast-body"><div class="toast-title">Deployment failed</div><div class="toast-msg">March kernel updates exceeded 5% failure threshold. Rollout paused at wave 2.</div>
+<div class="toast-actions"><button class="toast-btn toast-btn-primary">View details</button><button class="toast-btn">Dismiss</button></div></div>
+<button class="toast-close"><svg viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+</div>
+
+<div class="toast t-warning">
+<div class="toast-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2L1 14h14L8 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8 7v3M8 12v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+<div class="toast-body"><div class="toast-title">Compliance alert</div><div class="toast-msg">Development machines group dropped below 50% compliance.</div></div>
+<button class="toast-close"><svg viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+<div class="toast-progress" style="width:80%"></div>
+</div>
+
+<div class="toast t-info">
+<div class="toast-icon"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5.5v0M8 7.5v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+<div class="toast-body"><div class="toast-title">Vendor sync complete</div><div class="toast-msg">4 new patches imported from Canonical USN feed.</div></div>
+<button class="toast-close"><svg viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+<div class="toast-progress" style="width:15%"></div>
+</div>
+</div>
+
+<div class="label">Persistent banners (require manual dismiss)</div>
+<div class="toast-stack">
+<div class="toast t-critical">
+<div class="toast-icon" style="background:var(--color-background-danger);color:var(--color-text-danger)"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2L1 14h14L8 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 7v3M8 12v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+<div class="toast-body"><div class="toast-title" style="color:var(--color-text-danger)">Critical CVE detected — active exploitation</div><div class="toast-msg">CVE-2025-3891 is being actively exploited. 187 devices are affected. Immediate patching recommended.</div>
+<div class="toast-actions"><button class="toast-btn toast-btn-primary">Deploy now</button><button class="toast-btn">Review patch</button><button class="toast-btn">Snooze 1h</button></div></div>
+</div>
+
+<div class="toast t-deploy">
+<div class="toast-icon" style="background:var(--color-background-info);color:var(--color-text-info)"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2v12M4 10l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="toast-body"><div class="toast-title">Deployment in progress</div><div class="toast-msg">CVE-2025-3891 critical fix — Wave 3 of 4<div class="timer-bar"><span class="live-dot" style="background:var(--color-text-info)"></span>72% complete — 808 of 1,123 devices</div></div>
+<div class="toast-actions"><button class="toast-btn toast-btn-primary">Watch live</button><button class="toast-btn">Pause</button></div></div>
+</div>
+
+<div class="toast t-offline">
+<div class="toast-icon" style="background:var(--color-background-warning);color:var(--color-text-warning)"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+<div class="toast-body"><div class="toast-title">3 production devices offline</div><div class="toast-msg">db-prod-07, cache-prod-02, api-prod-15 haven't checked in for 15+ minutes.</div>
+<div class="toast-actions"><button class="toast-btn">View devices</button><button class="toast-btn">Acknowledge</button></div></div>
+</div>
+</div>
+</div>

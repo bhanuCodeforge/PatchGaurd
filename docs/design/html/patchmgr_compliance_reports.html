@@ -1,0 +1,151 @@
+<style>
+*{box-sizing:border-box;margin:0}
+.shell{font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;padding:24px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.top h2{font-size:18px;font-weight:500}
+.top-actions{display:flex;gap:8px;align-items:center}
+.btn{padding:7px 14px;font-size:12px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);display:inline-flex;align-items:center;gap:5px}
+.range-tabs{display:flex;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden}
+.range-tab{padding:6px 14px;font-size:12px;cursor:pointer;color:var(--color-text-secondary);background:var(--color-background-primary)}
+.range-tab.active{background:var(--color-background-info);color:var(--color-text-info);font-weight:500}
+.kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px}
+.kpi-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.kpi-val{font-size:22px;font-weight:500}
+.kpi-sub{font-size:11px;margin-top:2px;display:flex;align-items:center;gap:3px}
+.kpi-sub.up{color:var(--color-text-success)}
+.kpi-sub.down{color:var(--color-text-danger)}
+.kpi-sub.flat{color:var(--color-text-secondary)}
+.grid-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-bottom:16px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 20px}
+.card-title{font-size:14px;font-weight:500;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.card-title span{font-size:12px;color:var(--color-text-secondary);font-weight:400}
+.trend-chart{width:100%;height:140px;position:relative}
+.trend-line{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.trend-area{opacity:0.08}
+.axis-label{font-size:10px;fill:var(--color-text-tertiary)}
+.grid-line{stroke:var(--color-border-tertiary);stroke-width:0.5;stroke-dasharray:3 3}
+.group-list{display:flex;flex-direction:column;gap:0}
+.group-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px}
+.group-item:last-child{border-bottom:none}
+.group-rank{width:22px;height:22px;border-radius:50%;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--color-text-secondary);flex-shrink:0}
+.group-name{flex:1;min-width:0;font-weight:500}
+.group-bar{width:80px;height:6px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;flex-shrink:0}
+.group-fill{height:100%;border-radius:3px}
+.group-pct{width:40px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums}
+.os-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px}
+.os-bar-wrap{flex:1;height:20px;background:var(--color-background-secondary);border-radius:4px;overflow:hidden;display:flex}
+.os-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#fff;overflow:hidden}
+.os-label{width:80px;font-weight:500;flex-shrink:0}
+.sla-table{width:100%;font-size:12px;border-collapse:collapse}
+.sla-table th{text-align:left;color:var(--color-text-tertiary);font-weight:400;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.sla-table td{padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.sla-badge{display:inline-flex;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:500}
+.sla-pass{background:var(--color-background-success);color:var(--color-text-success)}
+.sla-fail{background:var(--color-background-danger);color:var(--color-text-danger)}
+.sla-warn{background:var(--color-background-warning);color:var(--color-text-warning)}
+.sparkline{display:inline-block;vertical-align:middle;margin-left:6px}
+</style>
+<div class="shell">
+<div class="top">
+<h2>Compliance reports</h2>
+<div class="top-actions">
+<div class="range-tabs">
+<div class="range-tab">7d</div>
+<div class="range-tab active">30d</div>
+<div class="range-tab">90d</div>
+<div class="range-tab">1y</div>
+</div>
+<button class="btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 10v3a1 1 0 001 1h10a1 1 0 001-1v-3M8 2v8M5 5l3-3 3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Export PDF</button>
+<button class="btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 10v3a1 1 0 001 1h10a1 1 0 001-1v-3M8 2v8M5 5l3-3 3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Export CSV</button>
+</div>
+</div>
+
+<div class="kpi-row">
+<div class="kpi"><div class="kpi-label">Overall compliance</div><div class="kpi-val" style="color:var(--color-text-success)">87.3%</div><div class="kpi-sub up"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 12V4M5 7l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>+2.1% from last period</div></div>
+<div class="kpi"><div class="kpi-label">Critical patch coverage</div><div class="kpi-val" style="color:var(--color-text-warning)">76.8%</div><div class="kpi-sub up"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 12V4M5 7l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>+5.3%</div></div>
+<div class="kpi"><div class="kpi-label">Mean time to patch (critical)</div><div class="kpi-val">3.2 days</div><div class="kpi-sub up"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 12V4M5 7l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>-0.8d faster</div></div>
+<div class="kpi"><div class="kpi-label">SLA compliance (48h critical)</div><div class="kpi-val" style="color:var(--color-text-danger)">91.2%</div><div class="kpi-sub down"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 4v8M5 9l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Target: 95%</div></div>
+</div>
+
+<div class="grid-2">
+<div class="card">
+<div class="card-title">Compliance trend<span>Last 30 days</span></div>
+<div class="trend-chart">
+<svg width="100%" height="140" viewBox="0 0 400 140" preserveAspectRatio="none">
+<line x1="0" y1="28" x2="400" y2="28" class="grid-line"/>
+<line x1="0" y1="70" x2="400" y2="70" class="grid-line"/>
+<line x1="0" y1="112" x2="400" y2="112" class="grid-line"/>
+<text x="2" y="26" class="axis-label">95%</text>
+<text x="2" y="68" class="axis-label">85%</text>
+<text x="2" y="110" class="axis-label">75%</text>
+<path d="M20 98 L50 95 L80 90 L110 88 L140 82 L170 78 L200 72 L230 68 L260 60 L290 52 L320 48 L350 42 L380 38" class="trend-line" stroke="#1D9E75"/>
+<path d="M20 98 L50 95 L80 90 L110 88 L140 82 L170 78 L200 72 L230 68 L260 60 L290 52 L320 48 L350 42 L380 38 L380 130 L20 130 Z" fill="#1D9E75" class="trend-area"/>
+<path d="M20 110 L50 108 L80 102 L110 96 L140 90 L170 82 L200 78 L230 72 L260 65 L290 58 L320 52 L350 46 L380 40" class="trend-line" stroke="#378ADD" stroke-dasharray="4 3"/>
+<text x="330" y="32" class="axis-label" fill="#1D9E75">Overall</text>
+<text x="330" y="46" class="axis-label" fill="#378ADD">Critical</text>
+</svg>
+</div>
+</div>
+<div class="card">
+<div class="card-title">Least compliant groups<span>Bottom 5</span></div>
+<div class="group-list">
+<div class="group-item"><div class="group-rank">1</div><div class="group-name">Development machines</div><div class="group-bar"><div class="group-fill" style="width:45%;background:#E24B4A"></div></div><div class="group-pct" style="color:var(--color-text-danger)">45%</div></div>
+<div class="group-item"><div class="group-rank">2</div><div class="group-name">Windows file servers</div><div class="group-bar"><div class="group-fill" style="width:62%;background:#EF9F27"></div></div><div class="group-pct" style="color:#854F0B">62%</div></div>
+<div class="group-item"><div class="group-rank">3</div><div class="group-name">macOS workstations</div><div class="group-bar"><div class="group-fill" style="width:71%;background:#EF9F27"></div></div><div class="group-pct" style="color:#854F0B">71%</div></div>
+<div class="group-item"><div class="group-rank">4</div><div class="group-name">Staging environment</div><div class="group-bar"><div class="group-fill" style="width:78%;background:#EF9F27"></div></div><div class="group-pct">78%</div></div>
+<div class="group-item"><div class="group-rank">5</div><div class="group-name">CI/CD build servers</div><div class="group-bar"><div class="group-fill" style="width:80%;background:#1D9E75"></div></div><div class="group-pct">80%</div></div>
+</div>
+</div>
+</div>
+
+<div class="grid-2">
+<div class="card">
+<div class="card-title">Compliance by OS</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div class="os-row">
+<span class="os-label">Linux</span>
+<div class="os-bar-wrap">
+<div class="os-seg" style="width:91%;background:#1D9E75">91%</div>
+<div class="os-seg" style="width:5%;background:#EF9F27"></div>
+<div class="os-seg" style="width:4%;background:#E24B4A"></div>
+</div>
+</div>
+<div class="os-row">
+<span class="os-label">Windows</span>
+<div class="os-bar-wrap">
+<div class="os-seg" style="width:78%;background:#1D9E75">78%</div>
+<div class="os-seg" style="width:14%;background:#EF9F27"></div>
+<div class="os-seg" style="width:8%;background:#E24B4A"></div>
+</div>
+</div>
+<div class="os-row">
+<span class="os-label">macOS</span>
+<div class="os-bar-wrap">
+<div class="os-seg" style="width:84%;background:#1D9E75">84%</div>
+<div class="os-seg" style="width:10%;background:#EF9F27"></div>
+<div class="os-seg" style="width:6%;background:#E24B4A"></div>
+</div>
+</div>
+</div>
+<div style="display:flex;gap:12px;margin-top:10px;font-size:11px;color:var(--color-text-secondary)">
+<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#1D9E75;display:inline-block"></span>Patched</span>
+<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#EF9F27;display:inline-block"></span>Pending</span>
+<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:2px;background:#E24B4A;display:inline-block"></span>Failed</span>
+</div>
+</div>
+<div class="card">
+<div class="card-title">SLA performance</div>
+<table class="sla-table">
+<thead><tr><th>SLA policy</th><th>Target</th><th>Actual</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td style="font-weight:500">Critical patches</td><td>48 hours</td><td>3.2 days</td><td><span class="sla-badge sla-fail">Missed</span></td></tr>
+<tr><td style="font-weight:500">High patches</td><td>7 days</td><td>5.1 days</td><td><span class="sla-badge sla-pass">Met</span></td></tr>
+<tr><td style="font-weight:500">Medium patches</td><td>30 days</td><td>12.4 days</td><td><span class="sla-badge sla-pass">Met</span></td></tr>
+<tr><td style="font-weight:500">Low patches</td><td>90 days</td><td>28.7 days</td><td><span class="sla-badge sla-pass">Met</span></td></tr>
+<tr><td style="font-weight:500">Scan coverage</td><td>99%</td><td>97.8%</td><td><span class="sla-badge sla-warn">At risk</span></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>

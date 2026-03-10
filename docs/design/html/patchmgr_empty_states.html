@@ -1,0 +1,81 @@
+<style>
+*{box-sizing:border-box;margin:0}
+.shell{font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:24px}
+.label{font-size:11px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;margin-top:28px}
+.label:first-child{margin-top:0}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.empty-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:32px 24px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.empty-icon{width:56px;height:56px;border-radius:50%;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.empty-icon svg{width:24px;height:24px;color:var(--color-text-tertiary)}
+.empty-title{font-size:14px;font-weight:500;margin-bottom:4px}
+.empty-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.5;max-width:260px;margin-bottom:14px}
+.btn{padding:7px 14px;font-size:12px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:var(--color-text-info);color:#fff;border-color:var(--color-text-info)}
+.empty-full{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:48px 24px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.steps-row{display:flex;gap:24px;margin-top:20px;margin-bottom:20px}
+.setup-step{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--color-background-info);color:var(--color-text-info);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500}
+.step-label{font-size:12px;color:var(--color-text-secondary);text-align:center;line-height:1.3}
+.step-arrow{display:flex;align-items:center;color:var(--color-text-tertiary);margin-top:-12px}
+.filter-empty{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:32px 24px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.filter-empty .empty-icon{background:var(--color-background-warning)}
+.filter-empty .empty-icon svg{color:var(--color-text-warning)}
+</style>
+<div class="shell">
+<div class="label">First-time setup (no data at all)</div>
+<div class="empty-full">
+<div class="empty-icon" style="width:64px;height:64px;margin-bottom:16px"><svg viewBox="0 0 24 24" fill="none" style="width:28px;height:28px"><rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" stroke-width="1.5"/><path d="M8 12l3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div style="font-size:16px;font-weight:500;margin-bottom:4px">Welcome to PatchGuard</div>
+<div style="font-size:13px;color:var(--color-text-secondary);max-width:400px;margin-bottom:16px;line-height:1.5">Get started by connecting your infrastructure. Follow these steps to begin managing patches across your environment.</div>
+<div class="steps-row">
+<div class="setup-step"><div class="step-num">1</div><div class="step-label">Configure LDAP and add users</div></div>
+<div class="step-arrow"><svg width="20" height="12" viewBox="0 0 20 12" fill="none"><path d="M1 6h16M14 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="setup-step"><div class="step-num">2</div><div class="step-label">Register your first devices</div></div>
+<div class="step-arrow"><svg width="20" height="12" viewBox="0 0 20 12" fill="none"><path d="M1 6h16M14 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="setup-step"><div class="step-num">3</div><div class="step-label">Connect vendor feeds</div></div>
+<div class="step-arrow"><svg width="20" height="12" viewBox="0 0 20 12" fill="none"><path d="M1 6h16M14 2l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="setup-step"><div class="step-num">4</div><div class="step-label">Deploy your first patch</div></div>
+</div>
+<button class="btn btn-primary">Start setup</button>
+</div>
+
+<div class="label">Per-section empty states</div>
+<div class="grid">
+<div class="empty-card">
+<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="1.5"/><circle cx="7" cy="15" r="1.5" fill="currentColor"/></svg></div>
+<div class="empty-title">No devices registered</div>
+<div class="empty-desc">Deploy the PatchGuard agent to your servers to start monitoring and patching.</div>
+<button class="btn btn-primary">Download agent</button>
+</div>
+
+<div class="empty-card">
+<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 3h16a1 1 0 011 1v16a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5"/><path d="M7 8h10M7 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+<div class="empty-title">No patches to review</div>
+<div class="empty-desc">All patches have been reviewed. New patches will appear here when vendor feeds sync.</div>
+<button class="btn">Configure vendor feeds</button>
+</div>
+
+<div class="empty-card">
+<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M6 15l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+<div class="empty-title">No deployments yet</div>
+<div class="empty-desc">Create your first deployment to start rolling out patches to your devices.</div>
+<button class="btn btn-primary">New deployment</button>
+</div>
+
+<div class="empty-card">
+<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M3 18V6l6-3 6 3 6-3v12l-6 3-6-3-6 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 3v12M15 6v12" stroke="currentColor" stroke-width="1.5"/></svg></div>
+<div class="empty-title">No compliance data</div>
+<div class="empty-desc">Compliance reports will appear once devices have been scanned and patches deployed.</div>
+<button class="btn">Run first scan</button>
+</div>
+</div>
+
+<div class="label">Filter/search empty state (data exists, but no matches)</div>
+<div class="filter-empty">
+<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M14.5 14.5L20 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M7 10h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+<div class="empty-title">No matching results</div>
+<div class="empty-desc">No devices match your current filters. Try adjusting your search or removing some filters.</div>
+<button class="btn">Clear all filters</button>
+</div>
+</div>

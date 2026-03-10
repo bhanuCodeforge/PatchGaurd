@@ -1,0 +1,139 @@
+<style>
+*{box-sizing:border-box;margin:0}
+.shell{font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;padding:24px}
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.top-bar h2{font-size:18px;font-weight:500}
+.live-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 12px;border-radius:12px;background:var(--color-background-success);color:var(--color-text-success);font-weight:500}
+.live-pulse{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.actions{display:flex;gap:8px}
+.btn{padding:7px 14px;font-size:13px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-warn{color:var(--color-text-warning);border-color:var(--color-border-warning)}
+.btn-danger{color:var(--color-text-danger);border-color:var(--color-border-danger)}
+.progress-section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:20px 24px;margin-bottom:16px}
+.progress-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.progress-header h3{font-size:15px;font-weight:500}
+.progress-pct{font-size:28px;font-weight:500;color:var(--color-text-info)}
+.progress-bar{width:100%;height:12px;background:var(--color-background-secondary);border-radius:6px;overflow:hidden;margin-bottom:12px;display:flex}
+.pg-done{background:#1D9E75;transition:width 0.5s}
+.pg-active{background:#378ADD;animation:activeWave 1.5s ease-in-out infinite}
+.pg-fail{background:#E24B4A}
+@keyframes activeWave{0%,100%{opacity:0.8}50%{opacity:1}}
+.stats-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:0}
+.stat{text-align:center}
+.stat-val{font-size:18px;font-weight:500}
+.stat-label{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.stat-val.success{color:var(--color-text-success)}
+.stat-val.active{color:var(--color-text-info)}
+.stat-val.fail{color:var(--color-text-danger)}
+.grid-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-bottom:16px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 20px}
+.card-title{font-size:14px;font-weight:500;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.card-title span{font-size:12px;color:var(--color-text-secondary);font-weight:400}
+.wave-track{display:flex;flex-direction:column;gap:8px}
+.wave-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--border-radius-md);font-size:13px}
+.wave-item.done{background:var(--color-background-success)}
+.wave-item.active{background:var(--color-background-info);font-weight:500}
+.wave-item.queued{background:var(--color-background-secondary);color:var(--color-text-tertiary)}
+.wave-num{width:20px;font-weight:500;font-size:12px}
+.wave-bar{flex:1;height:6px;background:rgba(0,0,0,0.08);border-radius:3px;overflow:hidden}
+.wave-fill{height:100%;border-radius:3px;transition:width 0.5s}
+.wave-fill.done{background:#1D9E75}
+.wave-fill.active{background:#378ADD}
+.wave-meta{font-size:11px;color:var(--color-text-secondary);width:60px;text-align:right}
+.device-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(10px,1fr));gap:3px}
+.device-dot{width:10px;height:10px;border-radius:2px}
+.device-dot.done{background:#1D9E75}
+.device-dot.active{background:#378ADD;animation:blink 1s infinite}
+.device-dot.queued{background:var(--color-background-secondary)}
+.device-dot.fail{background:#E24B4A}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.5}}
+.legend-row{display:flex;gap:12px;margin-top:10px;font-size:11px;color:var(--color-text-secondary)}
+.legend-item{display:flex;align-items:center;gap:4px}
+.legend-swatch{width:10px;height:10px;border-radius:2px}
+.event-list{display:flex;flex-direction:column;gap:0}
+.event-item{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;line-height:1.4}
+.event-item:last-child{border-bottom:none}
+.event-time{color:var(--color-text-tertiary);width:52px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.event-icon{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.event-icon.ok{background:var(--color-background-success);color:var(--color-text-success)}
+.event-icon.info{background:var(--color-background-info);color:var(--color-text-info)}
+.event-icon.err{background:var(--color-background-danger);color:var(--color-text-danger)}
+.event-icon.warn{background:var(--color-background-warning);color:var(--color-text-warning)}
+.event-icon svg{width:10px;height:10px}
+.tick{stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+</style>
+<div class="shell">
+<div class="top-bar">
+<div>
+<h2 style="display:flex;align-items:center;gap:10px">CVE-2025-3891 critical fix <span class="live-badge"><span class="live-pulse"></span>Live</span></h2>
+<span style="font-size:12px;color:var(--color-text-secondary)">Started 47 min ago by John Doe</span>
+</div>
+<div class="actions">
+<button class="btn btn-warn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="3" y="3" width="4" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/><rect x="9" y="3" width="4" height="10" rx="1" stroke="currentColor" stroke-width="1.5"/></svg>Pause</button>
+<button class="btn btn-danger"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Cancel</button>
+</div>
+</div>
+
+<div class="progress-section">
+<div class="progress-header">
+<h3>Overall progress</h3>
+<div class="progress-pct">72%</div>
+</div>
+<div class="progress-bar">
+<div class="pg-done" style="width:67%"></div>
+<div class="pg-active" style="width:5%"></div>
+<div class="pg-fail" style="width:2%"></div>
+</div>
+<div class="stats-row">
+<div class="stat"><div class="stat-val">1,123</div><div class="stat-label">Total devices</div></div>
+<div class="stat"><div class="stat-val success">752</div><div class="stat-label">Completed</div></div>
+<div class="stat"><div class="stat-val active">56</div><div class="stat-label">In progress</div></div>
+<div class="stat"><div class="stat-val fail">18</div><div class="stat-label">Failed</div></div>
+<div class="stat"><div class="stat-val">297</div><div class="stat-label">Queued</div></div>
+</div>
+</div>
+
+<div class="grid-2">
+<div class="card">
+<div class="card-title">Wave progress<span>Wave 3 of 4 active</span></div>
+<div class="wave-track">
+<div class="wave-item done"><span class="wave-num">C</span>Canary<div class="wave-bar"><div class="wave-fill done" style="width:100%"></div></div><span class="wave-meta">56/56</span></div>
+<div class="wave-item done"><span class="wave-num">1</span>Wave 1<div class="wave-bar"><div class="wave-fill done" style="width:100%"></div></div><span class="wave-meta">350/350</span></div>
+<div class="wave-item done"><span class="wave-num">2</span>Wave 2<div class="wave-bar"><div class="wave-fill done" style="width:100%"></div></div><span class="wave-meta">346/350</span></div>
+<div class="wave-item active"><span class="wave-num">3</span>Wave 3<div class="wave-bar"><div class="wave-fill active" style="width:16%"></div></div><span class="wave-meta">56/350</span></div>
+<div class="wave-item queued"><span class="wave-num">4</span>Wave 4<div class="wave-bar"><div class="wave-fill" style="width:0%"></div></div><span class="wave-meta">0/17</span></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">Device map<span>Each square = 1 device</span></div>
+<div class="device-grid" id="grid"></div>
+<div class="legend-row">
+<div class="legend-item"><div class="legend-swatch" style="background:#1D9E75"></div>Patched</div>
+<div class="legend-item"><div class="legend-swatch" style="background:#378ADD"></div>Installing</div>
+<div class="legend-item"><div class="legend-swatch" style="background:#E24B4A"></div>Failed</div>
+<div class="legend-item"><div class="legend-swatch" style="background:var(--color-background-secondary)"></div>Queued</div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Live event log<span>Auto-updating</span></div>
+<div class="event-list">
+<div class="event-item"><span class="event-time">14:32:08</span><div class="event-icon ok"><svg viewBox="0 0 16 16"><path class="tick" d="M4 8l3 3 5-5"/></svg></div><span><b style="font-weight:500">web-prod-47</b> — Patch installed successfully. Reboot scheduled.</span></div>
+<div class="event-item"><span class="event-time">14:32:05</span><div class="event-icon ok"><svg viewBox="0 0 16 16"><path class="tick" d="M4 8l3 3 5-5"/></svg></div><span><b style="font-weight:500">api-prod-12</b> — Patch installed successfully.</span></div>
+<div class="event-item"><span class="event-time">14:31:58</span><div class="event-icon err"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg></div><span><b style="font-weight:500">db-prod-07</b> — Failed: dependency conflict libssl3. <span style="color:var(--color-text-info);cursor:pointer">View log</span></span></div>
+<div class="event-item"><span class="event-time">14:31:52</span><div class="event-icon info"><svg viewBox="0 0 16 16"><path d="M8 2v12M4 10l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div><span><b style="font-weight:500">web-prod-48</b> — Downloading patch (24MB)...</span></div>
+<div class="event-item"><span class="event-time">14:31:44</span><div class="event-icon ok"><svg viewBox="0 0 16 16"><path class="tick" d="M4 8l3 3 5-5"/></svg></div><span><b style="font-weight:500">cache-prod-03</b> — Patch installed successfully.</span></div>
+<div class="event-item"><span class="event-time">14:31:30</span><div class="event-icon warn"><svg viewBox="0 0 16 16"><path d="M8 5v4M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg></div><span><b style="font-weight:500">Wave 3</b> — Started. 350 devices in this wave.</span></div>
+<div class="event-item"><span class="event-time">14:31:15</span><div class="event-icon info"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M8 6v2l1.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/></svg></div><span>Wave delay complete. Proceeding to wave 3.</span></div>
+</div>
+</div>
+</div>
+<script>
+var g=document.getElementById('grid');
+var states=['done','done','done','done','done','done','done','done','done','done','done','done','done','done','done','active','active','active','fail','fail','queued','queued','queued','queued','queued'];
+var all=[];
+for(var i=0;i<200;i++){var cls=i<150?'done':i<156?'active':i<160?'fail':'queued';var d=document.createElement('div');d.className='device-dot '+cls;g.appendChild(d);all.push(d)}
+</script>

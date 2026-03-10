@@ -1,0 +1,146 @@
+<style>
+*{box-sizing:border-box;margin:0}
+.shell{font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;padding:24px}
+.wizard-header{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.wizard-header h2{font-size:18px;font-weight:500;flex:1}
+.steps{display:flex;align-items:center;gap:0;margin-bottom:28px}
+.step{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:13px;color:var(--color-text-tertiary);position:relative}
+.step-num{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500}
+.step.done .step-num{background:var(--color-text-success);border-color:var(--color-text-success);color:#fff}
+.step.active{color:var(--color-text-primary);font-weight:500}
+.step.active .step-num{background:var(--color-text-info);border-color:var(--color-text-info);color:#fff}
+.step-line{width:32px;height:1px;background:var(--color-border-tertiary)}
+.step-line.done{background:var(--color-text-success)}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:20px 24px;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:500;margin-bottom:16px}
+.form-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-bottom:16px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:12px;color:var(--color-text-secondary)}
+.form-group input,.form-group select,.form-group textarea{padding:8px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary)}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--color-border-info)}
+.strategy-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.strategy-card{border:1.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;cursor:pointer;text-align:center}
+.strategy-card:hover{border-color:var(--color-border-secondary)}
+.strategy-card.selected{border-color:var(--color-text-info);background:var(--color-background-info)}
+.strategy-card h4{font-size:13px;font-weight:500;margin:8px 0 4px}
+.strategy-card p{font-size:11px;color:var(--color-text-secondary);line-height:1.4}
+.strategy-icon{width:36px;height:36px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);display:inline-flex;align-items:center;justify-content:center}
+.strategy-card.selected .strategy-icon{background:rgba(255,255,255,0.5)}
+.target-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.target-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:13px}
+.target-item.selected{border-color:var(--color-text-info);background:var(--color-background-info)}
+.target-item input[type=checkbox]{accent-color:var(--color-text-info)}
+.target-count{margin-left:auto;font-size:12px;color:var(--color-text-secondary)}
+.param-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.param-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px}
+.param-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px}
+.param-val{font-size:16px;font-weight:500}
+.param-input{margin-top:6px}
+.param-input input[type=range]{width:100%}
+.footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px}
+.btn{padding:8px 18px;font-size:13px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:var(--color-text-info);color:#fff;border-color:var(--color-text-info)}
+.btn-primary:hover{opacity:0.9}
+.btn-ghost{border:none;color:var(--color-text-secondary);background:none}
+.summary-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px}
+.summary-row:last-child{border-bottom:none}
+.summary-label{color:var(--color-text-secondary)}
+.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:500}
+.badge-crit{background:var(--color-background-danger);color:var(--color-text-danger)}
+.badge-info{background:var(--color-background-info);color:var(--color-text-info)}
+.warning-box{background:var(--color-background-warning);border-radius:var(--border-radius-md);padding:12px 16px;display:flex;align-items:flex-start;gap:10px;margin-top:16px;font-size:12px;color:var(--color-text-warning);line-height:1.5}
+.warning-box svg{flex-shrink:0;margin-top:1px}
+.slider-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+</style>
+<div class="shell">
+<div class="wizard-header">
+<h2>New deployment</h2>
+<span style="font-size:12px;color:var(--color-text-secondary)">Step 2 of 4</span>
+</div>
+<div class="steps">
+<div class="step done"><div class="step-num"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M4 8l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Patches</div>
+<div class="step-line done"></div>
+<div class="step active"><div class="step-num">2</div>Targets</div>
+<div class="step-line"></div>
+<div class="step"><div class="step-num">3</div>Strategy</div>
+<div class="step-line"></div>
+<div class="step"><div class="step-num">4</div>Review</div>
+</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px">
+<div>
+<div class="card">
+<div class="card-title">Select target groups</div>
+<div class="form-group" style="margin-bottom:12px"><input type="text" placeholder="Search groups..." style="padding:8px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);font-size:13px;width:100%;background:var(--color-background-primary);color:var(--color-text-primary)"></div>
+<div class="target-list">
+<div class="target-item selected"><input type="checkbox" checked>Production Linux servers<span class="target-count">724 devices</span></div>
+<div class="target-item selected"><input type="checkbox" checked>Production Windows servers<span class="target-count">399 devices</span></div>
+<div class="target-item"><input type="checkbox">Staging environment<span class="target-count">86 devices</span></div>
+<div class="target-item"><input type="checkbox">Development machines<span class="target-count">38 devices</span></div>
+<div class="target-item"><input type="checkbox">macOS workstations<span class="target-count">124 devices</span></div>
+<div class="target-item"><input type="checkbox">Database servers<span class="target-count">18 devices</span></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">Rollout strategy</div>
+<div class="strategy-grid">
+<div class="strategy-card"><div class="strategy-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><h4>Immediate</h4><p>All devices at once. Fastest but riskiest.</p></div>
+<div class="strategy-card selected"><div class="strategy-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="5" cy="8" r="3" stroke="currentColor" stroke-width="1.2"/><circle cx="11" cy="5" r="2" stroke="currentColor" stroke-width="1.2"/><circle cx="11" cy="11" r="2" stroke="currentColor" stroke-width="1.2"/></svg></div><h4>Canary</h4><p>Small % first, then full rollout if healthy.</p></div>
+<div class="strategy-card"><div class="strategy-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 4h10M3 8h7M3 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><h4>Rolling</h4><p>Wave by wave with configurable delays.</p></div>
+</div>
+
+<div class="param-grid">
+<div class="param-card">
+<div class="param-label">Canary size</div>
+<div class="param-val">5%</div>
+<div class="param-input"><input type="range" min="1" max="20" value="5" step="1"><div class="slider-labels"><span>1%</span><span>20%</span></div></div>
+</div>
+<div class="param-card">
+<div class="param-label">Wave size</div>
+<div class="param-val">50 devices</div>
+<div class="param-input"><input type="range" min="10" max="200" value="50" step="10"><div class="slider-labels"><span>10</span><span>200</span></div></div>
+</div>
+<div class="param-card">
+<div class="param-label">Max failure rate</div>
+<div class="param-val">5%</div>
+<div class="param-input"><input type="range" min="1" max="25" value="5" step="1"><div class="slider-labels"><span>1%</span><span>25%</span></div></div>
+</div>
+</div>
+<div style="margin-top:12px">
+<div class="form-row">
+<div class="form-group"><label>Wave delay</label><select><option>15 minutes</option><option>30 minutes</option><option>1 hour</option><option>2 hours</option></select></div>
+<div class="form-group"><label>Maintenance window</label><select><option>None — deploy immediately</option><option selected>Tonight 02:00–06:00 UTC</option><option>Weekend window</option></select></div>
+</div>
+</div>
+</div>
+</div>
+
+<div>
+<div class="card" style="position:sticky;top:24px">
+<div class="card-title">Deployment summary</div>
+<div class="summary-row"><span class="summary-label">Patches</span><span>2 patches <span class="badge badge-crit">1 critical</span></span></div>
+<div class="summary-row"><span class="summary-label">CVE-2025-3891</span><span class="badge badge-crit">Critical</span></div>
+<div class="summary-row"><span class="summary-label">CVE-2025-4012</span><span class="badge badge-crit">Critical</span></div>
+<div style="height:1px;background:var(--color-border-tertiary);margin:8px 0"></div>
+<div class="summary-row"><span class="summary-label">Target groups</span><span>2 groups</span></div>
+<div class="summary-row"><span class="summary-label">Total devices</span><span style="font-weight:500">1,123</span></div>
+<div class="summary-row"><span class="summary-label">Strategy</span><span class="badge badge-info">Canary</span></div>
+<div class="summary-row"><span class="summary-label">Canary size</span><span>56 devices (5%)</span></div>
+<div class="summary-row"><span class="summary-label">Schedule</span><span>Tonight 02:00 UTC</span></div>
+<div class="summary-row"><span class="summary-label">Est. duration</span><span>~2.5 hours</span></div>
+<div class="summary-row"><span class="summary-label">Requires reboot</span><span>Yes</span></div>
+<div class="warning-box"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2L1 14h14L8 2z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8 7v3M8 12v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>This deployment will trigger a reboot on 1,123 production devices. Ensure change approval is in place.</span></div>
+</div>
+</div>
+</div>
+
+<div class="footer">
+<button class="btn btn-ghost">Cancel</button>
+<div style="display:flex;gap:8px">
+<button class="btn">Back</button>
+<button class="btn btn-primary">Continue to review</button>
+</div>
+</div>
+</div>

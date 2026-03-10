@@ -1,0 +1,103 @@
+<style>
+*{box-sizing:border-box;margin:0}
+.shell{font-family:var(--font-sans);color:var(--color-text-primary);background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;padding:24px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.top h2{font-size:18px;font-weight:500}
+.top-actions{display:flex;gap:8px}
+.btn{padding:7px 14px;font-size:13px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:var(--color-text-info);color:#fff;border-color:var(--color-text-info)}
+.btn-primary:hover{opacity:0.9}
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.filter-chip{padding:5px 12px;font-size:12px;border-radius:16px;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);cursor:pointer;color:var(--color-text-secondary)}
+.filter-chip.active{background:var(--color-background-info);color:var(--color-text-info);border-color:transparent}
+.search-box{padding:7px 12px;font-size:13px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);width:220px}
+.search-box:focus{outline:none;border-color:var(--color-border-info)}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.tbl{width:100%;font-size:13px;border-collapse:collapse}
+.tbl th{text-align:left;color:var(--color-text-tertiary);font-weight:400;padding:10px 12px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;background:var(--color-background-secondary)}
+.tbl td{padding:10px 12px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.tbl tr:hover td{background:var(--color-background-secondary)}
+.tbl tr{cursor:pointer}
+.cb{width:16px;height:16px;accent-color:var(--color-text-info)}
+.hostname{font-weight:500;color:var(--color-text-info)}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+.status-dot.online{background:#1D9E75}
+.status-dot.offline{background:var(--color-text-tertiary)}
+.status-dot.maint{background:#EF9F27}
+.os-icon{display:inline-flex;align-items:center;gap:4px}
+.tag{display:inline-block;padding:2px 8px;font-size:11px;border-radius:10px;background:var(--color-background-secondary);color:var(--color-text-secondary);margin-right:3px}
+.comp-bar{width:50px;height:6px;background:var(--color-background-secondary);border-radius:3px;display:inline-block;vertical-align:middle;margin-right:4px;overflow:hidden}
+.comp-fill{height:100%;border-radius:3px}
+.comp-fill.high{background:#1D9E75}
+.comp-fill.med{background:#EF9F27}
+.comp-fill.low{background:#E24B4A}
+.page-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;font-size:12px;color:var(--color-text-secondary)}
+.page-btns{display:flex;gap:4px}
+.page-btn{padding:4px 10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:var(--color-background-primary);cursor:pointer;font-size:12px;color:var(--color-text-secondary)}
+.page-btn.active{background:var(--color-background-info);color:var(--color-text-info);border-color:transparent}
+.bulk-bar{background:var(--color-background-info);padding:10px 16px;display:flex;align-items:center;gap:12px;font-size:13px;color:var(--color-text-info)}
+.bulk-bar .btn{padding:4px 10px;font-size:12px}
+.last-seen{color:var(--color-text-tertiary);font-size:12px}
+</style>
+<div class="shell">
+<div class="top">
+<h2>Devices <span style="font-weight:400;font-size:14px;color:var(--color-text-secondary)">(1,247)</span></h2>
+<div class="top-actions">
+<button class="btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 11v3h3l8-8-3-3-8 8z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Bulk actions</button>
+<button class="btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Add device</button>
+<button class="btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 10v3a1 1 0 001 1h10a1 1 0 001-1v-3M8 2v8M5 5l3-3 3 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Export</button>
+</div>
+</div>
+<div class="filters">
+<input class="search-box" type="text" placeholder="Search hostname, IP, tag...">
+<span class="filter-chip active">All</span>
+<span class="filter-chip">Online</span>
+<span class="filter-chip">Offline</span>
+<span class="filter-chip">Maintenance</span>
+<span style="width:1px;height:20px;background:var(--color-border-tertiary)"></span>
+<span class="filter-chip">Linux</span>
+<span class="filter-chip">Windows</span>
+<span class="filter-chip">macOS</span>
+<span style="width:1px;height:20px;background:var(--color-border-tertiary)"></span>
+<span class="filter-chip">Production</span>
+<span class="filter-chip">Staging</span>
+</div>
+<div class="card">
+<div class="bulk-bar"><input type="checkbox" class="cb"> <span>3 selected</span> <button class="btn">Tag</button> <button class="btn">Assign group</button> <button class="btn">Scan now</button> <button class="btn" style="color:var(--color-text-danger);border-color:var(--color-border-danger)">Decommission</button></div>
+<table class="tbl">
+<thead><tr>
+<th style="width:32px"><input type="checkbox" class="cb"></th>
+<th>Hostname</th>
+<th>IP address</th>
+<th>OS</th>
+<th>Environment</th>
+<th>Status</th>
+<th>Compliance</th>
+<th>Tags</th>
+<th>Last seen</th>
+</tr></thead>
+<tbody>
+<tr><td><input type="checkbox" class="cb" checked></td><td class="hostname">web-prod-01</td><td>10.0.1.50</td><td class="os-icon"><svg width="12" height="12" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>Ubuntu 22.04</td><td>Production</td><td><span class="status-dot online"></span>Online</td><td><div class="comp-bar"><div class="comp-fill high" style="width:100%"></div></div>100%</td><td><span class="tag">web</span><span class="tag">nginx</span></td><td class="last-seen">Just now</td></tr>
+<tr><td><input type="checkbox" class="cb" checked></td><td class="hostname">db-prod-03</td><td>10.0.2.12</td><td class="os-icon"><svg width="12" height="12" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>Ubuntu 24.04</td><td>Production</td><td><span class="status-dot online"></span>Online</td><td><div class="comp-bar"><div class="comp-fill med" style="width:75%"></div></div>75%</td><td><span class="tag">database</span><span class="tag">postgres</span></td><td class="last-seen">2m ago</td></tr>
+<tr><td><input type="checkbox" class="cb" checked></td><td class="hostname">api-staging-02</td><td>10.0.3.88</td><td class="os-icon"><svg width="12" height="12" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>RHEL 9.3</td><td>Staging</td><td><span class="status-dot online"></span>Online</td><td><div class="comp-bar"><div class="comp-fill high" style="width:92%"></div></div>92%</td><td><span class="tag">api</span></td><td class="last-seen">1m ago</td></tr>
+<tr><td><input type="checkbox" class="cb"></td><td class="hostname">win-dc-01</td><td>10.0.4.10</td><td class="os-icon"><svg width="12" height="12" viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>Win Server 2022</td><td>Production</td><td><span class="status-dot online"></span>Online</td><td><div class="comp-bar"><div class="comp-fill med" style="width:68%"></div></div>68%</td><td><span class="tag">AD</span><span class="tag">critical</span></td><td class="last-seen">5m ago</td></tr>
+<tr><td><input type="checkbox" class="cb"></td><td class="hostname">mon-prod-01</td><td>10.0.1.99</td><td class="os-icon"><svg width="12" height="12" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>Ubuntu 22.04</td><td>Production</td><td><span class="status-dot online"></span>Online</td><td><div class="comp-bar"><div class="comp-fill high" style="width:100%"></div></div>100%</td><td><span class="tag">monitoring</span></td><td class="last-seen">Just now</td></tr>
+<tr><td><input type="checkbox" class="cb"></td><td class="hostname">build-ci-04</td><td>10.0.5.22</td><td class="os-icon"><svg width="12" height="12" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>Ubuntu 24.04</td><td>Development</td><td><span class="status-dot offline"></span>Offline</td><td><div class="comp-bar"><div class="comp-fill low" style="width:45%"></div></div>45%</td><td><span class="tag">CI</span></td><td class="last-seen" style="color:var(--color-text-danger)">3h ago</td></tr>
+<tr><td><input type="checkbox" class="cb"></td><td class="hostname">win-file-02</td><td>10.0.4.20</td><td class="os-icon"><svg width="12" height="12" viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>Win Server 2019</td><td>Production</td><td><span class="status-dot maint"></span>Maint.</td><td><div class="comp-bar"><div class="comp-fill med" style="width:60%"></div></div>60%</td><td><span class="tag">file-server</span></td><td class="last-seen">Maint. window</td></tr>
+<tr><td><input type="checkbox" class="cb"></td><td class="hostname">mac-dev-12</td><td>10.0.6.112</td><td class="os-icon"><svg width="12" height="12" viewBox="0 0 16 16"><path d="M8 2C5 2 3 5 3 8s2 6 5 6 5-3 5-6-2-6-5-6z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>macOS 14.4</td><td>Development</td><td><span class="status-dot online"></span>Online</td><td><div class="comp-bar"><div class="comp-fill high" style="width:88%"></div></div>88%</td><td><span class="tag">dev</span></td><td class="last-seen">30s ago</td></tr>
+</tbody>
+</table>
+<div class="page-bar">
+<span>Showing 1–50 of 1,247 devices</span>
+<div class="page-btns">
+<span class="page-btn active">1</span>
+<span class="page-btn">2</span>
+<span class="page-btn">3</span>
+<span class="page-btn">...</span>
+<span class="page-btn">25</span>
+<span class="page-btn">Next</span>
+</div>
+</div>
+</div>
+</div>
