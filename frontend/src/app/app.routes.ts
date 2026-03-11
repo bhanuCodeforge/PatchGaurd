@@ -80,6 +80,8 @@ export const routes: Routes = [
         path: 'audit',
         loadComponent: () =>
           import('./features/audit/audit.component').then((m) => m.AuditComponent),
+        canActivate: [roleGuard],
+        data: { role: 'operator' },
       },
       {
         path: 'settings/users',

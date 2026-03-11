@@ -275,6 +275,10 @@
         <span class="dd-spec-lbl">Last Seen</span>
         <span class="dd-spec-val">{{ d.last_seen | relativeTime }}</span>
       </div>
+      <div class="dd-spec-cell">
+        <span class="dd-spec-lbl">Last Scan</span>
+        <span class="dd-spec-val">{{ d.last_scan ? (d.last_scan | relativeTime) : 'Never' }}</span>
+      </div>
     </div>
 
     <!-- Recently updated patches -->

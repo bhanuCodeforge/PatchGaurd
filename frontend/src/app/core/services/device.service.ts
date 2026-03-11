@@ -114,4 +114,8 @@ export class DeviceService {
   downloadInstaller(id: string, os: string): Observable<Blob> {
     return this.api.getBlob(`/devices/${id}/download_installer/`, { os });
   }
+
+  triggerGlobalScan(deviceIds?: string[]): Observable<any> {
+    return this.api.post<any>('/devices/bulk_scan/', { device_ids: deviceIds });
+  }
 }

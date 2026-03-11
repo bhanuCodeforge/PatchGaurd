@@ -10,6 +10,8 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
 import { PatchApprovalModalComponent } from '../../shared/components/patch-approval-modal.component';
 import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
 import { AuthService } from '../../core/auth/auth.service';
+import { DeviceService } from '../../core/services/device.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-patch-catalog',
@@ -30,6 +32,8 @@ export class PatchCatalogComponent implements OnInit {
   private patchSvc = inject(PatchService);
   private ns = inject(NotificationService);
   private auth = inject(AuthService);
+  private deviceSvc = inject(DeviceService);
+  private router = inject(Router);
 
   canWrite = computed(() => this.auth.isOperatorOrAbove());
 
@@ -57,6 +61,20 @@ export class PatchCatalogComponent implements OnInit {
 
   bulkRejectVisible = signal(false);
   bulkRejectReason = '';
+
+  addPatchVisible = signal(false);
+  newPatch = {
+    vendor_id: '',
+    title: '',
+    severity: 'medium',
+    vendor: 'Microsoft',
+    applicable_os: [] as string[],
+    description: '',
+    cve_ids: [] as string[],
+    requires_reboot: false,
+  };
+  newPatchCveInput = '';
+  newPatchOsInput = '';
 
   stats = signal<any>(null);
 
@@ -161,7 +179,12 @@ export class PatchCatalogComponent implements OnInit {
     this.selectedIds.set(new Set());
   }
   openPanel(p: any) {
+    // Show list-level data immediately, then fetch full detail
     this.selectedPatch.set(p);
+    this.patchSvc.getPatchById(p.id).subscribe({
+      next: (detail) => this.selectedPatch.set(detail),
+      error: () => {} // Keep list-level data on error
+    });
   }
 
   markReview(p: any) {
@@ -271,6 +294,105 @@ export class PatchCatalogComponent implements OnInit {
         this.clearSelection();
       },
       error: () => this.ns.error('Error', 'Bulk reject failed.'),
+    });
+  }
+
+  triggerGlobalScan() {
+    this.deviceSvc.triggerGlobalScan().subscribe({
+      next: (res: any) => {
+        this.ns.success('Scan Triggered', res.status || 'Fleet-wide scan initiated.');
+        // Refresh list after a delay to catch early results
+        setTimeout(() => this.loadPatches(), 3000);
+      },
+      error: () => this.ns.error('Error', 'Failed to trigger fleet scan.'),
+    });
+  }
+
+  createDeployment() {
+    const ids = Array.from(this.selectedIds());
+    if (ids.length === 0) return;
+
+    // Filter only approved patches for the deployment wizard
+    const approvedIds = this.patches()
+      .filter((p) => ids.includes(p.id) && p.status === 'approved')
+      .map((p) => p.id);
+
+    if (approvedIds.length === 0) {
+      this.ns.warning(
+        'Action Required',
+        'Only approved patches can be deployed. Please approve your selection first.',
+      );
+      return;
+    }
+
+    this.router.navigate(['/deployments/new'], {
+      state: { patch_ids: approvedIds },
+    });
+  }
+
+  resetFilters() {
+    this.searchTerm = '';
+    this.severityFilter = '';
+    this.vendorFilter = '';
+    this.setTab('all');
+  }
+
+  openAddPatch() {
+    this.newPatch = {
+      vendor_id: '',
+      title: '',
+      severity: 'medium',
+      vendor: 'Microsoft',
+      applicable_os: [],
+      description: '',
+      cve_ids: [],
+      requires_reboot: false,
+    };
+    this.newPatchCveInput = '';
+    this.newPatchOsInput = '';
+    this.addPatchVisible.set(true);
+  }
+
+  addCveId() {
+    const id = this.newPatchCveInput.trim();
+    if (id && !this.newPatch.cve_ids.includes(id)) {
+      this.newPatch.cve_ids.push(id);
+    }
+    this.newPatchCveInput = '';
+  }
+
+  removeCveId(id: string) {
+    this.newPatch.cve_ids = this.newPatch.cve_ids.filter((c) => c !== id);
+  }
+
+  addOs() {
+    const os = this.newPatchOsInput.trim();
+    if (os && !this.newPatch.applicable_os.includes(os)) {
+      this.newPatch.applicable_os.push(os);
+    }
+    this.newPatchOsInput = '';
+  }
+
+  removeOs(os: string) {
+    this.newPatch.applicable_os = this.newPatch.applicable_os.filter((o) => o !== os);
+  }
+
+  submitNewPatch() {
+    if (!this.newPatch.vendor_id.trim() || !this.newPatch.title.trim()) {
+      this.ns.error('Validation', 'Vendor ID and Title are required.');
+      return;
+    }
+    this.patchSvc.createPatch(this.newPatch).subscribe({
+      next: () => {
+        this.ns.success('Created', 'Patch added successfully.');
+        this.addPatchVisible.set(false);
+        this.loadPatches();
+        this.loadStats();
+      },
+      error: (err: any) => {
+        const msg = err?.error?.detail || err?.error?.vendor_id?.[0] || JSON.stringify(err?.error) || 'Failed to create patch.';
+        this.ns.error('Error', msg);
+      },
     });
   }
 }

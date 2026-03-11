@@ -3,10 +3,10 @@ from .models import Patch
 
 class PatchStateMachine:
     VALID_TRANSITIONS = {
-        Patch.Status.IMPORTED: [Patch.Status.REVIEWED, Patch.Status.REJECTED],
-        Patch.Status.REVIEWED: [Patch.Status.APPROVED, Patch.Status.REJECTED],
-        Patch.Status.APPROVED: [Patch.Status.SUPERSEDED],
-        Patch.Status.REJECTED: [Patch.Status.IMPORTED],
+        Patch.Status.IMPORTED: [Patch.Status.REVIEWED, Patch.Status.APPROVED, Patch.Status.REJECTED],
+        Patch.Status.REVIEWED: [Patch.Status.APPROVED, Patch.Status.REJECTED, Patch.Status.IMPORTED],
+        Patch.Status.APPROVED: [Patch.Status.SUPERSEDED, Patch.Status.REJECTED, Patch.Status.REVIEWED],
+        Patch.Status.REJECTED: [Patch.Status.IMPORTED, Patch.Status.REVIEWED, Patch.Status.APPROVED],
         Patch.Status.SUPERSEDED: [],
     }
 

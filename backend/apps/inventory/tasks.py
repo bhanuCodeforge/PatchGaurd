@@ -150,6 +150,10 @@ def process_scan_results(device_id: str, patches: list):
         f"{installed_count} installed, {missing_count} missing, {skipped} skipped"
     )
     
+    # Update device last scan time
+    device.last_scan = timezone.now()
+    device.save(update_fields=["last_scan"])
+
     # Update device compliance rate
     refresh_device_compliance(device_id)
 

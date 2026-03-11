@@ -46,7 +46,7 @@ class DeviceDetailSerializer(serializers.ModelSerializer):
             'id', 'hostname', 'description', 'ip_address', 'mac_address',
             'os_family', 'os_version', 'os_arch', 'agent_version',
             'environment', 'status', 'tags', 'groups', 'metadata',
-            'compliance_rate', 'inventory_data', 'last_seen', 'created_at',
+            'compliance_rate', 'inventory_data', 'last_seen', 'last_scan', 'created_at',
             'compliance_summary', 'patch_stats', 'os_name'
         ]
 

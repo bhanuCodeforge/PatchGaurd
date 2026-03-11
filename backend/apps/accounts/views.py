@@ -14,6 +14,7 @@ from .serializers import (
 )
 from .permissions import IsAdmin, IsOperatorOrAbove
 from .models import AuditLog
+from common.pagination import StandardPageNumberPagination
 
 User = get_user_model()
 
@@ -213,5 +214,6 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AuditLog.objects.all().select_related('user').order_by('-timestamp')
     serializer_class = AuditLogSerializer
     permission_classes = [IsOperatorOrAbove]
+    pagination_class = StandardPageNumberPagination
     filterset_fields = ['resource_type', 'user']
     search_fields = ['action', 'user__username']

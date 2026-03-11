@@ -12,20 +12,34 @@
       </p>
     </div>
     <div class="d-flex gap-2">
-      <button class="btn btn-sm btn-outline-secondary" (click)="loadPatches()">
+      <button class="btn btn-sm btn-primary" *ngIf="canWrite()" (click)="openAddPatch()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Add Patch
+      </button>
+      <button class="btn btn-sm btn-outline-secondary" (click)="triggerGlobalScan()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
           <polyline points="23 4 23 10 17 10" />
           <polyline points="1 20 1 14 7 14" />
           <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
         </svg>
-        {{ 'UI.u_scan_now' | translate }}
+        Scan Fleet
       </button>
-      <button class="btn btn-sm btn-outline-primary" *ngIf="selectedIds().size > 1 && canWrite()"
+      <button class="btn btn-sm btn-outline-primary" *ngIf="selectedIds().size > 0 && canWrite()"
+        (click)="createDeployment()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+        </svg>
+        Create Deployment ({{ selectedIds().size }})
+      </button>
+      <button class="btn btn-sm btn-outline-success" *ngIf="selectedIds().size > 1 && canWrite()"
         (click)="bulkApprove()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
           <polyline points="20 6 9 17 4 12" />
         </svg>
-        Bulk Approve ({{ selectedIds().size }})
+        Bulk Approve
       </button>
       <button class="btn btn-sm btn-outline-danger" *ngIf="selectedIds().size > 1 && canWrite()"
         (click)="openBulkReject()">
@@ -33,12 +47,12 @@
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
-        Bulk Reject ({{ selectedIds().size }})
+        Bulk Reject
       </button>
     </div>
   </div>
 
-  <!-- Stats row -->
+  <!-- Stats row ... -->
   <div class="row g-2 mb-3" *ngIf="!statsLoading() && stats()">
     <div class="col-6 col-md-3">
       <div class="stat-mini stat-critical">
@@ -66,7 +80,7 @@
     </div>
   </div>
 
-  <!-- Tabs -->
+  <!-- Tabs ... -->
   <div class="patch-tabs mb-3">
     <button *ngFor="let t of tabs()" class="patch-tab" [class.active]="activeTab === t.value" (click)="setTab(t.value)">
       {{ t.label | translate }}
@@ -76,7 +90,7 @@
   </div>
 
   <!-- Filters -->
-  <div class="d-flex flex-wrap gap-2 mb-3">
+  <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
     <div class="search-wrap">
       <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         stroke-width="2">
@@ -101,6 +115,9 @@
       <option value="Canonical">Canonical</option>
       <option value="Apple">Apple</option>
     </select>
+    <button class="btn btn-sm btn-link text-muted ms-auto" (click)="resetFilters()" *ngIf="searchTerm || severityFilter || vendorFilter || activeTab !== 'all'">
+      {{ 'UI.u_clear_filters' | translate }}
+    </button>
   </div>
 
   <!-- Table card -->
@@ -246,6 +263,36 @@
           <div class="description-text">{{ selectedPatch().description || ('UI.u_no_data' | translate) }}</div>
         </div>
 
+        <!-- Device Status Breakdown (from detail endpoint) -->
+        <div class="info-group" *ngIf="selectedPatch().device_status_breakdown">
+          <h6 class="info-heading d-flex align-items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+            Device Patch Status
+          </h6>
+          <div class="d-flex gap-3 mt-2 flex-wrap">
+            <div class="text-center">
+              <div class="fw-600 text-success">{{ selectedPatch().device_status_breakdown.installed }}</div>
+              <div class="text-muted small">Installed</div>
+            </div>
+            <div class="text-center">
+              <div class="fw-600 text-danger">{{ selectedPatch().device_status_breakdown.missing }}</div>
+              <div class="text-muted small">Missing</div>
+            </div>
+            <div class="text-center">
+              <div class="fw-600 text-warning">{{ selectedPatch().device_status_breakdown.pending }}</div>
+              <div class="text-muted small">Pending</div>
+            </div>
+            <div class="text-center">
+              <div class="fw-600 text-danger">{{ selectedPatch().device_status_breakdown.failed }}</div>
+              <div class="text-muted small">Failed</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Approval / Rejection Audit -->
         <div class="info-group border-top border-secondary border-opacity-25 pt-3"
           *ngIf="selectedPatch().status !== 'imported'">
@@ -330,6 +377,94 @@
         <button class="btn btn-sm btn-outline-secondary" (click)="bulkRejectVisible.set(false)">Cancel</button>
         <button class="btn btn-sm btn-danger" (click)="bulkReject()" [disabled]="!bulkRejectReason.trim()">
           Reject {{ selectedIds().size }} Patches
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Patch Modal -->
+  <div class="modal-overlay" *ngIf="addPatchVisible()" (click)="addPatchVisible.set(false)">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()" style="max-width:560px;">
+      <div class="modal-header border-bottom border-secondary border-opacity-25 pb-3">
+        <h5 class="mb-0">Add New Patch</h5>
+        <button class="close-btn" (click)="addPatchVisible.set(false)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body py-3">
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label text-muted small">Vendor / Patch ID <span class="text-danger">*</span></label>
+            <input class="form-control" [(ngModel)]="newPatch.vendor_id" placeholder="e.g. KB5034441" />
+          </div>
+          <div class="col-6">
+            <label class="form-label text-muted small">Vendor</label>
+            <select class="form-select" [(ngModel)]="newPatch.vendor">
+              <option value="Microsoft">Microsoft</option>
+              <option value="Red Hat">Red Hat</option>
+              <option value="Canonical">Canonical</option>
+              <option value="Apple">Apple</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label text-muted small">Title <span class="text-danger">*</span></label>
+            <input class="form-control" [(ngModel)]="newPatch.title" placeholder="Security Update for Windows" />
+          </div>
+          <div class="col-6">
+            <label class="form-label text-muted small">Severity</label>
+            <select class="form-select" [(ngModel)]="newPatch.severity">
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <div class="form-check mt-4">
+              <input class="form-check-input" type="checkbox" [(ngModel)]="newPatch.requires_reboot" id="patchReboot" />
+              <label class="form-check-label text-muted small" for="patchReboot">Requires Reboot</label>
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label text-muted small">CVE IDs</label>
+            <div class="d-flex gap-1 mb-1 flex-wrap">
+              <span class="cve-badge" *ngFor="let c of newPatch.cve_ids">
+                {{ c }}
+                <button class="btn-close btn-close-white ms-1" style="font-size:0.5rem;" (click)="removeCveId(c)"></button>
+              </span>
+            </div>
+            <div class="input-group input-group-sm">
+              <input class="form-control" [(ngModel)]="newPatchCveInput" placeholder="CVE-2025-XXXX" (keydown.enter)="addCveId(); $event.preventDefault()" />
+              <button class="btn btn-outline-secondary" (click)="addCveId()">Add</button>
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label text-muted small">Applicable OS</label>
+            <div class="d-flex gap-1 mb-1 flex-wrap">
+              <span class="os-tag" *ngFor="let os of newPatch.applicable_os">
+                {{ os }}
+                <button class="btn-close btn-close-white ms-1" style="font-size:0.5rem;" (click)="removeOs(os)"></button>
+              </span>
+            </div>
+            <div class="input-group input-group-sm">
+              <input class="form-control" [(ngModel)]="newPatchOsInput" placeholder="Windows 11, Ubuntu 22.04..." (keydown.enter)="addOs(); $event.preventDefault()" />
+              <button class="btn btn-outline-secondary" (click)="addOs()">Add</button>
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label text-muted small">Description</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="newPatch.description" placeholder="Brief description of the patch..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-top border-secondary border-opacity-25 pt-3 d-flex gap-2 justify-content-end">
+        <button class="btn btn-sm btn-outline-secondary" (click)="addPatchVisible.set(false)">Cancel</button>
+        <button class="btn btn-sm btn-primary" (click)="submitNewPatch()" [disabled]="!newPatch.vendor_id.trim() || !newPatch.title.trim()">
+          Create Patch
         </button>
       </div>
     </div>

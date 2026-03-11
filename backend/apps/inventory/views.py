@@ -143,7 +143,25 @@ class DeviceViewSet(viewsets.ModelViewSet):
         } for t in targets]
         return Response(data)
 
-    @extend_schema(summary="Device Statistics", description="Aggregate stats across entire fleet.")
+    @extend_schema(summary="Bulk scan devices", description="Trigger patch scan on multiple devices.")
+    @action(detail=False, methods=["post"], permission_classes=[IsOperatorOrAbove])
+    def bulk_scan(self, request):
+        from .tasks import scan_device_patches
+        device_ids = request.data.get("device_ids")
+        
+        if device_ids:
+            queryset = Device.objects.filter(id__in=device_ids, status=Device.Status.ONLINE)
+        else:
+            queryset = Device.objects.filter(status=Device.Status.ONLINE)
+
+        count = 0
+        for device in queryset:
+            scan_device_patches.delay(str(device.id))
+            count += 1
+            
+        return Response({"status": f"Scan triggered for {count} online devices."})
+
+    @extend_schema(summary="Device statistics", description="Aggregate measurements across fleet.")
     @action(detail=False, methods=["get"])
     def stats(self, request):
         total = Device.objects.count()

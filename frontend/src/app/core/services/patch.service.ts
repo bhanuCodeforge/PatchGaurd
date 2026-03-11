@@ -13,6 +13,10 @@ export class PatchService {
     return this.api.get<PaginatedResponse<Patch>>('/patches/', params);
   }
 
+  createPatch(patch: any): Observable<Patch> {
+    return this.api.post<Patch>('/patches/', patch);
+  }
+
   getPatchById(id: string): Observable<Patch> {
     return this.api.get<Patch>(`/patches/${id}/`);
   }

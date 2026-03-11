@@ -93,7 +93,7 @@
   </div>
 
   <!-- Pagination -->
-  @if (logs.length > pageSize) {
+  @if (total() > pageSize) {
   <div class="d-flex justify-content-center align-items-center gap-3 py-3">
     <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page() - 1)">← {{
       'UI.u_prev' | translate }}</button>

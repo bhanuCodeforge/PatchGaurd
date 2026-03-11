@@ -190,6 +190,12 @@ export class DeploymentWizardComponent implements OnInit {
   //  Lifecycle
 
   ngOnInit() {
+    // Check if we came from Patch Catalog with pre-selected IDs
+    const state = window.history.state;
+    if (state && state.patch_ids && Array.isArray(state.patch_ids)) {
+      this.form.patch_ids = [...state.patch_ids];
+    }
+
     this.patchSvc.getPatches({ status: 'approved', page_size: 200 }).subscribe((r) => {
       this.allPatches.set(r.results ?? []);
       this.filteredPatches.set(r.results ?? []);

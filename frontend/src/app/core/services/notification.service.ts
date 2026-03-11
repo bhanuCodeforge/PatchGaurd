@@ -39,4 +39,8 @@ export class NotificationService {
   info(title: string, message: string) {
     this.show({ type: 'info', title, message });
   }
+
+  warning(title: string, message: string) {
+    this.show({ type: 'warning', title, message, duration: 4000 });
+  }
 }

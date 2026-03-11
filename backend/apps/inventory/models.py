@@ -87,6 +87,7 @@ class Device(models.Model):
     )
     compliance_rate = models.FloatField(default=100.0, db_index=True)
     inventory_data = models.JSONField(default=dict, blank=True)
+    last_scan = models.DateTimeField(null=True, blank=True)
     last_seen = models.DateTimeField(null=True, blank=True)
     last_checkin_ip = models.GenericIPAddressField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

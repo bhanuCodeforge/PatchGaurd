@@ -86,8 +86,27 @@ class PasswordChangeSerializer(serializers.Serializer):
         return value
 
 class AuditLogSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
+    actor = serializers.SerializerMethodField()
+    actor_role = serializers.SerializerMethodField()
+    description = serializers.CharField(source='action', read_only=True)
+    status = serializers.SerializerMethodField()
 
     class Meta:
         model = AuditLog
-        fields = ['id', 'username', 'action', 'resource_type', 'resource_id', 'timestamp', 'ip_address']
+        fields = [
+            'id', 'actor', 'actor_role', 'action', 'resource_type',
+            'resource_id', 'description', 'timestamp', 'ip_address', 'status',
+        ]
+
+    def get_actor(self, obj):
+        if obj.user:
+            return obj.user.username
+        return 'system'
+
+    def get_actor_role(self, obj):
+        if obj.user:
+            return getattr(obj.user, 'role', 'unknown')
+        return 'system'
+
+    def get_status(self, obj):
+        return 'success'

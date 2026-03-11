@@ -30,6 +30,7 @@ export interface Device {
   description?: string;
   tags: string[];
   last_seen: string;
+  last_scan?: string;
   os_arch?: string;
   agent_version?: string;
   groups?: any[];

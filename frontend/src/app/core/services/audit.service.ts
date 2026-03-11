@@ -23,6 +23,6 @@ export class AuditService {
   constructor(private api: ApiService) {}
 
   getLogs(params: any = {}): Observable<PaginatedResponse<AuditLog>> {
-    return this.api.get<PaginatedResponse<AuditLog>>('/accounts/audit-logs/', params);
+    return this.api.get<PaginatedResponse<AuditLog>>('/audit-logs/', params);
   }
 }
