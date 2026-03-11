@@ -152,21 +152,40 @@
 
   </div><!-- /lm-middle -->
 
-  <!-- ══ EVENT LOG ═══════════════════════════════════════════════════════ -->
+  <!-- ══ EVENT LOG (Virtual Scroll — Task 11.8) ═══════════════════════════ -->
   <div class="lm-panel lm-log-panel">
     <div class="lm-panel-header">
       <span class="lm-panel-title">{{ 'UI.u_event_log' | translate }}</span>
-      <span class="lm-event-count" *ngIf="events().length > 0">{{ 'UI.u_events_count' | translate:{count: events().length} }}</span>
+      <div class="log-header-right">
+        <span class="lm-event-count" *ngIf="events().length > 0">
+          {{ events().length | number }} events
+        </span>
+        <button
+          class="autoscroll-btn"
+          [class.autoscroll-active]="autoscroll()"
+          (click)="toggleAutoscroll()"
+          title="{{ autoscroll() ? 'Pause auto-scroll' : 'Resume auto-scroll' }}">
+          {{ autoscroll() ? '⏸ Pause' : '▶ Follow' }}
+        </button>
+      </div>
     </div>
-    <div class="event-log-list">
-      <div *ngFor="let ev of events()" class="event-row">
+
+    <!-- CDK Virtual Scroll: renders only visible rows → handles 5 000+ events -->
+    <cdk-virtual-scroll-viewport
+      itemSize="28"
+      class="event-log-viewport"
+      (scrolledIndexChange)="autoscroll.set(false)">
+      <div
+        *cdkVirtualFor="let ev of events(); trackBy: trackEvent"
+        class="event-row">
         <span class="ev-ts">{{ ev.ts | date:'HH:mm:ss' }}</span>
         <span class="ev-dot" [class]="'evdot-' + ev.level"></span>
         <span class="ev-msg" [class]="'evmsg-' + ev.level">{{ ev.message }}</span>
       </div>
-      <div *ngIf="events().length === 0" class="event-empty">
-        {{ 'UI.u_waiting_events' | translate }}
-      </div>
+    </cdk-virtual-scroll-viewport>
+
+    <div *ngIf="events().length === 0" class="event-empty">
+      {{ 'UI.u_waiting_events' | translate }}
     </div>
   </div>
 

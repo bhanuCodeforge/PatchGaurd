@@ -661,3 +661,44 @@ $yellow: #f59e0b;
   font-size: 13px;
   color: $muted;
 }
+
+// ── Task 11.8: CDK Virtual Scroll event log ──────────────────────────────────
+
+.event-log-viewport {
+  height: 320px;
+  width: 100%;
+  overflow-y: auto;
+
+  // Override CDK wrapper to fill correctly
+  &.cdk-virtual-scroll-orientation-vertical .cdk-virtual-scroll-content-wrapper {
+    width: 100%;
+  }
+}
+
+.log-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.autoscroll-btn {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+  color: $muted;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: $text;
+  }
+
+  &.autoscroll-active {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: $blue;
+    color: $blue;
+  }
+}

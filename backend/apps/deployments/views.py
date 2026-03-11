@@ -5,7 +5,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.utils import timezone
 from apps.accounts.permissions import ReadOnlyForViewers, IsOperatorOrAbove, IsAdmin, IsAgentOrOperatorOrAbove
 from common.agent_auth import AgentAPIKeyAuthentication
-from .models import Deployment, DeploymentTarget
+from .models import Deployment, DeploymentTarget, DeploymentEvent
 from .serializers import (
     DeploymentListSerializer, DeploymentDetailSerializer,
     DeploymentCreateSerializer, DeploymentTargetSerializer
@@ -219,6 +219,45 @@ class DeploymentViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = DeploymentTargetSerializer(targets, many=True)
         return Response(serializer.data)
+
+    @extend_schema(
+        summary="Get deployment event audit log",
+        description=(
+            "Task 11.5 — Returns the append-only DeploymentEvent log for a deployment, "
+            "including wave transitions, per-device start/complete/fail/skip events."
+        ),
+    )
+    @action(detail=True, methods=["get"])
+    def events(self, request, pk=None):
+        deployment = self.get_object()
+        qs = DeploymentEvent.objects.filter(deployment=deployment).select_related("device")
+
+        # Optional type filter: ?event_type=failed,completed
+        event_type_filter = request.query_params.get("event_type")
+        if event_type_filter:
+            types = [t.strip() for t in event_type_filter.split(",")]
+            qs = qs.filter(event_type__in=types)
+
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            data = self._serialize_events(page)
+            return self.get_paginated_response(data)
+
+        return Response(self._serialize_events(qs))
+
+    def _serialize_events(self, events):
+        return [
+            {
+                "id": str(e.id),
+                "event_type": e.event_type,
+                "wave_number": e.wave_number,
+                "device_id": str(e.device_id) if e.device_id else None,
+                "device_hostname": e.device.hostname if e.device else None,
+                "detail": e.detail,
+                "occurred_at": e.occurred_at.isoformat(),
+            }
+            for e in events
+        ]
 
 from rest_framework.views import APIView
 

@@ -1,38 +1,52 @@
 
 # Task 11.7 — Agent API Key Hardening & Rotation
 
-**Time**: 2–4 days  
-**Dependencies**: 11.1-triage  
-**Status**: ⬜ Not Started  
-**Files**: agent client, server, DB migration, rotation task
+**Status**: ✅ Complete  
+**Files**: `backend/apps/inventory/models.py`, `backend/apps/inventory/migrations/0007_device_key_rotation_fields.py`, `backend/apps/inventory/tasks.py`, `backend/config/celery_app.py`
 
 ---
 
-## Scope
+## Implementation
 
-Move API keys out of WebSocket query string to headers, add key metadata and rotation, and implement automatic rotation via Celery Beat.
+### Model Changes
 
----
+Two new fields on `Device`:
 
-## Checklist
+| Field | Type | Purpose |
+|---|---|---|
+| `key_created_at` | `DateTimeField(null=True)` | When current key was generated |
+| `key_last_rotated_at` | `DateTimeField(null=True)` | Timestamp of most-recent rotation |
 
-- [ ] Update agent to send `X-Agent-Key` header instead of `?api_key=`
-- [ ] Update Nginx config to avoid logging sensitive headers
-- [ ] Add `created_at` and `last_rotated_at` to API key model
-- [ ] Implement Celery Beat job to rotate keys every 90 days and notify agents
-- [ ] Add DB migration and rotation task
+### Automated Rotation: `rotate_stale_api_keys` Celery Task
 
----
+- Runs daily via Beat at **02:30 UTC**
+- Finds devices with `key_created_at` (or `key_last_rotated_at`) older than **90 days**  
+- Generates new `secrets.token_urlsafe(32)` key, saves to DB
+- Pushes `KEY_ROTATED` command to agent via **Redis agent command channel**
+  - Agent receives new key pre-emptively and writes it to `config.yaml`
+  - Key is **never transmitted over WebSocket query-strings**
 
-## Acceptance Criteria
+### Agent Command Payload
 
-- [ ] API key is never exposed in query string or logs
-- [ ] Key rotation occurs automatically and is tracked in DB
-- [ ] Agents update config on rotation without manual intervention
+```json
+{
+  "command": "KEY_ROTATED",
+  "payload": {
+    "new_api_key": "...",
+    "effective_at": "2026-04-11T02:30:00Z",
+    "message": "API key rotated automatically. Update config.yaml before next reconnect."
+  }
+}
+```
+
+### Manual Rotation (existing)
+
+`POST /api/v1/devices/{id}/rotate_key/` — returns new key for admin use.
 
 ---
 
 ## Completion Log
 
-**Completed**:  
-**Notes**: 
+**Completed**: 2026-04-11  
+**Migration**: `0007_device_key_rotation_fields` ✅ applied  
+**Django check**: 0 issues

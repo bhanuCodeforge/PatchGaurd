@@ -105,3 +105,63 @@ class DeploymentTarget(models.Model):
 
     def __str__(self):
         return f"{self.deployment.name} - {self.device.hostname}"
+
+
+class DeploymentEvent(models.Model):
+    """
+    Immutable audit-trail event for a DeploymentTarget lifecycle transition.
+
+    Task 11.5 — Event Sourcing.
+
+    Every meaningful state change on a DeploymentTarget appends one row here.
+    The counters on Deployment (completed_devices, failed_devices) are the
+    primary fast-path for UI; this table provides the audit trail and is the
+    source of truth for re-computing counters under load tests.
+
+    DO NOT UPDATE these rows once inserted – treat as append-only.
+    """
+
+    class EventType(models.TextChoices):
+        QUEUED      = "queued",      "Device Queued"
+        STARTED     = "started",     "Patching Started"
+        COMPLETED   = "completed",   "Patching Completed"
+        FAILED      = "failed",      "Patching Failed"
+        SKIPPED     = "skipped",     "Device Skipped (Preflight)"
+        CANCELLED   = "cancelled",   "Deployment Cancelled"
+        WAVE_START  = "wave_start",  "Wave Started"
+        WAVE_DONE   = "wave_done",   "Wave Completed"
+
+    id          = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    deployment  = models.ForeignKey(Deployment, on_delete=models.CASCADE, related_name="events", db_index=True)
+    target      = models.ForeignKey(DeploymentTarget, on_delete=models.CASCADE, related_name="events",
+                                    null=True, blank=True, db_index=True)
+    device      = models.ForeignKey("inventory.Device", on_delete=models.SET_NULL,
+                                    null=True, blank=True, related_name="deployment_events")
+    event_type  = models.CharField(max_length=20, choices=EventType.choices, db_index=True)
+    wave_number = models.IntegerField(null=True, blank=True)
+    detail      = models.JSONField(default=dict, blank=True)   # error message, patch IDs, etc.
+    occurred_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        db_table = "deployment_event"
+        ordering = ["-occurred_at"]
+        indexes = [
+            models.Index(fields=["deployment", "event_type", "-occurred_at"]),
+            models.Index(fields=["deployment", "device", "-occurred_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.deployment_id} | {self.event_type} | {self.occurred_at}"
+
+    @classmethod
+    def record(cls, deployment, event_type: str, target=None, device=None,
+               wave_number: int = None, detail: dict = None) -> "DeploymentEvent":
+        """Factory helper — create and save an event in one call."""
+        return cls.objects.create(
+            deployment=deployment,
+            target=target,
+            device=device or (target.device if target else None),
+            event_type=event_type,
+            wave_number=wave_number,
+            detail=detail or {},
+        )

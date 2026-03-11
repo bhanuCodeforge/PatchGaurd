@@ -16,6 +16,7 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 from routes import health, agents, events
 from ws_manager import manager
 from logging_utils import trace
+from streams_consumer import StreamsConsumer
 
 logging.basicConfig(
     level=getattr(logging, os.getenv("REALTIME_LOG_LEVEL", "INFO").upper()),
@@ -131,13 +132,34 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"Could not connect to database (will retry on demand): {e}")
 
-    # Start Redis Pub/Sub background task
-    sub_task = asyncio.create_task(redis_subscriber())
+    # Phase 1 (migration): Run BOTH Pub/Sub subscriber (legacy) AND Streams consumer (new).
+    # Once all deployments use Streams, disable ENABLE_PUBSUB_SUBSCRIBER.
+    enable_pubsub = os.getenv("ENABLE_PUBSUB_SUBSCRIBER", "true").lower() == "true"
+    enable_streams = os.getenv("ENABLE_STREAMS_CONSUMER", "true").lower() == "true"
+
+    tasks = []
+
+    if enable_pubsub:
+        sub_task = asyncio.create_task(redis_subscriber())
+        tasks.append(sub_task)
+        logger.info("Redis Pub/Sub subscriber started (legacy path).")
+
+    if enable_streams:
+        streams_consumer = StreamsConsumer(redis_url=REDIS_URL, manager=manager)
+        streams_task = asyncio.create_task(streams_consumer.run())
+        tasks.append(streams_task)
+        logger.info("Redis Streams consumer started (new path).")
 
     yield
 
-    # Shutdown
-    sub_task.cancel()
+    # Shutdown all background tasks
+    for task in tasks:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
     if app.state.pool:
         await app.state.pool.close()
 

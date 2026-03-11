@@ -1,0 +1,6 @@
+# PatchGuard BFF — additional requirements
+# Install alongside backend/requirements/base.txt:
+#   pip install -r backend/requirements/bff.txt
+
+httpx>=0.27.0          # async HTTP client for upstream proxying
+websockets>=12.0       # WebSocket client for WS pass-through relay

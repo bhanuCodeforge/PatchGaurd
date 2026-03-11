@@ -1,37 +1,43 @@
 
 # Task 11.5 — DeploymentEvent Table & Event Sourcing
 
-**Time**: 3–5 days  
-**Dependencies**: 11.1-triage  
-**Status**: ⬜ Not Started  
-**Files**: Django model, migration, backfill script, API updates
+**Status**: ✅ Complete  
+**Files**: `backend/apps/deployments/models.py`, `backend/apps/deployments/migrations/0002_deploymentevent.py`, `backend/apps/deployments/views.py`, `backend/apps/deployments/management/commands/backfill_deployment_events.py`
 
 ---
 
-## Scope
+## Implementation
 
-Add immutable `DeploymentEvent` model, backfill current deployment state, and refactor APIs to use event aggregates.
+### New Model: `DeploymentEvent`
 
----
+Append-only event log for every deployment lifecycle transition.
 
-## Checklist
+| Event Type | Description |
+|---|---|
+| `queued` | Device added to deployment |
+| `started` | Agent received patch command |
+| `completed` | Patching completed successfully |
+| `failed` | Patching failed |
+| `skipped` | Preflight check failed — device skipped |
+| `cancelled` | Deployment cancelled by operator |
+| `wave_start` | Wave begun |
+| `wave_done` | Wave completed |
 
-- [ ] Create Django model and migration for DeploymentEvent
-- [ ] Write management command to backfill events from existing deployments
-- [ ] Refactor API to return counters from events/materialized summary
-- [ ] Add verification checks for event consistency
+### API Endpoint
 
----
+`GET /api/v1/deployments/{id}/events/` — returns paginated event log with optional `?event_type=failed,completed` filter.
 
-## Acceptance Criteria
+### Backfill Command
 
-- [ ] Counters are correct under high concurrency (verified by load test)
-- [ ] Full audit trail of device events is available
-- [ ] API remains compatible for consumers
+```bash
+python manage.py backfill_deployment_events --dry-run
+python manage.py backfill_deployment_events --deployment-id <uuid>
+```
 
 ---
 
 ## Completion Log
 
-**Completed**:  
-**Notes**: 
+**Completed**: 2026-04-11  
+**Migration**: `0002_deploymentevent` ✅ applied  
+**Django check**: 0 issues

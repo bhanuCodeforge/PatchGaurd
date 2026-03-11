@@ -48,4 +48,9 @@ export class DeploymentService {
   getTargets(id: string, params: any = {}): Observable<PaginatedResponse<any>> {
     return this.api.get<PaginatedResponse<any>>(`/deployments/${id}/targets/`, params);
   }
+
+  /** Task 11.5/11.8 — Fetch persistent DeploymentEvent audit log. */
+  getDeploymentEvents(id: string, params: any = {}): Observable<any> {
+    return this.api.get<any>(`/deployments/${id}/events/`, params);
+  }
 }

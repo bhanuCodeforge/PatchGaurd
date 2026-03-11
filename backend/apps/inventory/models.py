@@ -77,6 +77,14 @@ class Device(models.Model):
     groups = models.ManyToManyField(DeviceGroup, related_name="devices", blank=True)
     metadata = models.JSONField(default=dict, blank=True)
     agent_api_key = models.CharField(max_length=64, unique=True, db_index=True)
+    key_created_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp when the current agent_api_key was generated."
+    )
+    key_last_rotated_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Timestamp of last automated API key rotation."
+    )
     compliance_rate = models.FloatField(default=100.0, db_index=True)
     inventory_data = models.JSONField(default=dict, blank=True)
     last_seen = models.DateTimeField(null=True, blank=True)

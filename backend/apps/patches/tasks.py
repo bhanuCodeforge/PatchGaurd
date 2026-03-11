@@ -5,6 +5,73 @@ from common.redis_pubsub import RedisPublisher
 
 logger = logging.getLogger(__name__)
 
+# Cache key for the compliance snapshot used by the BFF/dashboard
+_COMPLIANCE_MV_CACHE_KEY = "bff:compliance_mv_snapshot"
+_COMPLIANCE_MV_CACHE_TTL = 3600  # 1 hour — refreshed by Beat anyway
+
+
+@shared_task(queue="reporting", name="apps.patches.tasks.refresh_compliance_materialized_view")
+def refresh_compliance_materialized_view() -> dict:
+    """
+    Task 11.6 — Refresh the PostgreSQL materialized view mv_compliance_stats
+    and update the Redis cache snapshot.
+
+    Triggered by:
+      - Celery Beat every hour
+      - Deployment completion (apps.deployments.tasks.orchestrate_deployment)
+    """
+    from django.db import connection, ProgrammingError
+    import json
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_compliance_stats;")
+            cursor.execute("""
+                SELECT
+                    total_devices, online_devices, compliant_devices,
+                    non_compliant_devices, avg_compliance_rate,
+                    missing_critical_patches, missing_high_patches,
+                    devices_by_os, devices_by_env, refreshed_at
+                FROM mv_compliance_stats;
+            """)
+            row = cursor.fetchone()
+    except ProgrammingError as exc:
+        logger.warning("mv_compliance_stats not yet available (SQLite?): %s", exc)
+        return {"status": "skipped", "reason": str(exc)}
+
+    if not row:
+        return {"status": "empty"}
+
+    snapshot = {
+        "total_devices":           row[0],
+        "online_devices":          row[1],
+        "compliant_devices":       row[2],
+        "non_compliant_devices":   row[3],
+        "avg_compliance_rate":     float(row[4] or 0),
+        "missing_critical_patches": row[5],
+        "missing_high_patches":    row[6],
+        "devices_by_os":           row[7],
+        "devices_by_env":          row[8],
+        "refreshed_at":            row[9].isoformat() if row[9] else None,
+    }
+
+    # Store in Redis for ultra-fast API reads
+    try:
+        import redis as _redis
+        from django.conf import settings as _settings
+        r = _redis.Redis.from_url(
+            getattr(_settings, "CELERY_BROKER_URL", "redis://localhost:6379/0"),
+            decode_responses=True,
+        )
+        r.setex(_COMPLIANCE_MV_CACHE_KEY, _COMPLIANCE_MV_CACHE_TTL, json.dumps(snapshot))
+    except Exception as exc:
+        logger.warning("Could not update Redis compliance snapshot: %s", exc)
+
+    logger.info("mv_compliance_stats refreshed: avg=%.1f%% total=%d",
+                snapshot["avg_compliance_rate"], snapshot["total_devices"])
+    return {"status": "refreshed", "snapshot": snapshot}
+
+
 @shared_task
 def sync_vendor_patches():
     # Placeholder for vendor sync logic

@@ -221,3 +221,66 @@ def sync_dynamic_group_memberships():
             logger.error(f"Failed to sync group '{group.name}': {str(e)}")
 
     logger.info("Dynamic group sync completed.")
+
+
+@shared_task(queue="default", name="apps.inventory.tasks.rotate_stale_api_keys")
+def rotate_stale_api_keys(rotation_days: int = 90) -> dict:
+    """
+    Task 11.7 — Automated 90-day API key rotation.
+
+    Finds every Device whose key_created_at (or key_last_rotated_at) is older
+    than `rotation_days` days, generates a new key, persists it, and notifies
+    the agent via Redis so it can refresh its config without manual intervention.
+
+    The key is NEVER sent over WebSocket query-strings — the new key is pushed
+    to the agent via the X-Agent-Key command channel so the agent can write it
+    to its local config.yaml before the next reconnect.
+
+    Register in Celery Beat (celery_app.py) to run daily.
+    """
+    import secrets
+    from .models import Device
+
+    cutoff = timezone.now() - timedelta(days=rotation_days)
+
+    # Devices whose key is stale (use key_last_rotated_at if set, else key_created_at)
+    stale_devices = Device.objects.filter(
+        status__in=[Device.Status.ONLINE, Device.Status.OFFLINE],  # exclude decommissioned
+    ).exclude(status=Device.Status.DECOMMISSIONED)
+
+    # Filter to only stale keys in Python so we handle NULL timestamps gracefully
+    to_rotate = []
+    for dev in stale_devices.iterator():
+        last_action = dev.key_last_rotated_at or dev.key_created_at
+        if last_action is None or last_action < cutoff:
+            to_rotate.append(dev)
+
+    rotated = 0
+    failed = 0
+    for dev in to_rotate:
+        new_key = secrets.token_urlsafe(32)
+        try:
+            dev.agent_api_key = new_key
+            dev.key_last_rotated_at = timezone.now()
+            dev.save(update_fields=["agent_api_key", "key_last_rotated_at"])
+
+            # Notify agent via Redis — agent must handle KEY_ROTATED command
+            # and write new key to its config.yaml before the next heartbeat cycle
+            RedisPublisher.publish_agent_command(
+                str(dev.id),
+                "KEY_ROTATED",
+                {
+                    "new_api_key": new_key,
+                    "effective_at": timezone.now().isoformat(),
+                    "message": "API key rotated automatically. Update config.yaml before next reconnect.",
+                },
+            )
+            rotated += 1
+            logger.info("Key rotated for device %s (%s)", dev.hostname, dev.id)
+        except Exception as exc:
+            failed += 1
+            logger.error("Key rotation failed for device %s: %s", dev.hostname, exc)
+
+    logger.info("rotate_stale_api_keys: rotated=%d failed=%d (threshold=%d days)",
+                rotated, failed, rotation_days)
+    return {"rotated": rotated, "failed": failed, "threshold_days": rotation_days}
