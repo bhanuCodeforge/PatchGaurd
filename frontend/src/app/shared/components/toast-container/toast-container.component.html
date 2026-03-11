@@ -1,15 +1,25 @@
-<div class="toast-container">
-  <div *ngFor="let toast of toasts()" class="toast" [class]="'toast--' + toast.type">
-    <div class="toast-icon">
-      <span *ngIf="toast.type === 'success'">✓</span>
-      <span *ngIf="toast.type === 'error'">✕</span>
-      <span *ngIf="toast.type === 'warning'">⚠</span>
-      <span *ngIf="toast.type === 'info'">ℹ</span>
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000">
+  <div *ngFor="let toast of toasts()" 
+       class="toast show align-items-center border-0 mb-2 shadow-lg" 
+       [class.text-bg-success]="toast.type === 'success'"
+       [class.text-bg-danger]="toast.type === 'error'"
+       [class.text-bg-warning]="toast.type === 'warning'"
+       [class.text-bg-primary]="toast.type === 'info'"
+       role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body d-flex align-items-start gap-2 py-3 px-3">
+        <div class="fs-5 lh-1">
+          <span *ngIf="toast.type === 'success'">✓</span>
+          <span *ngIf="toast.type === 'error'">✕</span>
+          <span *ngIf="toast.type === 'warning'">⚠</span>
+          <span *ngIf="toast.type === 'info'">ℹ</span>
+        </div>
+        <div>
+          <div class="fw-bold fs-7">{{ toast.title | translate }}</div>
+          <div class="opacity-75 small">{{ toast.message | translate }}</div>
+        </div>
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="ns.remove(toast)" aria-label="Close"></button>
     </div>
-    <div class="toast-body">
-      <div class="toast-title">{{ toast.title | translate }}</div>
-      <div class="toast-msg">{{ toast.message | translate }}</div>
-    </div>
-    <button class="toast-close" (click)="ns.remove(toast)">✕</button>
   </div>
 </div>

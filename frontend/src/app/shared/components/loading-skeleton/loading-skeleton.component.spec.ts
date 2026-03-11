@@ -25,21 +25,23 @@ describe('LoadingSkeletonComponent', () => {
     component.variant = 'kpi-row';
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.querySelector('.kpi-row')).toBeTruthy();
+    // Row class is used for kpi-row now
+    expect(el.querySelector('.row')).toBeTruthy();
   });
 
   it('should render table variant', () => {
     component.variant = 'table';
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
-    expect(el.querySelector('.table-skel')).toBeTruthy();
+    // Table variant uses flex-column mt-3
+    expect(el.querySelector('.flex-column.mt-3')).toBeTruthy();
   });
 
   it('should use custom height for default line variant', () => {
     component.height = 80;
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
-    const row = el.querySelector<HTMLElement>('.skel-row');
-    expect(row?.style.height).toBe('80px');
+    const shimmer = el.querySelector<HTMLElement>('.shimmer');
+    expect(shimmer?.style.height).toBe('80px');
   });
 });

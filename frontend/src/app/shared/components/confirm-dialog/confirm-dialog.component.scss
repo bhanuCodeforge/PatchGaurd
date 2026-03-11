@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--shadow);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -9,8 +9,8 @@
 }
 
 .dialog {
-  background: #1f2937;
-  border: 1px solid #374151;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   width: 440px;
   overflow: hidden;
@@ -21,7 +21,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid #374151;
+  border-bottom: 1px solid var(--border);
 
   &--danger  { background: rgba(239, 68,  68,  0.05); }
   &--warning { background: rgba(245, 158, 11,  0.05); }
@@ -44,7 +44,7 @@
 .dialog-header--info    .dialog-icon { background: rgba(59,  130, 246, 0.15); color: #3b82f6; }
 
 h3 {
-  color: #f9fafb;
+  color: var(--text);
   font-size: 16px;
   font-weight: 600;
   margin: 0;
@@ -54,7 +54,7 @@ h3 {
   padding: 20px 24px;
 
   p {
-    color: #9ca3af;
+    color: var(--muted);
     font-size: 14px;
     line-height: 1.6;
   }
@@ -66,19 +66,19 @@ h3 {
   label {
     display: block;
     font-size: 13px;
-    color: #9ca3af;
+    color: var(--muted);
     margin-bottom: 8px;
   }
 
-  strong { color: #f9fafb; }
+  strong { color: var(--text); }
 
   input {
     width: 100%;
     padding: 8px 12px;
-    background: #111827;
-    border: 1px solid #374151;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
     border-radius: 6px;
-    color: #f9fafb;
+    color: var(--text);
     font-size: 14px;
     outline: none;
 
@@ -91,19 +91,19 @@ h3 {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  border-top: 1px solid #374151;
+  border-top: 1px solid var(--border);
 }
 
 .btn-secondary {
   padding: 8px 18px;
-  background: #374151;
+  background: var(--border);
   border: none;
   border-radius: 6px;
-  color: #d1d5db;
+  color: var(--text-secondary);
   font-size: 14px;
   cursor: pointer;
 
-  &:hover { background: #4b5563; }
+  &:hover { background: var(--muted); }
 }
 
 .btn-danger {

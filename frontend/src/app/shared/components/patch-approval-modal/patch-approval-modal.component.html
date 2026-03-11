@@ -1,22 +1,22 @@
-<div class="modal-backdrop" (click)="cancel.emit()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h5 class="modal-title">
+<div class="modal-backdrop-global d-flex align-items-center justify-content-center" (click)="cancel.emit()">
+  <div class="modal-content border-0 shadow-lg" style="max-width: 440px; background: var(--bg-card)" (click)="$event.stopPropagation()">
+    <div class="modal-header border-bottom py-3 px-4">
+      <h5 class="modal-title fs-6 fw-bold">
         <span [class.text-success]="action === 'approve'" [class.text-danger]="action === 'reject'">
           {{ action === 'approve' ? 'Approve Patch' : 'Reject Patch' }}
         </span>
       </h5>
-      <button type="button" class="btn-close btn-close-white" (click)="cancel.emit()"></button>
+      <button type="button" class="btn-close" (click)="cancel.emit()"></button>
     </div>
-    <div class="modal-body">
-      <p class="text-secondary small mb-3">
+    <div class="modal-body p-4">
+      <p class="text-muted small mb-3">
         {{ action === 'approve' 
            ? 'By approving this patch, you allow it to be deployed across the environment.' 
            : 'Rejecting this patch will exclude it from all current and future deployments.' }}
       </p>
       
-      <div class="form-group">
-        <label class="form-label text-muted small uppercase fw-bold">Reason / Notes</label>
+      <div class="mb-0">
+        <label class="form-label text-muted small text-uppercase fw-bold">Reason / Notes</label>
         <textarea 
           class="form-control" 
           rows="4" 
@@ -24,11 +24,13 @@
           placeholder="e.g. Critical security fix, approved by CISO, or reasons for rejection..."></textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-outline-secondary" (click)="cancel.emit()">Cancel</button>
+    <div class="modal-footer border-top p-3 px-4">
+      <button type="button" class="btn btn-outline-secondary px-4" (click)="cancel.emit()">Cancel</button>
       <button 
         type="button" 
-        [class]="action === 'approve' ? 'btn btn-success' : 'btn btn-danger'"
+        class="btn px-4 shadow-sm"
+        [class.btn-success]="action === 'approve'" 
+        [class.btn-danger]="action === 'reject'"
         (click)="submit()">
         Confirm {{ action === 'approve' ? 'Approval' : 'Rejection' }}
       </button>

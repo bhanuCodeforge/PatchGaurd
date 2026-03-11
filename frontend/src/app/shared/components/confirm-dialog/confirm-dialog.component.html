@@ -1,27 +1,39 @@
-<div *ngIf="visible" class="overlay" (click)="onOverlayClick($event)">
-  <div class="dialog">
-    <div class="dialog-header" [class]="'dialog-header--' + severity">
-      <div class="dialog-icon">
-        <span *ngIf="severity === 'danger'">⚠</span>
-        <span *ngIf="severity === 'warning'">!</span>
-        <span *ngIf="severity === 'info'">?</span>
+<div *ngIf="visible" class="modal-backdrop-global d-flex align-items-center justify-content-center" (click)="onOverlayClick($event)">
+  <div class="modal-content border-0 shadow-lg" style="max-width: 440px; background: var(--bg-card)">
+    <div class="modal-header border-bottom py-3 px-4" 
+         [class.bg-danger-subtle]="severity === 'danger'"
+         [class.bg-warning-subtle]="severity === 'warning'">
+      <div class="d-flex align-items-center gap-3">
+        <div class="rounded-circle d-flex align-items-center justify-content-center" 
+             style="width: 36px; height: 36px;"
+             [class.bg-danger]="severity === 'danger'"
+             [class.bg-warning]="severity === 'warning'"
+             [class.bg-primary]="severity === 'info'">
+          <span class="text-white fw-bold">
+            <span *ngIf="severity === 'danger'">⚠</span>
+            <span *ngIf="severity === 'warning'">!</span>
+            <span *ngIf="severity === 'info'">?</span>
+          </span>
+        </div>
+        <h3 class="modal-title fs-6 fw-bold text-body mb-0">{{ title }}</h3>
       </div>
-      <h3>{{ title }}</h3>
     </div>
 
-    <div class="dialog-body">
-      <p>{{ message }}</p>
-      <div *ngIf="confirmText" class="confirm-input">
-        <label>Type <strong>{{ confirmText }}</strong> to confirm:</label>
-        <input [(ngModel)]="typedConfirm" [placeholder]="confirmText" />
+    <div class="modal-body p-4">
+      <p class="text-muted mb-0">{{ message }}</p>
+      <div *ngIf="confirmText" class="mt-3">
+        <label class="form-label small text-muted text-uppercase fw-bold">Type <strong>{{ confirmText }}</strong> to confirm:</label>
+        <input [(ngModel)]="typedConfirm" [placeholder]="confirmText" class="form-control" />
       </div>
     </div>
 
-    <div class="dialog-footer">
-      <button class="btn-secondary" (click)="cancel.emit()">Cancel</button>
+    <div class="modal-footer border-top p-3 px-4">
+      <button class="btn btn-outline-secondary px-4" (click)="cancel.emit()">Cancel</button>
       <button
-        class="btn-danger"
+        class="btn shadow-sm px-4"
+        [class.btn-danger]="severity === 'danger'"
         [class.btn-warning]="severity === 'warning'"
+        [class.btn-primary]="severity === 'info'"
         [disabled]="confirmText && typedConfirm !== confirmText"
         (click)="confirm.emit()"
       >

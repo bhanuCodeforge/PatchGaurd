@@ -15,8 +15,8 @@
   gap: 12px;
   padding: 14px 16px;
   border-radius: 10px;
-  background: #1f2937;
-  border: 1px solid #374151;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   min-width: 300px;
   max-width: 400px;
   pointer-events: all;
@@ -61,25 +61,25 @@
 .toast-title {
   font-size: 13px;
   font-weight: 600;
-  color: #f9fafb;
+  color: var(--text);
   margin-bottom: 2px;
 }
 
 .toast-msg {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--muted);
   line-height: 1.4;
 }
 
 .toast-close {
   background: none;
   border: none;
-  color: #6b7280;
+  color: var(--muted2);
   cursor: pointer;
   font-size: 12px;
   padding: 0 2px;
   line-height: 1;
   margin-top: 1px;
 
-  &:hover { color: #d1d5db; }
+  &:hover { color: var(--text-secondary); }
 }
