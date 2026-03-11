@@ -7,12 +7,9 @@ Uses only psutil for zero subprocess overhead.
 
 import platform
 import time
-import logging
 from typing import Dict, Any
 
 import psutil
-
-logger = logging.getLogger("PatchAgent.FastLane")
 
 OS = platform.system()  # "Windows" | "Linux" | "Darwin"
 

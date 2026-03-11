@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.db.models import Count
+from django.utils import timezone
 from apps.accounts.permissions import (
     ReadOnlyForViewers, IsOperatorOrAbove, IsAdmin, IsAgentOrOperatorOrAbove
 )
@@ -13,7 +14,8 @@ from .filters import DeviceFilter
 from .serializers import (
     DeviceGroupSerializer, DeviceGroupCreateSerializer,
     DeviceListSerializer, DeviceDetailSerializer, DeviceCreateSerializer,
-    DeviceBulkTagSerializer
+    DeviceBulkTagSerializer, DeviceEventSerializer, LaneConfigSerializer,
+    InstallPatchSerializer,
 )
 from common.pagination import StandardPageNumberPagination
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
@@ -96,24 +98,32 @@ class DeviceViewSet(viewsets.ModelViewSet):
         device = self.get_object()
         meta = device.metadata or {}
         inv = device.inventory_data or {}
+        slow = inv.get('slow_lane') or {}
         return Response({
-            'hostname': device.hostname,
+            'hostname': meta.get('ComputerName') or meta.get('hostname') or device.hostname,
             'ip_address': device.ip_address,
             'mac_address': device.mac_address,
             'os_family': device.os_family,
-            'os_name': getattr(device, 'os_name', '') or device.os_family,
-            'os_version': device.os_version,
-            'os_arch': device.os_arch,
-            'agent_version': device.agent_version,
+            'os_name': meta.get('OSCaption') or getattr(device, 'os_name', '') or device.os_family,
+            'os_version': meta.get('OSVersion') or device.os_version,
+            'os_arch': meta.get('OSArchitecture') or meta.get('Architecture') or device.os_arch,
+            'os_build': meta.get('OSBuild') or meta.get('os_build') or '',
+            'agent_version': device.agent_version or meta.get('agent_version'),
             'environment': device.environment,
             'status': device.status,
             'last_seen': device.last_seen,
             'created_at': device.created_at,
-            'serial_number': meta.get('serial_number', ''),
-            'cpu_count': meta.get('cpu_count'),
-            'cpu_model': meta.get('cpu_model', ''),
-            'total_ram': meta.get('total_ram'),
-            'total_disk': meta.get('total_disk'),
+            # Hardware + OS fields with compatibility fallbacks (agent payload may be mixed-case)
+            'serial_number': (
+                meta.get('serial_number')
+                or meta.get('SerialNumber')
+                or meta.get('BIOSSerialNumber')
+                or ''
+            ),
+            'cpu_count': meta.get('cpu_count') or meta.get('CPUCores') or meta.get('CPULogical'),
+            'cpu_model': meta.get('cpu_model') or meta.get('CPU', ''),
+            'total_ram': meta.get('total_ram') or meta.get('RAM_GB'),
+            'total_disk': meta.get('total_disk') or ((meta.get('DiskFree_GB') or 0) + (meta.get('DiskUsed_GB') or 0)),
             'uptime': meta.get('uptime', ''),
             'cpu_usage': meta.get('cpu_usage', 0),
             'ram_usage': meta.get('ram_usage', 0),
@@ -122,10 +132,28 @@ class DeviceViewSet(viewsets.ModelViewSet):
             'network': inv.get('network', []),
             'storage': inv.get('storage', []),
             'last_login': inv.get('last_login'),
-            'boot_time': meta.get('boot_time', ''),
-            'domain': meta.get('domain', ''),
-            'manufacturer': meta.get('manufacturer', ''),
-            'model': meta.get('model', ''),
+            'boot_time': meta.get('boot_time') or meta.get('LastBootTime') or meta.get('LastBoot') or '',
+            'domain': meta.get('domain') or meta.get('Domain') or '',
+            'manufacturer': meta.get('manufacturer') or meta.get('Manufacturer') or '',
+            'model': meta.get('model') or meta.get('Model') or '',
+            'architecture': meta.get('Architecture') or meta.get('OSArchitecture') or meta.get('os_arch') or device.os_arch,
+            'platform': meta.get('platform') or device.os_family,
+            'scan_time': meta.get('scan_time') or '',
+            'python_version': meta.get('python_version') or '',
+            'admin': meta.get('admin'),
+            'patches': meta.get('patches'),
+            'missing_updates': meta.get('missing_updates'),
+            'critical_missing': meta.get('critical_missing'),
+            'registry_apps': meta.get('registry_apps'),
+            'store_apps': meta.get('store_apps'),
+            'drivers': meta.get('drivers'),
+            'defender': meta.get('defender'),
+            'realtime_prot': meta.get('realtime_prot'),
+            'running_processes': (
+                slow.get('running_processes')
+                or inv.get('running_processes')
+                or []
+            ),
         })
 
     @extend_schema(summary="List deployments", description="List recent DeploymentTargets for this device.")
@@ -480,6 +508,15 @@ class DeviceViewSet(viewsets.ModelViewSet):
             )
         from .tasks import scan_device_patches
         scan_device_patches.delay(str(device.id))
+
+        from .models import DeviceEvent
+        DeviceEvent.record(
+            device=device,
+            event_type=DeviceEvent.EventType.SCAN_START,
+            message=f"Patch scan triggered for {device.hostname}",
+            source=f"user:{getattr(request.user, 'username', 'unknown')}",
+        )
+
         return Response(
             {"status": f"Scan command enqueued for '{device.hostname}'", "device_id": str(device.id)},
             status=status.HTTP_202_ACCEPTED,
@@ -499,6 +536,16 @@ class DeviceViewSet(viewsets.ModelViewSet):
             str(device.id), "REBOOT",
             {"initiated_by": str(getattr(request.user, "username", "unknown"))}
         )
+
+        from .models import DeviceEvent
+        DeviceEvent.record(
+            device=device,
+            event_type=DeviceEvent.EventType.REBOOT_REQUESTED,
+            message=f"Reboot triggered for {device.hostname}",
+            severity="warning",
+            source=f"user:{getattr(request.user, 'username', 'unknown')}",
+        )
+
         return Response(
             {"status": f"REBOOT command sent to '{device.hostname}'", "device_id": str(device.id)},
             status=status.HTTP_202_ACCEPTED,
@@ -527,6 +574,16 @@ class DeviceViewSet(viewsets.ModelViewSet):
             str(device.id), "CONFIG_UPDATE",
             {"config": config}
         )
+        
+        from .models import DeviceEvent
+        DeviceEvent.record(
+            device=device,
+            event_type=DeviceEvent.EventType.CONFIG_CHANGE,
+            message="Agent configuration updated",
+            details={"config": config},
+            source=f"user:{getattr(request.user, 'username', 'unknown')}",
+        )
+
         return Response(
             {"status": "Configuration update command sent.", "device_id": str(device.id)},
             status=status.HTTP_202_ACCEPTED,
@@ -548,6 +605,25 @@ class DeviceViewSet(viewsets.ModelViewSet):
         )
         return Response(
             {"status": f"Inventory scan command sent to '{device.hostname}'", "device_id": str(device.id)},
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+    @extend_schema(summary="Request fast-lane metrics refresh", description="Publish COLLECT_FAST_LANE command to the agent via Redis pub/sub for immediate fast metrics collection.")
+    @action(detail=True, methods=["post"], url_path="request_fast_lane", permission_classes=[IsOperatorOrAbove])
+    def request_fast_lane(self, request, pk=None):
+        device = self.get_object()
+        if device.status != Device.Status.ONLINE:
+            return Response(
+                {"error": f"Device '{device.hostname}' is {device.status}. Agent must be online to scan."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        from common.redis_pubsub import RedisPublisher
+        RedisPublisher.publish_agent_command(
+            str(device.id), "COLLECT_FAST_LANE",
+            {"device_id": str(device.id), "initiated_by": str(getattr(request.user, "username", "unknown"))}
+        )
+        return Response(
+            {"status": f"Fast-lane metrics refresh command sent to '{device.hostname}'", "device_id": str(device.id)},
             status=status.HTTP_202_ACCEPTED,
         )
 
@@ -631,6 +707,261 @@ class DeviceViewSet(viewsets.ModelViewSet):
         return Response({"results": activities[:50]})
 
     # ------------------------------------------------------------------ #
+    # Timeline (structured event log — replaces activity)                  #
+    # ------------------------------------------------------------------ #
+
+    @extend_schema(
+        summary="Device timeline",
+        description="Paginated, filterable structured event timeline for a device.",
+        parameters=[
+            OpenApiParameter("event_type", OpenApiTypes.STR, description="Filter by event type"),
+            OpenApiParameter("severity", OpenApiTypes.STR, description="Filter by severity: info,warning,error,critical"),
+            OpenApiParameter("since", OpenApiTypes.DATETIME, description="Events after this datetime"),
+        ],
+    )
+    @action(detail=True, methods=["get"], pagination_class=StandardPageNumberPagination)
+    def timeline(self, request, pk=None):
+        from .models import DeviceEvent
+        device = self.get_object()
+        events = DeviceEvent.objects.filter(device=device)
+
+        event_type = request.query_params.get('event_type')
+        if event_type:
+            types = [t.strip() for t in event_type.split(',')]
+            events = events.filter(event_type__in=types)
+
+        severity = request.query_params.get('severity')
+        if severity:
+            sevs = [s.strip() for s in severity.split(',')]
+            events = events.filter(severity__in=sevs)
+
+        since = request.query_params.get('since')
+        if since:
+            events = events.filter(created_at__gte=since)
+
+        page = self.paginate_queryset(events)
+        if page is not None:
+            serializer = DeviceEventSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = DeviceEventSerializer(events[:50], many=True)
+        return Response(serializer.data)
+
+    # ------------------------------------------------------------------ #
+    # Per-patch install (Fast/Slow lane)                                   #
+    # ------------------------------------------------------------------ #
+
+    @extend_schema(
+        summary="Install single patch",
+        description="Trigger per-patch install on a device via Fast Lane or Slow Lane.",
+        request=InstallPatchSerializer,
+    )
+    @action(detail=True, methods=["post"], url_path="install_patch", permission_classes=[IsOperatorOrAbove])
+    def install_patch(self, request, pk=None):
+        from .models import DeviceEvent
+        from common.redis_pubsub import RedisPublisher
+
+        device = self.get_object()
+        serializer = InstallPatchSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        patch_id = str(serializer.validated_data['patch_id'])
+        lane = serializer.validated_data['lane']
+
+        if device.status != Device.Status.ONLINE:
+            return Response(
+                {"error": f"Device '{device.hostname}' is {device.status}. Agent must be online."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        # Verify patch exists
+        from apps.patches.models import Patch
+        try:
+            patch = Patch.objects.get(id=patch_id)
+        except Patch.DoesNotExist:
+            return Response({"error": "Patch not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        RedisPublisher.publish_agent_command(
+            str(device.id), "EXECUTE_PATCH",
+            {"patch_id": patch.vendor_id, "lane": lane, "initiated_by": str(getattr(request.user, "username", "unknown"))}
+        )
+
+        DeviceEvent.record(
+            device=device,
+            event_type=DeviceEvent.EventType.PATCH_INSTALL_START,
+            message=f"Patch {patch.vendor_id} install triggered via {lane} lane",
+            details={"patch_id": patch_id, "vendor_id": patch.vendor_id, "lane": lane},
+            source=f"user:{getattr(request.user, 'username', 'unknown')}",
+            patch_id=patch_id,
+            execution_lane=lane,
+        )
+
+        return Response({
+            "status": "install command sent",
+            "device_id": str(device.id),
+            "patch_id": patch_id,
+            "lane": lane,
+        }, status=status.HTTP_202_ACCEPTED)
+
+    # ------------------------------------------------------------------ #
+    # Lane configuration                                                   #
+    # ------------------------------------------------------------------ #
+
+    @extend_schema(
+        summary="Push lane configuration",
+        description="Set Fast Lane / Slow Lane configuration and push to agent via WebSocket.",
+        request=LaneConfigSerializer,
+    )
+    @action(detail=True, methods=["post"], url_path="lane_config", permission_classes=[IsOperatorOrAbove])
+    def lane_config(self, request, pk=None):
+        from .models import DeviceEvent
+        from common.redis_pubsub import RedisPublisher
+
+        device = self.get_object()
+        serializer = LaneConfigSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        old_config = device.lane_config or {}
+        new_config = serializer.validated_data
+
+        # Merge into device.lane_config
+        merged = {**old_config}
+        if 'fast_lane' in new_config:
+            merged['fast_lane'] = {**merged.get('fast_lane', {}), **new_config['fast_lane']}
+        if 'slow_lane' in new_config:
+            merged['slow_lane'] = {**merged.get('slow_lane', {}), **new_config['slow_lane']}
+
+        device.lane_config = merged
+        device.save(update_fields=["lane_config"])
+
+        # Build CONFIG_UPDATE payload for agent
+        agent_config = {}
+        if 'fast_lane' in new_config and 'interval' in new_config['fast_lane']:
+            agent_config['fast_lane_interval'] = new_config['fast_lane']['interval']
+        if 'slow_lane' in new_config and 'interval' in new_config['slow_lane']:
+            agent_config['slow_lane_interval'] = new_config['slow_lane']['interval']
+
+        if agent_config and device.status == Device.Status.ONLINE:
+            RedisPublisher.publish_agent_command(
+                str(device.id), "CONFIG_UPDATE",
+                {"config": agent_config}
+            )
+
+        DeviceEvent.record(
+            device=device,
+            event_type=DeviceEvent.EventType.CONFIG_CHANGE,
+            message="Lane configuration updated",
+            details={"old": old_config, "new": merged},
+            source=f"user:{getattr(request.user, 'username', 'unknown')}",
+        )
+
+        return Response({
+            "status": "lane config updated",
+            "device_id": str(device.id),
+            "lane_config": merged,
+        })
+
+    # ------------------------------------------------------------------ #
+    # Alert summary                                                        #
+    # ------------------------------------------------------------------ #
+
+    @extend_schema(summary="Alert summary", description="Quick summary of actionable alerts for this device.")
+    @action(detail=True, methods=["get"], url_path="alert_summary")
+    def alert_summary(self, request, pk=None):
+        device = self.get_object()
+        from apps.patches.models import DevicePatchStatus
+
+        statuses = DevicePatchStatus.objects.filter(device=device)
+        critical_missing = statuses.filter(
+            state=DevicePatchStatus.State.MISSING,
+            patch__severity='critical'
+        ).count()
+        high_missing = statuses.filter(
+            state=DevicePatchStatus.State.MISSING,
+            patch__severity='high'
+        ).count()
+        failed = statuses.filter(state=DevicePatchStatus.State.FAILED).count()
+        pending_reboot = statuses.filter(state=DevicePatchStatus.State.PENDING_REBOOT).count()
+
+        # Recent failed deployments
+        from apps.deployments.models import DeploymentTarget
+        failed_deployments = DeploymentTarget.objects.filter(
+            device=device, status=DeploymentTarget.Status.FAILED,
+        ).count()
+
+        return Response({
+            "critical_missing": critical_missing,
+            "high_missing": high_missing,
+            "failed_patches": failed,
+            "pending_reboot": pending_reboot,
+            "failed_deployments": failed_deployments,
+            "needs_attention": (critical_missing + failed + pending_reboot) > 0,
+        })
+
+    # ------------------------------------------------------------------ #
+    # Agent health                                                         #
+    # ------------------------------------------------------------------ #
+
+    @extend_schema(summary="Agent health", description="Agent health status including heartbeat stats and version.")
+    @action(detail=True, methods=["get"], url_path="agent_health")
+    def agent_health(self, request, pk=None):
+        device = self.get_object()
+        meta = device.metadata or {}
+        now = timezone.now() if hasattr(timezone, 'now') else None
+
+        from django.utils import timezone as tz
+        now = tz.now()
+
+        heartbeat_age = None
+        if device.last_seen:
+            heartbeat_age = (now - device.last_seen).total_seconds()
+
+        return Response({
+            "status": device.status,
+            "agent_version": device.agent_version,
+            "last_seen": device.last_seen,
+            "heartbeat_age_seconds": heartbeat_age,
+            "heartbeat_interval": meta.get("heartbeat_interval", 60),
+            "log_level": meta.get("log_level", "info"),
+            "lane_config": device.lane_config or {},
+            "fast_lane_interval": (device.lane_config or {}).get("fast_lane", {}).get("interval", 5),
+            "slow_lane_interval": (device.lane_config or {}).get("slow_lane", {}).get("interval", 900),
+            "cpu_usage": meta.get("cpu_usage"),
+            "ram_usage": meta.get("ram_usage"),
+            "disk_usage": meta.get("disk_usage"),
+        })
+
+    # ------------------------------------------------------------------ #
+    # Decommission                                                         #
+    # ------------------------------------------------------------------ #
+
+    @extend_schema(summary="Decommission device", description="Soft-delete: marks device as decommissioned without data loss.")
+    @action(detail=True, methods=["post"], permission_classes=[IsAdmin])
+    def decommission(self, request, pk=None):
+        from .models import DeviceEvent
+
+        device = self.get_object()
+        if device.status == Device.Status.DECOMMISSIONED:
+            return Response({"error": "Device is already decommissioned"}, status=status.HTTP_409_CONFLICT)
+
+        old_status = device.status
+        device.status = Device.Status.DECOMMISSIONED
+        device.save(update_fields=["status"])
+
+        DeviceEvent.record(
+            device=device,
+            event_type=DeviceEvent.EventType.CONFIG_CHANGE,
+            severity="warning",
+            message=f"Device decommissioned (was {old_status})",
+            source=f"user:{getattr(request.user, 'username', 'unknown')}",
+        )
+
+        return Response({
+            "status": "decommissioned",
+            "device_id": str(device.id),
+            "hostname": device.hostname,
+        })
+
+    # ------------------------------------------------------------------ #
     # API Key Rotation                                                     #
     # ------------------------------------------------------------------ #
 
@@ -641,7 +972,18 @@ class DeviceViewSet(viewsets.ModelViewSet):
         device = self.get_object()
         new_key = secrets.token_urlsafe(32)
         device.agent_api_key = new_key
-        device.save(update_fields=["agent_api_key"])
+        device.key_last_rotated_at = timezone.now()
+        device.save(update_fields=["agent_api_key", "key_last_rotated_at"])
+
+        from .models import DeviceEvent
+        DeviceEvent.record(
+            device=device,
+            event_type=DeviceEvent.EventType.KEY_ROTATED,
+            message="Agent API key rotated",
+            severity="warning",
+            source=f"user:{getattr(request.user, 'username', 'unknown')}",
+        )
+
         return Response({
             "status": "API key rotated",
             "device_id": str(device.id),

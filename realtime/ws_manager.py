@@ -13,6 +13,8 @@ class ConnectionManager:
         self.dashboard_connections: Dict[str, List[WebSocket]] = {}
         # Subscriptions mapping deployment_id -> set of dashboard websocket objects
         self.deployment_subscriptions: Dict[str, Set[WebSocket]] = {}
+        # Subscriptions mapping device_id -> set of dashboard websocket objects
+        self.device_subscriptions: Dict[str, Set[WebSocket]] = {}
         # Maps agent_id strings to their active websocket
         self.agent_connections: Dict[str, WebSocket] = {}
 
@@ -54,6 +56,10 @@ class ConnectionManager:
             for dep_id, ws_set in self.deployment_subscriptions.items():
                 if websocket in ws_set:
                     ws_set.remove(websocket)
+            # Remove from all device subscriptions
+            for dev_id, ws_set in self.device_subscriptions.items():
+                if websocket in ws_set:
+                    ws_set.remove(websocket)
             logger.info(f"Dashboard User {identifier} disconnected.")
 
     def subscribe_to_deployment(self, websocket: WebSocket, deployment_id: str):
@@ -64,6 +70,15 @@ class ConnectionManager:
     def unsubscribe_from_deployment(self, websocket: WebSocket, deployment_id: str):
         if deployment_id in self.deployment_subscriptions:
             self.deployment_subscriptions[deployment_id].discard(websocket)
+
+    def subscribe_to_device(self, websocket: WebSocket, device_id: str):
+        if device_id not in self.device_subscriptions:
+            self.device_subscriptions[device_id] = set()
+        self.device_subscriptions[device_id].add(websocket)
+
+    def unsubscribe_from_device(self, websocket: WebSocket, device_id: str):
+        if device_id in self.device_subscriptions:
+            self.device_subscriptions[device_id].discard(websocket)
 
     async def broadcast_to_dashboard(self, message: str):
         dead_sockets = []
@@ -87,6 +102,18 @@ class ConnectionManager:
                     dead_sockets.append(ws)
             for socket in dead_sockets:
                 self.unsubscribe_from_deployment(socket, deployment_id)
+
+    async def broadcast_to_device_subscribers(self, device_id: str, message: str):
+        """Send a message to all dashboard clients subscribed to a specific device."""
+        if device_id in self.device_subscriptions:
+            dead_sockets = []
+            for ws in self.device_subscriptions[device_id]:
+                try:
+                    await ws.send_text(message)
+                except (Exception, WebSocketDisconnect):
+                    dead_sockets.append(ws)
+            for socket in dead_sockets:
+                self.unsubscribe_from_device(socket, device_id)
 
     @trace
     async def send_to_agent(self, agent_id: str, message: str) -> bool:

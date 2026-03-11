@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Device, DeviceGroup
+from .models import Device, DeviceGroup, DeviceEvent
 import string
 import secrets
 import uuid
@@ -47,8 +47,10 @@ class DeviceDetailSerializer(serializers.ModelSerializer):
             'id', 'hostname', 'description', 'ip_address', 'mac_address',
             'os_family', 'os_version', 'os_arch', 'agent_version',
             'environment', 'status', 'tags', 'groups', 'metadata',
-            'compliance_rate', 'inventory_data', 'last_seen', 'last_scan', 'created_at',
-            'compliance_summary', 'patch_stats', 'os_name'
+            'compliance_rate', 'inventory_data', 'lane_config',
+            'last_seen', 'last_scan', 'created_at',
+            'compliance_summary', 'patch_stats', 'os_name',
+            'key_created_at', 'key_last_rotated_at',
         ]
 
     def get_compliance_summary(self, obj):
@@ -69,6 +71,7 @@ class DeviceDetailSerializer(serializers.ModelSerializer):
             'missing': statuses.filter(state=DevicePatchStatus.State.MISSING).count(),
             'pending': statuses.filter(state=DevicePatchStatus.State.PENDING).count(),
             'failed': statuses.filter(state=DevicePatchStatus.State.FAILED).count(),
+            'pending_reboot': statuses.filter(state=DevicePatchStatus.State.PENDING_REBOOT).count(),
         }
 
 class DeviceCreateSerializer(serializers.ModelSerializer):
@@ -94,3 +97,62 @@ class DeviceBulkTagSerializer(serializers.Serializer):
     device_ids = serializers.ListField(child=serializers.UUIDField())
     tags = serializers.ListField(child=serializers.CharField())
     action = serializers.ChoiceField(choices=['add', 'remove'])
+
+
+class DeviceEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeviceEvent
+        fields = [
+            'id', 'device', 'event_type', 'severity', 'message',
+            'details', 'source', 'deployment_id', 'patch_id',
+            'execution_lane', 'created_at',
+        ]
+        read_only_fields = fields
+
+
+class LaneConfigSerializer(serializers.Serializer):
+    """Validates lane configuration payload before pushing to agent."""
+    fast_lane = serializers.DictField(required=False)
+    slow_lane = serializers.DictField(required=False)
+
+    def validate_fast_lane(self, value):
+        allowed = {
+            'interval', 'concurrency',
+            'max_bandwidth_mbps', 'bandwidth_kbps',
+            'retry_count', 'retry_delay_sec', 'retry_strategy',
+            'rate_limit',
+        }
+        for key in value:
+            if key not in allowed:
+                raise serializers.ValidationError(f"Unknown fast_lane key: {key}")
+        if 'interval' in value and (not isinstance(value['interval'], (int, float)) or value['interval'] < 1):
+            raise serializers.ValidationError("fast_lane.interval must be >= 1")
+        if 'concurrency' in value and (not isinstance(value['concurrency'], int) or value['concurrency'] < 1):
+            raise serializers.ValidationError("fast_lane.concurrency must be >= 1")
+        if 'rate_limit' in value and (not isinstance(value['rate_limit'], (int, float)) or value['rate_limit'] < 0):
+            raise serializers.ValidationError("fast_lane.rate_limit must be >= 0")
+        return value
+
+    def validate_slow_lane(self, value):
+        allowed = {
+            'interval', 'concurrency',
+            'max_bandwidth_mbps', 'bandwidth_kbps',
+            'retry_count', 'retry_delay_sec', 'retry_strategy',
+            'rate_limit',
+        }
+        for key in value:
+            if key not in allowed:
+                raise serializers.ValidationError(f"Unknown slow_lane key: {key}")
+        if 'interval' in value and (not isinstance(value['interval'], (int, float)) or value['interval'] < 60):
+            raise serializers.ValidationError("slow_lane.interval must be >= 60")
+        if 'concurrency' in value and (not isinstance(value['concurrency'], int) or value['concurrency'] < 1):
+            raise serializers.ValidationError("slow_lane.concurrency must be >= 1")
+        if 'rate_limit' in value and (not isinstance(value['rate_limit'], (int, float)) or value['rate_limit'] < 0):
+            raise serializers.ValidationError("slow_lane.rate_limit must be >= 0")
+        return value
+
+
+class InstallPatchSerializer(serializers.Serializer):
+    """Validates per-patch install request."""
+    patch_id = serializers.UUIDField()
+    lane = serializers.ChoiceField(choices=['fast', 'slow'], default='fast')

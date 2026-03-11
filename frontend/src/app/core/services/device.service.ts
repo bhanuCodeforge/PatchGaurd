@@ -107,6 +107,10 @@ export class DeviceService {
     return this.api.post<any>(`/devices/${id}/request_slow_lane/`, {});
   }
 
+  requestFastLaneScan(id: string): Observable<any> {
+    return this.api.post<any>(`/devices/${id}/request_fast_lane/`, {});
+  }
+
   getInstallerUrl(id: string, os: string): string {
     return `/api/v1/devices/${id}/download_installer/?os=${os}`;
   }
@@ -117,5 +121,31 @@ export class DeviceService {
 
   triggerGlobalScan(deviceIds?: string[]): Observable<any> {
     return this.api.post<any>('/devices/bulk_scan/', { device_ids: deviceIds });
+  }
+
+  // --- New Device Details APIs ---
+
+  getTimeline(id: string, params: any = {}): Observable<PaginatedResponse<any>> {
+    return this.api.get<PaginatedResponse<any>>(`/devices/${id}/timeline/`, params);
+  }
+
+  installPatch(id: string, patchId: string, lane: 'fast' | 'slow' = 'fast'): Observable<any> {
+    return this.api.post<any>(`/devices/${id}/install_patch/`, { patch_id: patchId, lane });
+  }
+
+  updateLaneConfig(id: string, config: any): Observable<any> {
+    return this.api.post<any>(`/devices/${id}/lane_config/`, config);
+  }
+
+  getAlertSummary(id: string): Observable<any> {
+    return this.api.get<any>(`/devices/${id}/alert_summary/`);
+  }
+
+  getAgentHealth(id: string): Observable<any> {
+    return this.api.get<any>(`/devices/${id}/agent_health/`);
+  }
+
+  decommissionDevice(id: string): Observable<any> {
+    return this.api.post<any>(`/devices/${id}/decommission/`, {});
   }
 }

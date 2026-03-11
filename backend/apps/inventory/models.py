@@ -87,6 +87,10 @@ class Device(models.Model):
     )
     compliance_rate = models.FloatField(default=100.0, db_index=True)
     inventory_data = models.JSONField(default=dict, blank=True)
+    lane_config = models.JSONField(
+        default=dict, blank=True,
+        help_text="Lane scheduler config: {fast_lane: {interval, concurrency, ...}, slow_lane: {...}}"
+    )
     last_scan = models.DateTimeField(null=True, blank=True)
     last_seen = models.DateTimeField(null=True, blank=True)
     last_checkin_ip = models.GenericIPAddressField(null=True, blank=True)
@@ -112,3 +116,77 @@ class Device(models.Model):
 
     def __str__(self):
         return f"{self.hostname} ({self.ip_address})"
+
+
+class DeviceEvent(models.Model):
+    """
+    Structured timeline event for a device — unified audit trail.
+
+    Provides the event backbone for the "Execution & Timeline" tab in device details.
+    Append-only — DO NOT UPDATE rows once inserted.
+    """
+
+    class EventType(models.TextChoices):
+        HEARTBEAT = "heartbeat", "Heartbeat"
+        SCAN_START = "scan_start", "Scan Started"
+        SCAN_COMPLETE = "scan_complete", "Scan Complete"
+        PATCH_INSTALL_START = "patch_install_start", "Patch Install Started"
+        PATCH_INSTALL_SUCCESS = "patch_install_success", "Patch Installed"
+        PATCH_INSTALL_FAILED = "patch_install_failed", "Patch Install Failed"
+        DEPLOYMENT_START = "deployment_start", "Deployment Started"
+        DEPLOYMENT_COMPLETE = "deployment_complete", "Deployment Complete"
+        DEPLOYMENT_FAILED = "deployment_failed", "Deployment Failed"
+        REBOOT_REQUESTED = "reboot_requested", "Reboot Requested"
+        REBOOT_COMPLETE = "reboot_complete", "Reboot Complete"
+        CONFIG_CHANGE = "config_change", "Config Changed"
+        KEY_ROTATED = "key_rotated", "API Key Rotated"
+        AGENT_ONLINE = "agent_online", "Agent Online"
+        AGENT_OFFLINE = "agent_offline", "Agent Offline"
+        SLOW_LANE_COMPLETE = "slow_lane_complete", "Inventory Collected"
+        ERROR = "error", "Error"
+
+    class Severity(models.TextChoices):
+        INFO = "info", "Info"
+        WARNING = "warning", "Warning"
+        ERROR = "error", "Error"
+        CRITICAL = "critical", "Critical"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name="events")
+    event_type = models.CharField(max_length=30, choices=EventType.choices, db_index=True)
+    severity = models.CharField(max_length=10, choices=Severity.choices, default=Severity.INFO)
+    message = models.TextField()
+    details = models.JSONField(default=dict, blank=True)
+    source = models.CharField(max_length=100, default="agent")
+    deployment_id = models.UUIDField(null=True, blank=True, db_index=True)
+    patch_id = models.UUIDField(null=True, blank=True)
+    execution_lane = models.CharField(max_length=10, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        db_table = "device_event"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["device", "-created_at"]),
+            models.Index(fields=["device", "event_type"]),
+        ]
+
+    def __str__(self):
+        return f"{self.device_id} | {self.event_type} | {self.created_at}"
+
+    @classmethod
+    def record(cls, device, event_type: str, message: str, severity: str = "info",
+               details: dict = None, source: str = "system", deployment_id=None,
+               patch_id=None, execution_lane: str = "") -> "DeviceEvent":
+        """Factory helper — create and save an event in one call."""
+        return cls.objects.create(
+            device=device,
+            event_type=event_type,
+            severity=severity,
+            message=message,
+            details=details or {},
+            source=source,
+            deployment_id=deployment_id,
+            patch_id=patch_id,
+            execution_lane=execution_lane,
+        )

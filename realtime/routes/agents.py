@@ -59,6 +59,15 @@ async def websocket_dashboard(websocket: WebSocket, token: str = Query(...)):
                     dep_id = env.payload.get("deployment_id")
                     if dep_id:
                         manager.unsubscribe_from_deployment(websocket, dep_id)
+                elif env.event == "subscribe_device":
+                    dev_id = env.payload.get("device_id")
+                    if dev_id:
+                        manager.subscribe_to_device(websocket, dev_id)
+                        await websocket.send_json({"event": "subscribed", "payload": {"device_id": dev_id}})
+                elif env.event == "unsubscribe_device":
+                    dev_id = env.payload.get("device_id")
+                    if dev_id:
+                        manager.unsubscribe_from_device(websocket, dev_id)
             except Exception as e:
                 logger.error(f"Error handling dashboard message: {e}")
     except WebSocketDisconnect:
@@ -197,6 +206,49 @@ async def websocket_agent(websocket: WebSocket, api_key: str = Query(...)):
                         _post_to_backend(
                             f"/devices/{device_id}/ingest_slow_lane/",
                             env.payload,
+                            api_key,
+                        )
+                    )
+
+                elif env.event == "patch_install_start":
+                    # Agent started installing a patch (fast or slow lane)
+                    msg = json.dumps({
+                        "event": "patch_install_start",
+                        "payload": {**env.payload, "device_id": device_id}
+                    })
+                    await manager.broadcast_to_dashboard(msg)
+                    await manager.broadcast_to_device_subscribers(device_id, msg)
+
+                elif env.event == "patch_install_result":
+                    # Agent finished a per-patch install
+                    payload_with_device = {**env.payload, "device_id": device_id}
+                    msg = json.dumps({
+                        "event": "patch_install_result",
+                        "payload": payload_with_device,
+                    })
+                    await manager.broadcast_to_dashboard(msg)
+                    await manager.broadcast_to_device_subscribers(device_id, msg)
+                    # Persist result to backend
+                    asyncio.create_task(
+                        _post_to_backend(
+                            f"/devices/{device_id}/ingest_patch_result/",
+                            payload_with_device,
+                            api_key,
+                        )
+                    )
+
+                elif env.event == "reboot_complete":
+                    # Agent reports reboot finished
+                    msg = json.dumps({
+                        "event": "reboot_complete",
+                        "payload": {**env.payload, "device_id": device_id}
+                    })
+                    await manager.broadcast_to_dashboard(msg)
+                    await manager.broadcast_to_device_subscribers(device_id, msg)
+                    asyncio.create_task(
+                        _post_to_backend(
+                            f"/devices/{device_id}/heartbeat/",
+                            {**env.payload, "reboot_complete": True},
                             api_key,
                         )
                     )

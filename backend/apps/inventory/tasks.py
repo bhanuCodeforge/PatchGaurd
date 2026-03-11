@@ -157,6 +157,16 @@ def process_scan_results(device_id: str, patches: list):
     # Update device compliance rate
     refresh_device_compliance(device_id)
 
+    # Record timeline event
+    from .models import DeviceEvent
+    DeviceEvent.record(
+        device=device,
+        event_type=DeviceEvent.EventType.SCAN_COMPLETE,
+        message=f"Scan complete: {installed_count} installed, {missing_count} missing",
+        details={"installed": installed_count, "missing": missing_count, "skipped": skipped},
+        source="agent",
+    )
+
     # Notify dashboards of updated compliance
     RedisPublisher.publish_notification(
         "info",

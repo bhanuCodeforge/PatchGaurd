@@ -19,10 +19,6 @@ from collectors.slow_lane import get_slow_collector
 
 logger = logging.getLogger("PatchAgent.Scheduler")
 
-# Thread pool for slow-lane (blocking subprocess calls)
-_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="slow-lane")
-
-
 class LaneScheduler:
     """
     Manages two concurrent data-collection loops:
@@ -40,12 +36,22 @@ class LaneScheduler:
         device_id: str,
         fast_interval: int = 5,
         slow_interval: int = 900,
+        fast_concurrency: int = 2,
+        slow_concurrency: int = 1,
     ):
         self.send_fn = send_fn
         self.device_id = device_id
         self.fast_interval = fast_interval
         self.slow_interval = slow_interval
+        self.fast_concurrency = fast_concurrency
+        self.slow_concurrency = slow_concurrency
         self._running = False
+
+        # Per-instance thread pool sized to slow_concurrency
+        self._executor = ThreadPoolExecutor(
+            max_workers=max(1, slow_concurrency),
+            thread_name_prefix="slow-lane",
+        )
 
         # Initialise collectors
         self._fast = FastLaneCollector()
@@ -70,15 +76,36 @@ class LaneScheduler:
     def stop(self):
         """Signal both loops to exit."""
         self._running = False
+        try:
+            self._executor.shutdown(wait=False)
+        except Exception:
+            pass
 
-    def update_intervals(self, fast: Optional[int] = None, slow: Optional[int] = None):
-        """Dynamically update collection intervals (e.g. from CONFIG_UPDATE)."""
+    def update_intervals(self, fast: Optional[int] = None, slow: Optional[int] = None,
+                         fast_concurrency: Optional[int] = None,
+                         slow_concurrency: Optional[int] = None):
+        """Dynamically update collection intervals and concurrency (e.g. from CONFIG_UPDATE)."""
         if fast is not None and fast > 0:
             self.fast_interval = fast
             logger.info(f"Fast lane interval updated to {fast}s")
         if slow is not None and slow > 0:
             self.slow_interval = slow
             logger.info(f"Slow lane interval updated to {slow}s")
+        if fast_concurrency is not None and fast_concurrency > 0:
+            self.fast_concurrency = fast_concurrency
+            logger.info(f"Fast lane concurrency updated to {fast_concurrency}")
+        if slow_concurrency is not None and slow_concurrency > 0:
+            if slow_concurrency != self.slow_concurrency:
+                try:
+                    self._executor.shutdown(wait=False)
+                except Exception:
+                    pass
+                self._executor = ThreadPoolExecutor(
+                    max_workers=max(1, slow_concurrency),
+                    thread_name_prefix="slow-lane",
+                )
+            self.slow_concurrency = slow_concurrency
+            logger.info(f"Slow lane concurrency updated to {slow_concurrency}")
 
     # -------------------------------------------------------------- #
     # Fast Lane loop                                                   #
@@ -129,7 +156,7 @@ class LaneScheduler:
 
                 # Run blocking collector in thread to avoid blocking the event loop
                 loop = asyncio.get_event_loop()
-                data = await loop.run_in_executor(_executor, self._slow.collect)
+                data = await loop.run_in_executor(self._executor, self._slow.collect)
 
                 elapsed = round(time.monotonic() - t0, 1)
                 logger.info(f"Slow lane collection finished in {elapsed}s")

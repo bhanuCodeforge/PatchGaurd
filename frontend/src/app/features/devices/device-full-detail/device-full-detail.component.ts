@@ -53,7 +53,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     ]),
   ],
 })
-export class DeviceFullDetailComponent implements OnInit {
+export class DeviceFullDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private deviceSvc = inject(DeviceService);
@@ -101,6 +101,40 @@ export class DeviceFullDetailComponent implements OnInit {
 
   // Inventory scan
   scanningInventory = signal(false);
+  scanningFastLane = signal(false);
+
+  // Alert summary (new)
+  alertSummary = signal<any>(null);
+
+  // Timeline events (new)
+  timelineEvents = signal<any[]>([]);
+  timelineLoading = signal(false);
+  timelineFilter = signal<string>('');
+
+  // Agent health (new)
+  agentHealth = signal<any>(null);
+  agentHealthLoading = signal(false);
+
+  // Lane config (new)
+  laneConfigModel: any = {
+    fast_lane: {
+      interval: 5,
+      concurrency: 2,
+      rate_limit: 0,
+      retry_strategy: 'exponential',
+      bandwidth_kbps: 0,
+    },
+    slow_lane: {
+      interval: 900,
+      concurrency: 1,
+      rate_limit: 0,
+      retry_strategy: 'linear',
+      bandwidth_kbps: 0,
+    },
+  };
+
+  // Per-patch install in progress
+  installingPatchId = signal<string | null>(null);
 
   patchCounts = computed(() => {
     const ps = this.patches();
@@ -117,6 +151,8 @@ export class DeviceFullDetailComponent implements OnInit {
     if (id) {
       this.loadDevice(id);
       this.setupWebsocket(id);
+      // Subscribe to device-specific WS events
+      this.ws.send('subscribe_device', { device_id: id });
     } else {
       this.router.navigate(['/devices']);
     }
@@ -124,6 +160,10 @@ export class DeviceFullDetailComponent implements OnInit {
 
   ngOnDestroy() {
     this.wsSub?.unsubscribe();
+    const d = this.device();
+    if (d) {
+      this.ws.send('unsubscribe_device', { device_id: d.id });
+    }
   }
 
   setupWebsocket(id: string) {
@@ -177,6 +217,26 @@ export class DeviceFullDetailComponent implements OnInit {
         this.loadInstalledApps(id);
         this.loadAllPatches(id);
         this.loadSystemInfo(id);
+      } else if (msg.event === 'patch_install_start') {
+        // Per-patch install started on agent
+        this.installingPatchId.set(msg.payload.patch_id);
+      } else if (msg.event === 'patch_install_result') {
+        // Per-patch install completed
+        this.installingPatchId.set(null);
+        const status = msg.payload.status;
+        if (status === 'installed') {
+          this.ns.success(
+            'Patch Installed',
+            `Patch installed successfully (${msg.payload.lane} lane, ${msg.payload.duration_ms}ms)`,
+          );
+        } else {
+          this.ns.error('Patch Failed', `Patch installation failed via ${msg.payload.lane} lane`);
+        }
+        this.loadAllPatches(id);
+        this.loadAlertSummary(id);
+      } else if (msg.event === 'reboot_complete') {
+        this.ns.success('Reboot Complete', `${current.hostname} has rebooted successfully`);
+        this.loadDevice(id);
       }
     });
   }
@@ -191,11 +251,24 @@ export class DeviceFullDetailComponent implements OnInit {
           log_level: d.metadata?.log_level || 'info',
           heartbeat_interval: d.metadata?.heartbeat_interval || 60,
         };
+        const cfg = (d as any).lane_config || {};
+        this.laneConfigModel = {
+          fast_lane: {
+            ...this.laneConfigModel.fast_lane,
+            ...(cfg.fast_lane || {}),
+          },
+          slow_lane: {
+            ...this.laneConfigModel.slow_lane,
+            ...(cfg.slow_lane || {}),
+          },
+        };
         this.loadAllPatches(id);
         this.loadDeployments(id);
         this.loadSystemInfo(id);
         this.loadInstalledApps(id);
         this.loadSlowLaneSummary(id);
+        this.loadAlertSummary(id);
+        this.loadAgentHealth(id);
         this.loading.set(false);
       },
       error: () => {
@@ -289,6 +362,66 @@ export class DeviceFullDetailComponent implements OnInit {
     });
   }
 
+  loadAlertSummary(id: string) {
+    this.deviceSvc.getAlertSummary(id).subscribe({
+      next: (r) => this.alertSummary.set(r),
+      error: () => {},
+    });
+  }
+
+  loadTimeline(id: string, eventType?: string) {
+    this.timelineLoading.set(true);
+    const params: any = { page_size: 50 };
+    if (eventType) params.event_type = eventType;
+    this.deviceSvc.getTimeline(id, params).subscribe({
+      next: (r) => {
+        this.timelineEvents.set(r.results || []);
+        this.timelineLoading.set(false);
+      },
+      error: () => this.timelineLoading.set(false),
+    });
+  }
+
+  loadAgentHealth(id: string) {
+    this.agentHealthLoading.set(true);
+    this.deviceSvc.getAgentHealth(id).subscribe({
+      next: (r) => {
+        this.agentHealth.set(r);
+        this.agentHealthLoading.set(false);
+      },
+      error: () => this.agentHealthLoading.set(false),
+    });
+  }
+
+  installPatch(patchId: string, lane: 'fast' | 'slow' = 'fast') {
+    const d = this.device();
+    if (!d || this.installingPatchId()) return;
+    this.installingPatchId.set(patchId);
+    this.deviceSvc.installPatch(d.id, patchId, lane).subscribe({
+      next: () => {
+        this.ns.info('Install Initiated', `Patch install command sent via ${lane} lane`);
+      },
+      error: (err) => {
+        this.installingPatchId.set(null);
+        this.ns.error('Install Failed', err?.error?.error || 'Could not send install command.');
+      },
+    });
+  }
+
+  decommissionDevice() {
+    const d = this.device();
+    if (!d) return;
+    this.deviceSvc.decommissionDevice(d.id).subscribe({
+      next: () => {
+        this.ns.success('Decommissioned', `Device ${d.hostname} has been decommissioned.`);
+        this.router.navigate(['/devices']);
+      },
+      error: (err) => {
+        this.ns.error('Error', err?.error?.error || 'Failed to decommission device.');
+      },
+    });
+  }
+
   selectInventoryTab(deviceId: string) {
     this.activeTab.set('inventory');
     this.loadSlowLaneSummary(deviceId);
@@ -325,14 +458,36 @@ export class DeviceFullDetailComponent implements OnInit {
     this.deviceSvc.requestSlowLaneScan(d.id).subscribe({
       next: () => {
         this.ns.success(
-          'Scan Initiated',
-          `Inventory scan command sent to ${d.hostname}. Data will refresh automatically.`,
+          'Slow Lane Triggered',
+          `Slow-lane inventory scan command sent to ${d.hostname}. Data will refresh automatically.`,
         );
         this.scanningInventory.set(false);
       },
       error: (err) => {
-        this.ns.error('Scan Failed', err?.error?.error || 'Could not send scan command.');
+        this.ns.error(
+          'Slow Lane Failed',
+          err?.error?.error || 'Could not send slow-lane scan command.',
+        );
         this.scanningInventory.set(false);
+      },
+    });
+  }
+
+  scanFastLane() {
+    const d = this.device();
+    if (!d || this.scanningFastLane()) return;
+    this.scanningFastLane.set(true);
+    this.deviceSvc.requestFastLaneScan(d.id).subscribe({
+      next: () => {
+        this.ns.success('Fast Lane Triggered', `Fast-lane metrics refresh sent to ${d.hostname}.`);
+        this.scanningFastLane.set(false);
+      },
+      error: (err) => {
+        this.ns.error(
+          'Fast Lane Failed',
+          err?.error?.error || 'Could not trigger fast-lane refresh.',
+        );
+        this.scanningFastLane.set(false);
       },
     });
   }
@@ -429,6 +584,37 @@ export class DeviceFullDetailComponent implements OnInit {
     });
   }
 
+
+  updateLaneConfig() {
+    const d = this.device();
+    if (!d) return;
+    this.deviceSvc.updateLaneConfig(d.id, this.laneConfigModel).subscribe({
+      next: () => {
+        this.ns.success('Lane Config Sent', 'Lane configuration pushed to agent.');
+      },
+      error: () => this.ns.error('Error', 'Failed to update lane configuration.'),
+    });
+  }
+
+  resetLaneConfig() {
+    this.laneConfigModel = {
+      fast_lane: {
+        interval: 5,
+        concurrency: 2,
+        rate_limit: 0,
+        retry_strategy: 'exponential',
+        bandwidth_kbps: 0,
+      },
+      slow_lane: {
+        interval: 900,
+        concurrency: 1,
+        rate_limit: 0,
+        retry_strategy: 'linear',
+        bandwidth_kbps: 0,
+      },
+    };
+  }
+
   get filteredApps() {
     return this.installedApps();
   }
@@ -447,6 +633,21 @@ export class DeviceFullDetailComponent implements OnInit {
     if (bytesPerSec >= 1048576) return (bytesPerSec / 1048576).toFixed(1) + ' MB/s';
     if (bytesPerSec >= 1024) return (bytesPerSec / 1024).toFixed(1) + ' KB/s';
     return Math.round(bytesPerSec) + ' B/s';
+  }
+
+  getTopProcesses(si: any, limit: number = 12): any[] {
+    const list = si?.running_processes;
+    if (!Array.isArray(list)) return [];
+    return [...list]
+      .sort((a: any, b: any) => Number(b?.Memory_MB || 0) - Number(a?.Memory_MB || 0))
+      .slice(0, limit);
+  }
+
+  formatMemoryMB(mb: any): string {
+    const value = Number(mb || 0);
+    if (!Number.isFinite(value) || value <= 0) return '0 MB';
+    if (value >= 1024) return (value / 1024).toFixed(2) + ' GB';
+    return value.toFixed(1) + ' MB';
   }
 
   /* ── Slow-lane helpers ── */

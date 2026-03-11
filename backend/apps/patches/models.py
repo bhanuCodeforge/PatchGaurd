@@ -63,11 +63,19 @@ class DevicePatchStatus(models.Model):
         INSTALLED = "installed", "Installed"
         FAILED = "failed", "Failed"
         ROLLED_BACK = "rolled_back", "Rolled Back"
+        PENDING_REBOOT = "pending_reboot", "Pending Reboot"
+
+    class ExecutionLane(models.TextChoices):
+        FAST = "fast", "Fast Lane"
+        SLOW = "slow", "Slow Lane"
+        NONE = "", "Not Set"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     device = models.ForeignKey("inventory.Device", on_delete=models.CASCADE, related_name="patch_statuses")
     patch = models.ForeignKey(Patch, on_delete=models.CASCADE, related_name="device_statuses")
     state = models.CharField(max_length=20, choices=State.choices, default=State.MISSING)
+    execution_lane = models.CharField(max_length=10, choices=ExecutionLane.choices, blank=True, default="")
+    execution_duration_ms = models.IntegerField(null=True, blank=True)
     installed_at = models.DateTimeField(null=True, blank=True)
     error_message = models.TextField(blank=True)
     retry_count = models.IntegerField(default=0)

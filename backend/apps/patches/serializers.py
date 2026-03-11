@@ -70,7 +70,12 @@ class DevicePatchStatusSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DevicePatchStatus
-        fields = '__all__'
+        fields = [
+            'id', 'device', 'patch', 'state', 'execution_lane',
+            'execution_duration_ms', 'installed_at', 'error_message',
+            'retry_count', 'last_attempt', 'device_hostname',
+            'patch_vendor_id', 'patch_title',
+        ]
 
     def get_patch(self, obj):
         p = obj.patch

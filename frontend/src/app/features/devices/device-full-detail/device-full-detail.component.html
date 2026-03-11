@@ -42,14 +42,20 @@
       </div>
       <!-- Quick actions -->
       <div class="dd-hero-actions">
-        <button class="dd-icon-btn" title="Scan" (click)="scan()">
+        <button class="dd-icon-btn" [title]="'UI.u_tip_patch_scan' | translate" (click)="scan()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
-        <button class="dd-icon-btn" title="Reboot" (click)="reboot()">
+        <button class="dd-icon-btn" [title]="'UI.u_tip_fast_scan' | translate" [disabled]="scanningFastLane()" (click)="scanFastLane()">
+          <svg [class.spin]="scanningFastLane()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </button>
+        <button class="dd-icon-btn" [title]="'UI.u_tip_slow_scan' | translate" [disabled]="scanningInventory()" (click)="scanInventory()">
+          <svg [class.spin]="scanningInventory()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="M5 9l7-7 7 7"/><path d="M19 15l-7 7-7-7"/></svg>
+        </button>
+        <button class="dd-icon-btn" [title]="'UI.u_tip_reboot_device' | translate" (click)="reboot()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
-        <button class="dd-icon-btn dd-download-btn" title="Download Agent Installer" (click)="downloadInstaller()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <button class="dd-icon-btn dd-download-btn" [title]="'UI.u_tip_download_agent' | translate" [disabled]="installerDownloading()" (click)="downloadInstaller()">
+          <svg [class.spin]="installerDownloading()" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         </button>
       </div>
     </div>
@@ -75,6 +81,21 @@
     }
   </div>
 
+  <!-- ── Alert Banner ────────────────────────────────────────────────────── -->
+  @if (alertSummary(); as alerts) {
+    @if (alerts.needs_attention) {
+      <div class="dd-alert-banner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span class="dd-alert-text">
+          @if (alerts.critical_missing > 0) { <strong>{{ alerts.critical_missing }}</strong> critical patches missing. }
+          @if (alerts.failed_patches > 0) { <strong>{{ alerts.failed_patches }}</strong> failed patches. }
+          @if (alerts.pending_reboot > 0) { <strong>{{ alerts.pending_reboot }}</strong> pending reboot. }
+          @if (alerts.failed_deployments > 0) { <strong>{{ alerts.failed_deployments }}</strong> failed deployments. }
+        </span>
+      </div>
+    }
+  }
+
   <!-- ── Tabs ───────────────────────────────────────────────────────────── -->
   <div class="dd-tabs">
     <button class="dd-tab" [class.active]="activeTab() === 'overview'" (click)="activeTab.set('overview')">
@@ -95,9 +116,9 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
       {{ 'UI.u_deploy_history' | translate }}
     </button>
-    <button class="dd-tab" [class.active]="activeTab() === 'activity'" (click)="activeTab.set('activity'); loadActivityLog(d.id)">
+    <button class="dd-tab" [class.active]="activeTab() === 'activity'" (click)="activeTab.set('activity'); loadTimeline(d.id)">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      Activity Log
+      Timeline
     </button>
     <button class="dd-tab" [class.active]="activeTab() === 'inventory'" (click)="activeTab.set('inventory'); loadSlowLaneSummary(d.id)">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -366,6 +387,7 @@
             <th>Vendor</th>
             <th>Reboot</th>
             <th>Released</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -404,9 +426,21 @@
               }
             </td>
             <td class="text-muted small">{{ p.patch?.released_at | relativeTime }}</td>
+            <td>
+              <div class="dd-patch-actions">
+                <button class="dd-btn-lane dd-btn-fast" [disabled]="installingPatchId() === p.patch?.id"
+                  (click)="installPatch(p.patch?.id, 'fast')" title="Install via Fast Lane">
+                  @if (installingPatchId() === p.patch?.id) { ⏳ } @else { ⚡ } Fast
+                </button>
+                <button class="dd-btn-lane dd-btn-slow" [disabled]="installingPatchId() === p.patch?.id"
+                  (click)="installPatch(p.patch?.id, 'slow')" title="Install via Slow Lane (scheduled)">
+                  🕐 Slow
+                </button>
+              </div>
+            </td>
           </tr>
           } @empty {
-          <tr><td colspan="7" class="dd-empty">
+          <tr><td colspan="8" class="dd-empty">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <div>All patches are installed — system is up to date!</div>
           </td></tr>
@@ -553,7 +587,7 @@
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">Serial Number</span>
-          <span class="dd-inv-val dd-mono">{{ si.serial_number || d.metadata?.SerialNumber || '—' }}</span>
+          <span class="dd-inv-val dd-mono">{{ si.serial_number || d.metadata?.SerialNumber || d.metadata?.serial_number || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">CPU</span>
@@ -573,7 +607,7 @@
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">Architecture</span>
-          <span class="dd-inv-val">{{ d.metadata?.OSArchitecture || si.os_arch }}</span>
+          <span class="dd-inv-val">{{ d.metadata?.Architecture || d.metadata?.OSArchitecture || si.architecture || si.os_arch || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">BIOS</span>
@@ -608,7 +642,11 @@
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">Boot Time</span>
-          <span class="dd-inv-val">{{ d.metadata?.LastBootTime || si.boot_time || '—' }}</span>
+          <span class="dd-inv-val">{{ d.metadata?.LastBoot || d.metadata?.LastBootTime || si.boot_time || '—' }}</span>
+        </div>
+        <div class="dd-inv-cell">
+          <span class="dd-inv-lbl">Domain</span>
+          <span class="dd-inv-val">{{ d.metadata?.Domain || si.domain || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">Time Zone</span>
@@ -621,6 +659,18 @@
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">Agent Version</span>
           <span class="dd-inv-val">{{ si.agent_version || '—' }}</span>
+        </div>
+        <div class="dd-inv-cell">
+          <span class="dd-inv-lbl">Platform</span>
+          <span class="dd-inv-val">{{ si.platform || d.os_family || '—' }}</span>
+        </div>
+        <div class="dd-inv-cell">
+          <span class="dd-inv-lbl">Python Version</span>
+          <span class="dd-inv-val">{{ si.python_version || '—' }}</span>
+        </div>
+        <div class="dd-inv-cell">
+          <span class="dd-inv-lbl">Scan Time</span>
+          <span class="dd-inv-val">{{ si.scan_time || '—' }}</span>
         </div>
       </div>
     </div>
@@ -706,6 +756,37 @@
     </div>
     }
 
+    <!-- Running Processes (with memory usage) -->
+    @if (getTopProcesses(si).length > 0) {
+    <div class="dd-inv-section">
+      <div class="dd-inv-section-title">Running Processes (Top by Memory)</div>
+      <div class="dd-table-wrap">
+        <table class="dd-table">
+          <thead>
+            <tr>
+              <th>Process</th>
+              <th>PID</th>
+              <th>CPU</th>
+              <th>Memory</th>
+              <th>Path</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (proc of getTopProcesses(si); track proc.Id) {
+            <tr>
+              <td class="dd-mono small">{{ proc.ProcessName || '—' }}</td>
+              <td class="dd-mono small">{{ proc.Id || '—' }}</td>
+              <td class="small">{{ proc.CPU ?? '—' }}</td>
+              <td class="small">{{ formatMemoryMB(proc.Memory_MB) }}</td>
+              <td class="small text-muted" [title]="proc.Path">{{ proc.Path || '—' }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    }
+
     }
   </div>
   }
@@ -749,8 +830,22 @@
        ══════════════════════════════════════════════════════════════════════ -->
   @if (activeTab() === 'activity') {
   <div class="dd-tab-panel" @tabChange>
+    <!-- Timeline filters -->
+    <div class="dd-timeline-filters">
+      <select class="dd-select" (change)="timelineFilter.set($any($event.target).value); loadTimeline(d.id, $any($event.target).value)">
+        <option value="">All Events</option>
+        <option value="scan_complete">Scans</option>
+        <option value="patch_install_success">Patch Installs</option>
+        <option value="patch_install_failed">Patch Failures</option>
+        <option value="deployment_start">Deployments</option>
+        <option value="reboot_requested">Reboots</option>
+        <option value="config_change">Config Changes</option>
+        <option value="key_rotated">Key Rotations</option>
+        <option value="error">Errors</option>
+      </select>
+    </div>
     <div class="dd-table-wrap">
-      @if (activityLoading()) {
+      @if (timelineLoading()) {
         <app-loading-skeleton variant="table" [rows]="[0,1,2,3,4]"></app-loading-skeleton>
       } @else {
       <table class="dd-table">
@@ -758,27 +853,33 @@
           <tr>
             <th>Timestamp</th>
             <th>Event</th>
-            <th>Details</th>
-            <th>User / Source</th>
+            <th>Severity</th>
+            <th>Message</th>
+            <th>Lane</th>
+            <th>Source</th>
           </tr>
         </thead>
         <tbody>
-          @for (a of activityLog(); track $index) {
+          @for (ev of timelineEvents(); track ev.id) {
           <tr>
-            <td class="text-muted small">{{ a.timestamp || a.created_at | relativeTime }}</td>
+            <td class="text-muted small">{{ ev.created_at | relativeTime }}</td>
             <td>
               <span class="dd-state-badge"
-                [class.state-installed]="a.event_type === 'heartbeat' || a.event_type === 'scan_complete'"
-                [class.state-pending]="a.event_type === 'config_change' || a.event_type === 'deployment_start'"
-                [class.state-failed]="a.event_type === 'error' || a.event_type === 'deployment_failed'">
-                {{ a.event_type || a.action }}
+                [class.state-installed]="ev.event_type === 'scan_complete' || ev.event_type === 'patch_install_success'"
+                [class.state-pending]="ev.event_type === 'config_change' || ev.event_type === 'deployment_start'"
+                [class.state-failed]="ev.event_type === 'error' || ev.event_type === 'patch_install_failed' || ev.event_type === 'deployment_failed'">
+                {{ ev.event_type }}
               </span>
             </td>
-            <td class="small">{{ a.message || a.details || '—' }}</td>
-            <td class="text-muted small">{{ a.user || a.source || 'agent' }}</td>
+            <td>
+              <span class="dd-severity-badge" [class]="'sev-' + ev.severity">{{ ev.severity }}</span>
+            </td>
+            <td class="small">{{ ev.message || '—' }}</td>
+            <td class="small">{{ ev.execution_lane || '—' }}</td>
+            <td class="text-muted small">{{ ev.source || 'system' }}</td>
           </tr>
           } @empty {
-          <tr><td colspan="4" class="dd-empty">No activity recorded yet.</td></tr>
+          <tr><td colspan="6" class="dd-empty">No timeline events recorded yet.</td></tr>
           }
         </tbody>
       </table>
@@ -1089,6 +1190,110 @@
       </button>
     </div>
 
+    <!-- Agent Health Status -->
+    @if (agentHealth(); as health) {
+    <div class="dd-settings-card" style="margin-top: 16px">
+      <div class="dd-section-header" style="margin-bottom: 16px">
+        <span>Agent Health</span>
+        <button class="dd-link-btn" (click)="loadAgentHealth(d.id)">Refresh</button>
+      </div>
+      <div class="dd-settings-grid">
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Status</label>
+          <span class="dd-status-dot" [class]="'dot-' + health.status" style="display:inline-block;margin-right:6px"></span>
+          <span>{{ health.status | titlecase }}</span>
+        </div>
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Agent Version</label>
+          <span>{{ health.agent_version || '—' }}</span>
+        </div>
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Last Heartbeat</label>
+          <span>{{ health.heartbeat_age_seconds ? (health.heartbeat_age_seconds + 's ago') : '—' }}</span>
+        </div>
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Fast Lane Interval</label>
+          <span>{{ health.intervals?.fast_lane || '—' }}s</span>
+        </div>
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Slow Lane Interval</label>
+          <span>{{ health.intervals?.slow_lane || '—' }}s</span>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Lane Configuration -->
+    <div class="dd-settings-card" style="margin-top: 16px">
+      <div class="dd-section-header" style="margin-bottom: 16px">
+        <span>Lane Configuration</span>
+      </div>
+      <div class="dd-settings-hint">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>Configure Fast Lane (real-time metrics) and Slow Lane (inventory collection) intervals and concurrency.</span>
+      </div>
+      <div class="dd-settings-grid">
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Fast Lane Interval (sec)</label>
+          <input type="number" class="dd-input-sm" [title]="'UI.u_tip_fl_interval' | translate" [(ngModel)]="laneConfigModel.fast_lane.interval" min="2" max="300">
+        </div>
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Fast Lane Concurrency</label>
+          <input type="number" class="dd-input-sm" [title]="'UI.u_tip_fl_concurrency' | translate" [(ngModel)]="laneConfigModel.fast_lane.concurrency" min="1" max="10">
+        </div>
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Fast Lane Rate Limit (ops/min)</label>
+          <input type="number" class="dd-input-sm" [title]="'UI.u_tip_fl_rate' | translate" [(ngModel)]="laneConfigModel.fast_lane.rate_limit" min="0" max="5000">
+        </div>
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Fast Lane Retry Strategy</label>
+          <select class="dd-input-sm dd-select-sm" [title]="'UI.u_tip_fl_retry' | translate" [(ngModel)]="laneConfigModel.fast_lane.retry_strategy">
+            <option value="none">None</option>
+            <option value="linear">Linear</option>
+            <option value="exponential">Exponential</option>
+          </select>
+        </div>
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Fast Lane Bandwidth (kbps)</label>
+          <input type="number" class="dd-input-sm" [title]="'UI.u_tip_fl_bw' | translate" [(ngModel)]="laneConfigModel.fast_lane.bandwidth_kbps" min="0" max="1000000">
+        </div>
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Slow Lane Interval (sec)</label>
+          <input type="number" class="dd-input-sm" [title]="'UI.u_tip_sl_interval' | translate" [(ngModel)]="laneConfigModel.slow_lane.interval" min="60" max="86400">
+        </div>
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Slow Lane Concurrency</label>
+          <input type="number" class="dd-input-sm" [title]="'UI.u_tip_sl_concurrency' | translate" [(ngModel)]="laneConfigModel.slow_lane.concurrency" min="1" max="4">
+        </div>
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Slow Lane Rate Limit (ops/min)</label>
+          <input type="number" class="dd-input-sm" [title]="'UI.u_tip_sl_rate' | translate" [(ngModel)]="laneConfigModel.slow_lane.rate_limit" min="0" max="5000">
+        </div>
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Slow Lane Retry Strategy</label>
+          <select class="dd-input-sm dd-select-sm" [title]="'UI.u_tip_sl_retry' | translate" [(ngModel)]="laneConfigModel.slow_lane.retry_strategy">
+            <option value="none">None</option>
+            <option value="linear">Linear</option>
+            <option value="exponential">Exponential</option>
+          </select>
+        </div>
+        <div class="dd-settings-group">
+          <label class="dd-inv-lbl">Slow Lane Bandwidth (kbps)</label>
+          <input type="number" class="dd-input-sm" [title]="'UI.u_tip_sl_bw' | translate" [(ngModel)]="laneConfigModel.slow_lane.bandwidth_kbps" min="0" max="1000000">
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="dd-btn-push" (click)="updateLaneConfig()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          Push Lane Config
+        </button>
+        <button class="dd-btn-push" style="background:#475569" (click)="resetLaneConfig()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Reset Default
+        </button>
+      </div>
+    </div>
+
     <!-- Danger Zone -->
     <div class="dd-danger-zone">
       <div class="dd-danger-title">
@@ -1096,9 +1301,14 @@
         {{ 'UI.u_danger_zone' | translate }}
       </div>
       <p class="dd-danger-desc">{{ 'UI.u_delete_device_desc' | translate }}</p>
-      <button class="dd-btn-delete" (click)="deleteDevice()">
-        {{ 'UI.u_delete_device_btn' | translate }}
-      </button>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="dd-btn-delete" style="background:#b45309" (click)="decommissionDevice()">
+          Decommission Device
+        </button>
+        <button class="dd-btn-delete" (click)="deleteDevice()">
+          {{ 'UI.u_delete_device_btn' | translate }}
+        </button>
+      </div>
     </div>
 
   </div>

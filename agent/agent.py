@@ -45,7 +45,6 @@ class PatchAgent:
         self.ws: Optional[websockets.WebSocketClientProtocol] = None
         self.running = True
         self._connected = False
-        self._rest_session: Optional[Any] = None  # aiohttp.ClientSession
         self.version = "1.0.0"
         self._scheduler: Optional[LaneScheduler] = None
 
@@ -274,6 +273,8 @@ class PatchAgent:
                         device_id=self.device_id,
                         fast_interval=self.config.get("fast_lane_interval", 5),
                         slow_interval=self.config.get("slow_lane_interval", 900),
+                        fast_concurrency=self.config.get("fast_lane_concurrency", 2),
+                        slow_concurrency=self.config.get("slow_lane_concurrency", 1),
                     )
 
                     await asyncio.gather(
@@ -428,8 +429,38 @@ class PatchAgent:
 
                     if command == "START_SCAN":
                         await self.run_scan()
+                    elif command == "COLLECT_FAST_LANE":
+                        if self._scheduler:
+                            metrics = self._scheduler._fast.collect()
+                            metrics["device_id"] = self.device_id
+                            await self._send_lane_event("metrics", metrics)
+                        else:
+                            # Fallback if scheduler not ready yet
+                            payload = {
+                                "device_id": self.device_id,
+                                "cpu_percent": psutil.cpu_percent(interval=0),
+                                "memory_percent": psutil.virtual_memory().percent,
+                                "disk_usage_percent": self._disk_usage(),
+                                "timestamp": time.time(),
+                            }
+                            await self._send_lane_event("metrics", payload)
+                    elif command == "COLLECT_SLOW_LANE":
+                        if self._scheduler:
+                            loop = asyncio.get_event_loop()
+                            t0 = time.monotonic()
+                            data = await loop.run_in_executor(self._scheduler._executor, self._scheduler._slow.collect)
+                            elapsed = round(time.monotonic() - t0, 1)
+                            await self._send_lane_event("slow_lane_data", {
+                                "device_id": self.device_id,
+                                "data": data,
+                                "collection_time_sec": elapsed,
+                                "timestamp": time.time(),
+                            })
+                        else:
+                            await self.send_inventory()
                     elif command == "EXECUTE_PATCH":
-                        await self.run_patch(payload.get("patch_id"))
+                        lane = payload.get("lane", "fast")
+                        await self.run_patch(payload.get("patch_id"), lane=lane, initiated_by=payload.get("initiated_by"))
                     elif command == "START_DEPLOYMENT":
                         await self.run_deployment(payload)
                     elif command == "CANCEL_DEPLOYMENT":
@@ -449,7 +480,6 @@ class PatchAgent:
                         new_cfg = payload.get("config", {})
                         if new_cfg:
                             logger.info(f"Applying remote config update: {new_cfg}")
-                            old_interval = self.config.get("heartbeat_interval", 60)
                             
                             self.config.update(new_cfg)
                             self._persist_config()
@@ -462,6 +492,8 @@ class PatchAgent:
                                 self._scheduler.update_intervals(
                                     fast=new_cfg.get("fast_lane_interval"),
                                     slow=new_cfg.get("slow_lane_interval"),
+                                    fast_concurrency=new_cfg.get("fast_lane_concurrency"),
+                                    slow_concurrency=new_cfg.get("slow_lane_concurrency"),
                                 )
                             
                             # If heartbeat interval changed, the loop will adapt on next sleep
@@ -645,24 +677,43 @@ class PatchAgent:
         logger.info(f"Deployment {deployment_id} result: {result_status} ({len(failed)} failed patches)")
 
     @trace
-    async def run_patch(self, patch_id: str):
+    async def run_patch(self, patch_id: str, lane: str = "fast", initiated_by: str = ""):
         if not patch_id:
             return
-        logger.info(f"Installing patch {patch_id}...")
+        logger.info(f"Installing patch {patch_id} via {lane} lane...")
+
+        # Emit start event
+        await self.send_json({
+            "event": "patch_install_start",
+            "payload": {
+                "device_id": self.device_id,
+                "patch_id": patch_id,
+                "lane": lane,
+                "initiated_by": initiated_by,
+            }
+        })
+
+        t0 = time.time()
         try:
             success = self.plugin.install_patch(patch_id)
         except Exception as e:
             logger.error(f"Patch install failed: {e}")
             success = False
+        duration_ms = int((time.time() - t0) * 1000)
+
+        result_status = "completed" if success else "failed"
         await self.send_json({
-            "event": "patch_result",
+            "event": "patch_install_result",
             "payload": {
                 "device_id": self.device_id,
                 "patch_id": patch_id,
-                "status": "completed" if success else "failed",
+                "status": result_status,
+                "lane": lane,
+                "duration_ms": duration_ms,
                 "timestamp": time.time(),
             }
         })
+        logger.info(f"Patch {patch_id} [{lane}]: {result_status} in {duration_ms}ms")
 
     async def send_json(self, data: Dict[str, Any]):
         if self.ws is not None and self._connected:
