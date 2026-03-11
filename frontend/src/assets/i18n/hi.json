@@ -303,7 +303,15 @@
     "u_plugged_in": "प्लग इन",
     "u_on_battery": "बैटरी पर",
     "u_search_patch": "पैच खोजें",
-    "u_search_audit": "ऑडिट खोजें"
+    "u_search_audit": "ऑडिट खोजें",
+    "u_os_family": "OS परिवार",
+    "u_os_version": "OS संस्करण",
+    "u_last_seen": "अंतिम बार देखा गया",
+    "u_never": "कभी नहीं",
+    "u_performance": "प्रदर्शन (ग्लोबल मेट्रिक्स)",
+    "u_reboot_action": "पुनरारंभ करें",
+    "u_view_full_details": "पूरा विवरण देखें →",
+    "u_optional": "वैकल्पिक"
   },
   "MSG": {
     "m_reboot_confirm": "क्या आप वाकई {{hostname}} को पुनरारंभ करना चाहते हैं? इससे इस उपकरण पर चल रही सभी सेवाएँ बाधित हो जाएँगी।",

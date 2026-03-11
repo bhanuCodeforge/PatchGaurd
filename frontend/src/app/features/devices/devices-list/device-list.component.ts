@@ -285,8 +285,8 @@ export class DeviceListComponent implements OnInit, OnDestroy {
   }
 
   submitAddDevice() {
-    if (!this.addForm.hostname.trim() || !this.addForm.ip_address.trim()) {
-      this.ns.error('Validation Error', 'Hostname and IP address are required.');
+    if (!this.addForm.ip_address.trim()) {
+      this.ns.error('Validation Error', 'IP address is required.');
       return;
     }
     this.addLoading.set(true);

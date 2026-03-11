@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Device, DeviceGroup
 import string
 import secrets
+import uuid
 
 class DeviceGroupSerializer(serializers.ModelSerializer):
     device_count = serializers.SerializerMethodField()
@@ -71,7 +72,8 @@ class DeviceDetailSerializer(serializers.ModelSerializer):
         }
 
 class DeviceCreateSerializer(serializers.ModelSerializer):
-    # os_version and agent_version are optional from the UI
+    # os_version, agent_version, and hostname are optional from the UI
+    hostname      = serializers.CharField(required=False, default='', allow_blank=True)
     os_version    = serializers.CharField(required=False, default='', allow_blank=True)
     agent_version = serializers.CharField(required=False, default='', allow_blank=True)
 
@@ -80,6 +82,9 @@ class DeviceCreateSerializer(serializers.ModelSerializer):
         fields = ['hostname', 'description', 'ip_address', 'os_family', 'os_version', 'mac_address', 'os_arch', 'environment', 'status', 'tags', 'agent_version']
 
     def create(self, validated_data):
+        if not validated_data.get('hostname'):
+            validated_data['hostname'] = f"pending-{uuid.uuid4().hex[:8]}"
+            
         alphabet = string.ascii_letters + string.digits
         api_key = ''.join(secrets.choice(alphabet) for i in range(32))
         validated_data['agent_api_key'] = api_key

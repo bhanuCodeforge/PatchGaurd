@@ -315,7 +315,15 @@
     "u_min_length": "Min 12 characters",
     "u_complexity": "Must contain upper, lower, digit, and special char",
     "u_search_patch": "Search patches",
-    "u_search_audit": "Search audit"
+    "u_search_audit": "Search audit",
+    "u_os_family": "OS Family",
+    "u_os_version": "OS Version",
+    "u_last_seen": "Last Seen",
+    "u_never": "Never",
+    "u_performance": "Performance (Global Metrics)",
+    "u_reboot_action": "Reboot",
+    "u_view_full_details": "View Full Details →",
+    "u_optional": "Optional"
   },
   "MSG": {
     "m_reboot_confirm": "Are you sure you want to reboot {{hostname}}? This will interrupt all services running on this device.",

@@ -21,29 +21,30 @@
 
     <div class="flyout-body">
       <div class="info-group">
-        <h6 class="info-heading">System Information</h6>
+        <h6 class="info-heading">{{ 'UI.u_system_info_tab' | translate }}</h6>
         <div class="info-grid">
-          <div class="info-row"><span class="key">OS Family</span><span class="val">{{ device?.os_family | titlecase }}</span></div>
-          <div class="info-row"><span class="key">OS Version</span><span class="val">{{ device?.os_version || 'N/A' }}</span></div>
-          <div class="info-row"><span class="key">Architecture</span><span class="val">{{ device?.os_arch || 'x86_64' }}</span></div>
-          <div class="info-row"><span class="key">Environment</span><span class="val">{{ device?.environment | titlecase }}</span></div>
-          <div class="info-row"><span class="key">Agent Version</span><span class="val">{{ device?.agent_version || 'N/A' }}</span></div>
-          <div class="info-row"><span class="key">Last Seen</span><span class="val">{{ device?.last_seen | relativeTime }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_os_family' | translate }}</span><span class="val">{{ device?.os_family | titlecase }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_os_version' | translate }}</span><span class="val">{{ device?.os_version || 'N/A' }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_os_arch' | translate }}</span><span class="val">{{ device?.os_arch || 'x86_64' }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_environment' | translate }}</span><span class="val">{{ device?.environment | titlecase }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_agent_version' | translate }}</span><span class="val">{{ device?.agent_version || 'N/A' }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_last_seen' | translate }}</span><span class="val">{{ device?.last_seen | relativeTime }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_last_scan' | translate }}</span><span class="val">{{ device?.last_scan ? (device?.last_scan | relativeTime) : ('UI.u_never' | translate) }}</span></div>
         </div>
       </div>
 
       <div class="info-group" *ngIf="device?.tags?.length">
-        <h6 class="info-heading">Tags</h6>
+        <h6 class="info-heading">{{ 'UI.u_tags' | translate }}</h6>
         <div class="d-flex flex-wrap gap-1 mt-1">
           <span class="device-tag" *ngFor="let t of device.tags">{{ t }}</span>
         </div>
       </div>
 
       <div class="info-group">
-        <h6 class="info-heading">Performance (Global Metrics)</h6>
+        <h6 class="info-heading">{{ 'UI.u_performance' | translate }}</h6>
         <div class="metrics-grid">
           <div class="metric-item">
-            <span class="metric-label">CPU Usage</span>
+            <span class="metric-label">{{ 'UI.u_cpu_usage' | translate }}</span>
             <div class="d-flex align-items-center gap-2">
               <div class="progress flex-grow-1" style="height: 4px; background: #374151;">
                 <div class="progress-bar" [style.width]="(device?.metadata?.cpu_usage || 0) + '%'"
@@ -55,7 +56,7 @@
             </div>
           </div>
           <div class="metric-item mt-2">
-            <span class="metric-label">RAM Usage</span>
+            <span class="metric-label">{{ 'UI.u_mem_usage' | translate }}</span>
             <div class="d-flex align-items-center gap-2">
               <div class="progress flex-grow-1" style="height: 4px; background: #374151;">
                 <div class="progress-bar" [style.width]="(device?.metadata?.ram_usage || 0) + '%'"
@@ -69,10 +70,10 @@
       </div>
 
       <div class="info-group">
-        <h6 class="info-heading">Compliance</h6>
+        <h6 class="info-heading">{{ 'UI.u_compliance' | translate }}</h6>
         <div class="compliance-bar-wrap">
           <div class="d-flex justify-content-between mb-1">
-            <span class="text-muted small">Compliance Rate</span>
+            <span class="text-muted small">{{ 'UI.u_compliance_rate' | translate }}</span>
             <span class="small fw-600" [class]="(device?.compliance_rate || 0) >= 90 ? 'text-success' : (device?.compliance_rate || 0) >= 70 ? 'text-warning' : 'text-danger'">
               {{ device?.compliance_rate || 0 }}%
             </span>
@@ -87,18 +88,18 @@
 
     <div class="flyout-footer flex-wrap">
       <button class="btn btn-sm btn-outline-secondary" (click)="scan()">
-        Scan Now
+        {{ 'UI.u_scan_now' | translate }}
       </button>
       <button class="btn btn-sm btn-outline-warning" (click)="reboot()">
-        Reboot
+        {{ 'UI.u_reboot_action' | translate }}
       </button>
       <button class="btn btn-sm btn-outline-primary" (click)="edit.emit(device)">
-        Edit
+        {{ 'UI.u_edit' | translate }}
       </button>
       <button class="btn btn-sm btn-outline-danger" (click)="delete()">
-        Delete
+        {{ 'UI.u_delete_label' | translate }}
       </button>
-      <button class="btn btn-sm btn-primary ms-auto" [routerLink]="['/devices', device?.id]" (click)="close.emit()">View Full Details →</button>
+      <button class="btn btn-sm btn-primary ms-auto" [routerLink]="['/devices', device?.id]" (click)="close.emit()">{{ 'UI.u_view_full_details' | translate }}</button>
     </div>
   </div>
 </div>

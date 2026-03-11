@@ -211,7 +211,7 @@
   <!-- Form state -->
   <div *ngIf="!createdDevice()" class="modal-body-custom">
     <div class="mb-3">
-      <label class="form-label">{{ 'UI.u_hostname' | translate }} <span class="text-danger">*</span></label>
+      <label class="form-label">{{ 'UI.u_hostname' | translate }} <span class="text-muted small">({{ 'UI.u_optional' | translate }})</span></label>
       <input class="form-control form-control-dark" [(ngModel)]="addForm.hostname" [placeholder]="'UI.u_hostname' | translate" />
     </div>
     <div class="mb-3">
