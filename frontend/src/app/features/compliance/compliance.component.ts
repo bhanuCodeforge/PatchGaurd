@@ -38,6 +38,7 @@ export class ComplianceComponent implements OnInit {
 
   // SLA violations
   slaBreaches = signal<any[]>([]);
+  slaItems = signal<any[]>([]);
   slaLoading = signal(false);
 
   // Active tab
@@ -63,6 +64,7 @@ export class ComplianceComponent implements OnInit {
           { label: 'Medium', pct: r.medium_pct ?? 0, color: '#eab308' },
           { label: 'Low', pct: r.low_pct ?? 0, color: '#22c55e' },
         ]);
+        this.slaItems.set(r.violation_items ?? []);
       },
     });
     this.loadDevices();

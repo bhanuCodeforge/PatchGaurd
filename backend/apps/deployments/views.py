@@ -323,6 +323,25 @@ class ComplianceReportView(APIView):
             "compliance": s.overall_compliance
         } for s in trend_qs]
 
+        # SLA Violations: Detailed list for the report
+        sla_threshold = timezone.now() - timezone.timedelta(hours=72)
+        violations_qs = DevicePatchStatus.objects.filter(
+            state=DevicePatchStatus.State.MISSING,
+            patch__severity='critical',
+            patch__released_at__lt=sla_threshold
+        ).select_related('device', 'patch')[:100]  # Limit to 100 for performance
+        
+        violation_items = [
+            {
+                "id": str(v.id),
+                "device_hostname": v.device.hostname,
+                "patch_title": v.patch.title,
+                "severity": v.patch.severity,
+                "released_at": v.patch.released_at.isoformat(),
+                "kb_article": v.patch.kb_article
+            } for v in violations_qs
+        ]
+
         return Response({
             "overall": round(overall, 1),
             "compliant_devices": compliant_devices,
@@ -332,5 +351,6 @@ class ComplianceReportView(APIView):
             "high_pct": round((sev_counts.get('high', 0) / total_missing * 100), 1),
             "medium_pct": round((sev_counts.get('medium', 0) / total_missing * 100), 1),
             "low_pct": round((sev_counts.get('low', 0) / total_missing * 100), 1),
-            "trend": trend_data
+            "trend": trend_data,
+            "violation_items": violation_items
         })

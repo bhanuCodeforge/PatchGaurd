@@ -10,10 +10,10 @@ from django.utils import timezone
 from rest_framework.decorators import action
 from .serializers import (
     CustomTokenObtainSerializer, UserSerializer, UserCreateSerializer, PasswordChangeSerializer,
-    AuditLogSerializer
+    AuditLogSerializer, SystemSettingSerializer
 )
 from .permissions import IsAdmin, IsOperatorOrAbove
-from .models import AuditLog
+from .models import AuditLog, SystemSetting
 from common.pagination import StandardPageNumberPagination
 
 User = get_user_model()
@@ -217,3 +217,23 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = StandardPageNumberPagination
     filterset_fields = ['resource_type', 'user']
     search_fields = ['action', 'user__username']
+
+class SystemSettingViewSet(viewsets.ModelViewSet):
+    """
+    CRUD of global system settings. Restricted to Administrators.
+    """
+    queryset = SystemSetting.objects.all().order_by('key')
+    serializer_class = SystemSettingSerializer
+    permission_classes = [IsAdmin]
+    lookup_field = 'key' # Allow looking up by key string directly
+
+    @action(detail=False, methods=['get'], permission_classes=[IsOperatorOrAbove])
+    def get_by_key(self, request):
+        key = request.query_params.get('key')
+        if not key:
+            return Response({"error": "key param required"}, status=400)
+        try:
+            setting = SystemSetting.objects.get(key=key)
+            return Response(SystemSettingSerializer(setting).data)
+        except SystemSetting.DoesNotExist:
+            return Response({"error": "Setting not found"}, status=404)

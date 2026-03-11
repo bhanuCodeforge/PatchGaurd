@@ -5,7 +5,7 @@
 body { margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
 
 // ── CSS CUSTOM PROPERTIES — DARK (default) ───────────
-:root, [data-theme="dark"] {
+:root, [data-bs-theme="dark"] {
   --bg:          #111827;
   --bg-card:     #1f2937;
   --bg-input:    #111827;
@@ -22,7 +22,18 @@ body { margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', sans-serif
   --dropdown-bg: #1a2332;
   --scrollbar-track: #1f2937;
   --scrollbar-thumb: #374151;
-  // severity/status (dark stays same)
+
+  // Bootstrap Mapping
+  --bs-body-bg:             var(--bg);
+  --bs-body-color:          var(--text);
+  --bs-secondary-color:     var(--text-secondary);
+  --bs-tertiary-color:      var(--muted);
+  --bs-border-color:        var(--border);
+  --bs-card-bg:             var(--bg-card);
+  --bs-modal-bg:            var(--modal-bg);
+  --bs-dropdown-bg:         var(--dropdown-bg);
+
+  // Severity/Status
   --sev-critical-bg: #450a0a; --sev-critical-color: #fca5a5; --sev-critical-border: #7f1d1d;
   --sev-high-bg:     #431407; --sev-high-color:     #fed7aa; --sev-high-border:     #9a3412;
   --sev-medium-bg:   #422006; --sev-medium-color:   #fde68a; --sev-medium-border:   #92400e;
@@ -32,7 +43,7 @@ body { margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', sans-serif
 }
 
 // ── CSS CUSTOM PROPERTIES — LIGHT ────────────────────
-[data-theme="light"] {
+[data-bs-theme="light"] {
   --bg:          #f3f4f6;
   --bg-card:     #ffffff;
   --bg-input:    #f9fafb;
@@ -49,7 +60,18 @@ body { margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', sans-serif
   --dropdown-bg: #ffffff;
   --scrollbar-track: #f3f4f6;
   --scrollbar-thumb: #d1d5db;
-  // severity/status light variants
+
+  // Bootstrap Mapping
+  --bs-body-bg:             var(--bg);
+  --bs-body-color:          var(--text);
+  --bs-secondary-color:     var(--text-secondary);
+  --bs-tertiary-color:      var(--muted);
+  --bs-border-color:        var(--border);
+  --bs-card-bg:             var(--bg-card);
+  --bs-modal-bg:            var(--modal-bg);
+  --bs-dropdown-bg:         var(--dropdown-bg);
+
+  // Severity/Status
   --sev-critical-bg: #fef2f2; --sev-critical-color: #991b1b; --sev-critical-border: #fecaca;
   --sev-high-bg:     #fff7ed; --sev-high-color:     #9a3412; --sev-high-border:     #fed7aa;
   --sev-medium-bg:   #fefce8; --sev-medium-color:   #92400e; --sev-medium-border:   #fde68a;
@@ -58,39 +80,11 @@ body { margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', sans-serif
   --st-reviewed-bg:  #eff6ff; --st-reviewed-color:  #1d4ed8;
 }
 
-// ── AUTO-DETECT OS THEME PREFERENCE ──────────────────
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg:          #f3f4f6;
-    --bg-card:     #ffffff;
-    --bg-input:    #f9fafb;
-    --bg-hover:    #f0f4ff;
-    --bg-thead:    #f8fafc;
-    --border:      #e5e7eb;
-    --border-focus:#3b82f6;
-    --text:        #111827;
-    --text-secondary: #374151;
-    --muted:       #9ca3af;
-    --muted2:      #6b7280;
-    --shadow:      rgba(0,0,0,.12);
-    --modal-bg:    #ffffff;
-    --dropdown-bg: #ffffff;
-    --scrollbar-track: #f3f4f6;
-    --scrollbar-thumb: #d1d5db;
-    --sev-critical-bg: #fef2f2; --sev-critical-color: #991b1b; --sev-critical-border: #fecaca;
-    --sev-high-bg:     #fff7ed; --sev-high-color:     #9a3412; --sev-high-border:     #fed7aa;
-    --sev-medium-bg:   #fefce8; --sev-medium-color:   #92400e; --sev-medium-border:   #fde68a;
-    --st-approved-bg:  #f0fdf4; --st-approved-color:  #15803d;
-    --st-rejected-bg:  #fef2f2; --st-rejected-color:  #b91c1c;
-    --st-reviewed-bg:  #eff6ff; --st-reviewed-color:  #1d4ed8;
-  }
-}
-
 // Apply to body
 body {
-  background: var(--bg);
-  color: var(--text);
-  transition: background .2s ease, color .2s ease;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  transition: background-color .2s ease, color .2s ease;
 }
 
 // ── TYPOGRAPHY ───────────────────────────────────────
@@ -240,7 +234,7 @@ th.sortable { cursor: pointer; user-select: none; &:hover { color: var(--text-se
   border: 1px solid rgba(34,197,94,.3);
   border-radius: 999px; padding: 2px 10px;
   font-size: 12px; font-weight: 700;
-  [data-theme="dark"] & { color: #4ade80; }
+  [data-bs-theme="dark"] & { color: #4ade80; }
 }
 .live-dot {
   width: 7px; height: 7px; border-radius: 50%;
@@ -292,7 +286,7 @@ th.sortable { cursor: pointer; user-select: none; &:hover { color: var(--text-se
 // ── MODAL (shared) ───────────────────────────────────
 .modal-backdrop-global {
   position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1040;
-  [data-theme="light"] & { background: rgba(0,0,0,.3); }
+  [data-bs-theme="light"] & { background: rgba(0,0,0,.3); }
 }
 
 // ── BOOTSTRAP OVERRIDES ──────────────────────────────

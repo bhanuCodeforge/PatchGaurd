@@ -5,7 +5,7 @@ from django.utils import timezone
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from datetime import timedelta
 import re
-from .models import AuditLog
+from .models import AuditLog, SystemSetting
 
 User = get_user_model()
 
@@ -110,3 +110,8 @@ class AuditLogSerializer(serializers.ModelSerializer):
 
     def get_status(self, obj):
         return 'success'
+class SystemSettingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SystemSetting
+        fields = ['id', 'key', 'value', 'data', 'description', 'updated_at']
+        read_only_fields = ['id', 'updated_at']

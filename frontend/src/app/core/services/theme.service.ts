@@ -26,6 +26,6 @@ export class ThemeService {
   }
 
   private _apply(theme: Theme) {
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-bs-theme', theme);
   }
 }

@@ -1,9 +1,11 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../core/auth/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { SettingsService } from '../../../core/services/settings.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-settings',
@@ -12,9 +14,10 @@ import { NotificationService } from '../../../core/services/notification.service
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
-export class SettingsComponent {
-  auth = inject(AuthService);
+export class SettingsComponent implements OnInit {
+  private auth = inject(AuthService);
   private ns = inject(NotificationService);
+  private settingsSvc = inject(SettingsService);
 
   activeSection = 'profile';
   isAdmin = this.auth.currentUser()?.role === 'admin';
@@ -59,7 +62,7 @@ export class SettingsComponent {
 
   // Admin settings
   generalSettings = {
-    orgName: 'My Organization',
+    orgName: 'PatchGuard Enterprise',
     patchApprovalRequired: true,
     deploymentApprovalRequired: true,
     sessionTimeoutMin: 30,
@@ -115,6 +118,24 @@ export class SettingsComponent {
     metricsRetentionDays: 30,
   };
 
+  ngOnInit() {
+    if (this.auth.isAdmin()) {
+      this.loadAdminSettings();
+    }
+  }
+
+  loadAdminSettings() {
+    this.settingsSvc.getSettings().subscribe({
+      next: (settings) => {
+        settings.forEach(s => {
+          if (s.key === 'SMTP_CONFIG') this.emailSettings = { ...this.emailSettings, ...s.data };
+          if (s.key === 'GENERAL_POLICY') this.generalSettings = { ...this.generalSettings, ...s.data };
+          if (s.key === 'RETENTION_POLICY') this.retentionSettings = { ...this.retentionSettings, ...s.data };
+        });
+      }
+    });
+  }
+
   saveProfile() {
     this.ns.success('UI.u_saved', 'MSG.m_profile_updated');
   }
@@ -141,7 +162,10 @@ export class SettingsComponent {
   }
 
   saveGeneralSettings() {
-    this.ns.success('UI.u_saved', 'General settings saved');
+    this.settingsSvc.updateSetting('GENERAL_POLICY', { data: this.generalSettings, value: 'updated' }).subscribe({
+      next: () => this.ns.success('UI.u_saved', 'General settings saved'),
+      error: () => this.ns.error('Error', 'Failed to save general settings')
+    });
   }
 
   saveVendorFeeds() {
@@ -149,7 +173,10 @@ export class SettingsComponent {
   }
 
   saveEmailSettings() {
-    this.ns.success('UI.u_saved', 'Email/SMTP settings saved');
+    this.settingsSvc.updateSetting('SMTP_CONFIG', { data: this.emailSettings, value: 'updated' }).subscribe({
+      next: () => this.ns.success('UI.u_saved', 'Email/SMTP settings saved'),
+      error: () => this.ns.error('Error', 'Failed to save email settings')
+    });
   }
 
   testEmail() {
@@ -165,6 +192,9 @@ export class SettingsComponent {
   }
 
   saveRetentionSettings() {
-    this.ns.success('UI.u_saved', 'Data retention policy saved');
+    this.settingsSvc.updateSetting('RETENTION_POLICY', { data: this.retentionSettings, value: 'updated' }).subscribe({
+      next: () => this.ns.success('UI.u_saved', 'Data retention policy saved'),
+      error: () => this.ns.error('Error', 'Failed to save retention settings')
+    });
   }
 }

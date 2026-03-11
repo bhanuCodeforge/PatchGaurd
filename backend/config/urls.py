@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/v1/devices/', include('apps.inventory.urls')),
     path('api/v1/patches/', include('apps.patches.urls')),
     path('api/v1/audit-logs/', include('apps.accounts.urls_audit')),
+    path('api/v1/settings/', include('apps.accounts.urls_settings')),
     path('api/v1/', include('apps.deployments.urls')),  # Includes reports/ AND deployments/
     
     # Swagger / DRF Spectacular config
