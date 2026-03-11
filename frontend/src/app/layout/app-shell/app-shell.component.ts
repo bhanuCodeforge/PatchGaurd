@@ -4,7 +4,7 @@ import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter, map } from 'rxjs/operators';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { TopbarComponent } from '../topbar/topbar.component';
-import { ToastContainerComponent } from '../../shared/components/toast-container.component';
+import { ToastContainerComponent } from '../../shared/components/toast-container/toast-container.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { WebsocketService } from '../../core/services/websocket.service';
 

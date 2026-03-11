@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
-import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton.component';
-import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { AuditService, AuditLog } from '../../core/services/audit.service';
 
 @Component({

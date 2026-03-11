@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ReportService } from '../../core/services/report.service';
 import { DeviceService } from '../../core/services/device.service';
-import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton.component';
-import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
 
 @Component({

@@ -6,7 +6,10 @@ describe('EmptyStateComponent', () => {
   let fixture: ComponentFixture<EmptyStateComponent>;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [EmptyStateComponent] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [EmptyStateComponent],
+    }).compileComponents();
+
     fixture = TestBed.createComponent(EmptyStateComponent);
     component = fixture.componentInstance;
     component.title = 'No results';
@@ -14,4 +17,17 @@ describe('EmptyStateComponent', () => {
   });
 
   it('should create', () => expect(component).toBeTruthy());
+
+  it('should render the default icon', () => {
+    expect(component.icon).toBe('📭');
+  });
+
+  it('should render the custom title', () => {
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('.empty-title')?.textContent?.trim()).toBe('No results');
+  });
+
+  it('should render the default description', () => {
+    expect(component.description).toBe('Nothing to display here yet.');
+  });
 });

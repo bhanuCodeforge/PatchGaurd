@@ -1,13 +1,13 @@
-﻿import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { DeploymentService } from '../../../core/services/deployment.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { StatusBadgeComponent } from '../../../shared/components/status-badge.component';
-import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton.component';
-import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
 
 @Component({

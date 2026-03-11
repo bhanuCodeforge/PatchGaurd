@@ -1,0 +1,14 @@
+<ng-container [ngSwitch]="variant">
+  <div *ngSwitchCase="'kpi-row'" class="kpi-row">
+    <div *ngFor="let i of [1, 2, 3, 4]" class="kpi-card shimmer"></div>
+  </div>
+
+  <div *ngSwitchCase="'table'" class="table-skel">
+    <div class="skel-header shimmer"></div>
+    <div *ngFor="let r of rows" class="skel-row shimmer"></div>
+  </div>
+
+  <div *ngSwitchCase="'card'"  class="card-skel shimmer"></div>
+  <div *ngSwitchCase="'chart'" class="chart-skel shimmer"></div>
+  <div *ngSwitchDefault        class="skel-row shimmer" [style.height.px]="height"></div>
+</ng-container>

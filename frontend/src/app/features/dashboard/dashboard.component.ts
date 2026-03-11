@@ -8,7 +8,7 @@ import { DeviceService } from '../../core/services/device.service';
 import { DeploymentService } from '../../core/services/deployment.service';
 import { PatchService } from '../../core/services/patch.service';
 import { WebsocketService } from '../../core/services/websocket.service';
-import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton.component';
+import { LoadingSkeletonComponent } from '../../shared/components/loading-skeleton/loading-skeleton.component';
 import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
 
 @Component({

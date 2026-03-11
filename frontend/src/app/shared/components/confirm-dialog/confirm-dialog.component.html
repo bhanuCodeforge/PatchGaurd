@@ -1,0 +1,32 @@
+<div *ngIf="visible" class="overlay" (click)="onOverlayClick($event)">
+  <div class="dialog">
+    <div class="dialog-header" [class]="'dialog-header--' + severity">
+      <div class="dialog-icon">
+        <span *ngIf="severity === 'danger'">⚠</span>
+        <span *ngIf="severity === 'warning'">!</span>
+        <span *ngIf="severity === 'info'">?</span>
+      </div>
+      <h3>{{ title }}</h3>
+    </div>
+
+    <div class="dialog-body">
+      <p>{{ message }}</p>
+      <div *ngIf="confirmText" class="confirm-input">
+        <label>Type <strong>{{ confirmText }}</strong> to confirm:</label>
+        <input [(ngModel)]="typedConfirm" [placeholder]="confirmText" />
+      </div>
+    </div>
+
+    <div class="dialog-footer">
+      <button class="btn-secondary" (click)="cancel.emit()">Cancel</button>
+      <button
+        class="btn-danger"
+        [class.btn-warning]="severity === 'warning'"
+        [disabled]="confirmText && typedConfirm !== confirmText"
+        (click)="confirm.emit()"
+      >
+        {{ confirmLabel }}
+      </button>
+    </div>
+  </div>
+</div>

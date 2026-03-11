@@ -5,12 +5,12 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DeviceService } from '../../../core/services/device.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { StatusBadgeComponent } from '../../../shared/components/status-badge.component';
-import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
 import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
 import { Device } from '../../../core/models/types';
 import { WebsocketService } from '../../../core/services/websocket.service';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog.component';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { Subscription } from 'rxjs';
 
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';

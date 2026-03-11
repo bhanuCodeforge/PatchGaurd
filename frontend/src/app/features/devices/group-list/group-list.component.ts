@@ -5,8 +5,8 @@ import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { DeviceService } from '../../../core/services/device.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton.component';
-import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
+import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-group-list',

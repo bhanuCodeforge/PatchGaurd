@@ -1,0 +1,37 @@
+<div class="modal-backdrop" (click)="cancel.emit()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h5 class="modal-title">
+        <span [class.text-success]="action === 'approve'" [class.text-danger]="action === 'reject'">
+          {{ action === 'approve' ? 'Approve Patch' : 'Reject Patch' }}
+        </span>
+      </h5>
+      <button type="button" class="btn-close btn-close-white" (click)="cancel.emit()"></button>
+    </div>
+    <div class="modal-body">
+      <p class="text-secondary small mb-3">
+        {{ action === 'approve' 
+           ? 'By approving this patch, you allow it to be deployed across the environment.' 
+           : 'Rejecting this patch will exclude it from all current and future deployments.' }}
+      </p>
+      
+      <div class="form-group">
+        <label class="form-label text-muted small uppercase fw-bold">Reason / Notes</label>
+        <textarea 
+          class="form-control" 
+          rows="4" 
+          [(ngModel)]="reason" 
+          placeholder="e.g. Critical security fix, approved by CISO, or reasons for rejection..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="cancel.emit()">Cancel</button>
+      <button 
+        type="button" 
+        [class]="action === 'approve' ? 'btn btn-success' : 'btn btn-danger'"
+        (click)="submit()">
+        Confirm {{ action === 'approve' ? 'Approval' : 'Rejection' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,4 @@
+<span class="badge" [ngStyle]="getStyle()">
+  <span *ngIf="dot" class="dot" [ngStyle]="{ background: getColor() }"></span>
+  {{ label || value }}
+</span>

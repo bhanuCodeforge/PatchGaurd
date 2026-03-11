@@ -4,9 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { UserService } from '../../../core/services/user.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog.component';
-import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton.component';
-import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
 
 @Component({

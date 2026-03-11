@@ -4,9 +4,9 @@ import { RouterLink, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DeviceService } from '../../../core/services/device.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { StatusBadgeComponent } from '../../../shared/components/status-badge.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
-import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog.component';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-device-detail',
