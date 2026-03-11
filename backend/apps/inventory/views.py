@@ -220,15 +220,23 @@ class DeviceViewSet(viewsets.ModelViewSet):
             if 'agent_version' in meta: device.agent_version = meta['agent_version']
             
             existing = device.metadata or {}
-            # Update metadata json with all spec fields
-            spec_fields = (
+            # Update metadata json with all spec fields and any new WMI details
+            spec_fields = {
                 "cpu_usage", "ram_usage", "disk_usage", "agent_version",
                 "cpu_count", "total_ram", "total_disk", "uptime", "serial_number",
-                "log_level", "heartbeat_interval"
-            )
-            for field in spec_fields:
-                if field in meta:
-                    existing[field] = meta[field]
+                "log_level", "heartbeat_interval", "cpu_model", "boot_time", "domain",
+                "manufacturer", "model",
+                # Detailed WMI fields:
+                "ComputerName", "UserName", "OSCaption", "OSVersion", "OSBuild",
+                "OSArchitecture", "InstallDate", "LastBootTime", "CPU", "CPUCores",
+                "CPULogical", "RAM_GB", "DiskFree_GB", "DiskUsed_GB", "BIOSVersion",
+                "BIOSDate", "TimeZone"
+            }
+            
+            for key, val in meta.items():
+                if key in spec_fields or key not in {"mac_address", "os_arch", "agent_version", "status", "last_seen"}:
+                    existing[key] = val
+                    
             device.metadata = existing
         device.save(update_fields=["last_seen", "status", "metadata", "mac_address", "os_arch", "agent_version"])
         return Response({"status": "heartbeat received", "device_id": str(device.id)})

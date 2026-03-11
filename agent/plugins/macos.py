@@ -10,6 +10,27 @@ class MacOSPlugin(OSPlugin):
     """
 
     def get_system_info(self) -> Dict[str, Any]:
+        import psutil
+        import time
+        import socket
+        
+        boot_time = psutil.boot_time()
+        uptime_seconds = time.time() - boot_time
+        days = int(uptime_seconds // (24 * 3600))
+        hours = int((uptime_seconds % (24 * 3600)) // 3600)
+        minutes = int((uptime_seconds % 3600) // 60)
+        uptime_str = f"{days}d {hours}h {minutes}m" if days > 0 else f"{hours}h {minutes}m"
+        
+        disk = psutil.disk_usage('/')
+        
+        cpu_model = "Unknown"
+        try:
+            res = subprocess.run(["sysctl", "-n", "machdep.cpu.brand_string"], capture_output=True, text=True)
+            if res.returncode == 0 and res.stdout.strip():
+                cpu_model = res.stdout.strip()
+        except Exception:
+            pass
+
         return {
             "os_family": "macos",
             "os_name": "macOS",
@@ -17,6 +38,22 @@ class MacOSPlugin(OSPlugin):
             "architecture": platform.machine(),
             "kernel": platform.version(),
             "package_manager": "softwareupdate",
+            "cpu_count": psutil.cpu_count(),
+            "total_ram": psutil.virtual_memory().total,
+            "total_disk": disk.total,
+            "uptime": uptime_str,
+            "ComputerName": socket.gethostname(),
+            "UserName": "root",
+            "OSCaption": "macOS",
+            "OSVersion": platform.mac_ver()[0],
+            "OSBuild": platform.version(),
+            "OSArchitecture": platform.machine(),
+            "CPU": cpu_model,
+            "CPUCores": psutil.cpu_count(logical=False),
+            "CPULogical": psutil.cpu_count(logical=True),
+            "RAM_GB": round(psutil.virtual_memory().total / (1024**3), 2),
+            "DiskFree_GB": round(disk.free / (1024**3), 2),
+            "DiskUsed_GB": round((disk.total - disk.free) / (1024**3), 2),
         }
 
     @trace

@@ -39,10 +39,6 @@
             [class.fill-orange]="(d.compliance_rate || 0) >= 60 && (d.compliance_rate || 0) < 90"
             [class.fill-red]="(d.compliance_rate || 0) < 60"></div>
         </div>
-        <span class="dd-comp-pct"
-          [class.text-green]="(d.compliance_rate || 0) >= 90"
-          [class.text-orange]="(d.compliance_rate || 0) >= 60 && (d.compliance_rate || 0) < 90"
-          [class.text-red]="(d.compliance_rate || 0) < 60">{{ d.compliance_rate || 0 }}%</span>
       </div>
       <!-- Quick actions -->
       <div class="dd-hero-actions">
@@ -245,11 +241,11 @@
     <div class="dd-spec-grid">
       <div class="dd-spec-cell">
         <span class="dd-spec-lbl">{{ 'UI.u_os' | translate }}</span>
-        <span class="dd-spec-val">{{ d.os_name || (d.os_family | titlecase) }}</span>
+        <span class="dd-spec-val">{{ d.metadata?.OSCaption || d.os_name || (d.os_family | titlecase) }}</span>
       </div>
       <div class="dd-spec-cell">
         <span class="dd-spec-lbl">{{ 'UI.u_os_arch' | translate }}</span>
-        <span class="dd-spec-val">{{ d.os_arch || 'x86_64' }}</span>
+        <span class="dd-spec-val">{{ d.metadata?.OSArchitecture || d.os_arch || 'x86_64' }}</span>
       </div>
       <div class="dd-spec-cell">
         <span class="dd-spec-lbl">{{ 'UI.u_environment' | translate }}</span>
@@ -261,15 +257,15 @@
       </div>
       <div class="dd-spec-cell">
         <span class="dd-spec-lbl">CPU</span>
-        <span class="dd-spec-val">{{ d.metadata?.cpu_count || '—' }} cores</span>
+        <span class="dd-spec-val">{{ d.metadata?.CPULogical || d.metadata?.cpu_count || '—' }} cores</span>
       </div>
       <div class="dd-spec-cell">
         <span class="dd-spec-lbl">RAM</span>
-        <span class="dd-spec-val">{{ formatBytes(d.metadata?.total_ram) }}</span>
+        <span class="dd-spec-val">{{ d.metadata?.RAM_GB ? d.metadata?.RAM_GB + ' GB' : formatBytes(d.metadata?.total_ram) }}</span>
       </div>
       <div class="dd-spec-cell">
         <span class="dd-spec-lbl">Disk</span>
-        <span class="dd-spec-val">{{ formatBytes(d.metadata?.total_disk) }}</span>
+        <span class="dd-spec-val">{{ d.metadata?.DiskFree_GB ? (d.metadata?.DiskFree_GB + ' GB free / ' + (d.metadata?.DiskUsed_GB + d.metadata?.DiskFree_GB) + ' GB') : formatBytes(d.metadata?.total_disk) }}</span>
       </div>
       <div class="dd-spec-cell">
         <span class="dd-spec-lbl">Last Seen</span>
@@ -549,39 +545,39 @@
       <div class="dd-inv-grid">
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">Manufacturer</span>
-          <span class="dd-inv-val">{{ si.manufacturer || '—' }}</span>
+          <span class="dd-inv-val">{{ si.manufacturer || d.metadata?.Manufacturer || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">Model</span>
-          <span class="dd-inv-val">{{ si.model || '—' }}</span>
+          <span class="dd-inv-val">{{ si.model || d.metadata?.Model || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">Serial Number</span>
-          <span class="dd-inv-val dd-mono">{{ si.serial_number || '—' }}</span>
+          <span class="dd-inv-val dd-mono">{{ si.serial_number || d.metadata?.SerialNumber || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">CPU</span>
-          <span class="dd-inv-val">{{ si.cpu_model || (si.cpu_count ? si.cpu_count + ' cores' : '—') }}</span>
+          <span class="dd-inv-val" [title]="d.metadata?.CPU">{{ d.metadata?.CPU || si.cpu_model || (si.cpu_count ? si.cpu_count + ' cores' : '—') }}</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">CPU Cores</span>
-          <span class="dd-inv-val">{{ si.cpu_count || '—' }}</span>
+          <span class="dd-inv-val">{{ d.metadata?.CPULogical || si.cpu_count || '—' }} ({{ d.metadata?.CPUCores || '?' }} physical)</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">Total RAM</span>
-          <span class="dd-inv-val">{{ formatBytes(si.total_ram) }}</span>
+          <span class="dd-inv-val">{{ d.metadata?.RAM_GB ? d.metadata?.RAM_GB + ' GB' : formatBytes(si.total_ram) }}</span>
         </div>
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Total Disk</span>
-          <span class="dd-inv-val">{{ formatBytes(si.total_disk) }}</span>
+          <span class="dd-inv-lbl">Disk Space</span>
+          <span class="dd-inv-val">{{ d.metadata?.DiskFree_GB ? (d.metadata?.DiskFree_GB + ' GB Free / ' + d.metadata?.DiskUsed_GB + ' GB Used') : formatBytes(si.total_disk) }}</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">Architecture</span>
-          <span class="dd-inv-val">{{ si.os_arch }}</span>
+          <span class="dd-inv-val">{{ d.metadata?.OSArchitecture || si.os_arch }}</span>
         </div>
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Domain</span>
-          <span class="dd-inv-val">{{ si.domain || '—' }}</span>
+          <span class="dd-inv-lbl">BIOS</span>
+          <span class="dd-inv-val">{{ d.metadata?.BIOSVersion || '—' }} ({{ d.metadata?.BIOSDate || '—' }})</span>
         </div>
       </div>
     </div>
@@ -592,39 +588,39 @@
       <div class="dd-inv-grid">
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">OS Name</span>
-          <span class="dd-inv-val text-primary-bright">{{ si.os_name }}</span>
+          <span class="dd-inv-val text-primary-bright">{{ d.metadata?.OSCaption || si.os_name }}</span>
         </div>
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Version</span>
-          <span class="dd-inv-val">{{ si.os_version || '—' }}</span>
+          <span class="dd-inv-lbl">Version / Build</span>
+          <span class="dd-inv-val">{{ d.metadata?.OSVersion || si.os_version || '—' }} ({{ d.metadata?.OSBuild || '—' }})</span>
         </div>
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Family</span>
-          <span class="dd-inv-val">{{ si.os_family | titlecase }}</span>
+          <span class="dd-inv-lbl">Install Date</span>
+          <span class="dd-inv-val">{{ d.metadata?.InstallDate || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Hostname</span>
-          <span class="dd-inv-val dd-mono">{{ si.hostname }}</span>
+          <span class="dd-inv-lbl">Computer Name</span>
+          <span class="dd-inv-val dd-mono">{{ d.metadata?.ComputerName || si.hostname }}</span>
         </div>
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Uptime</span>
-          <span class="dd-inv-val">{{ si.uptime || '—' }}</span>
+          <span class="dd-inv-lbl">Logged in User</span>
+          <span class="dd-inv-val">{{ d.metadata?.UserName || si.last_login?.DisplayName || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">Boot Time</span>
-          <span class="dd-inv-val">{{ si.boot_time || '—' }}</span>
+          <span class="dd-inv-val">{{ d.metadata?.LastBootTime || si.boot_time || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Agent Version</span>
-          <span class="dd-inv-val">{{ si.agent_version || '—' }}</span>
+          <span class="dd-inv-lbl">Time Zone</span>
+          <span class="dd-inv-val">{{ d.metadata?.TimeZone || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">Environment</span>
           <span class="dd-inv-val">{{ si.environment | titlecase }}</span>
         </div>
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Last Login</span>
-          <span class="dd-inv-val">{{ si.last_login?.DisplayName || '—' }}</span>
+          <span class="dd-inv-lbl">Agent Version</span>
+          <span class="dd-inv-val">{{ si.agent_version || '—' }}</span>
         </div>
       </div>
     </div>
@@ -695,7 +691,7 @@
                 [class.bg-success]="si.battery.percent > 20"
                 [class.bg-danger]="si.battery.percent <= 20"></div>
             </div>
-            <span class="dd-inv-val">{{ si.battery.percent }}%</span>
+            <span class="dd-inv-val mt-0 flex-shrink-0">{{ si.battery.percent }}%</span>
           </div>
         </div>
         <div class="dd-inv-cell">

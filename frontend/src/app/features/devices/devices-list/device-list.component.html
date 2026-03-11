@@ -109,7 +109,7 @@
               <input type="checkbox" class="form-check-input" [checked]="selectedIds().has(d.id)" (change)="toggleSelect(d.id)" />
             </td>
             <td>
-              <a class="hostname-link" [routerLink]="['/devices', d.id]" (click)="$event.stopPropagation()">{{ d.hostname }}</a>
+              <a class="hostname-link" [routerLink]="['/devices', d.id]" (click)="$event.stopPropagation()">{{ d.metadata?.ComputerName || d.hostname }}</a>
             </td>
             <td class="text-mono text-muted">{{ d.ip_address }}</td>
             <td>

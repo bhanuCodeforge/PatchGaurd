@@ -4,7 +4,7 @@
       <div class="d-flex align-items-center gap-2">
         <div class="flyout-icon">🖥️</div>
         <div>
-          <h5 class="flyout-title mb-0">{{ device?.hostname }}</h5>
+          <h5 class="flyout-title mb-0">{{ device?.metadata?.ComputerName || device?.hostname }}</h5>
           <span class="text-muted small font-monospace">{{ device?.ip_address }}</span>
         </div>
       </div>
@@ -13,7 +13,8 @@
         <span class="env-badge" [class]="'env-' + device?.environment">{{ device?.environment }}</span>
         <button class="close-btn" (click)="close.emit()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
       </div>
@@ -23,13 +24,20 @@
       <div class="info-group">
         <h6 class="info-heading">{{ 'UI.u_system_info_tab' | translate }}</h6>
         <div class="info-grid">
-          <div class="info-row"><span class="key">{{ 'UI.u_os_family' | translate }}</span><span class="val">{{ device?.os_family | titlecase }}</span></div>
-          <div class="info-row"><span class="key">{{ 'UI.u_os_version' | translate }}</span><span class="val">{{ device?.os_version || 'N/A' }}</span></div>
-          <div class="info-row"><span class="key">{{ 'UI.u_os_arch' | translate }}</span><span class="val">{{ device?.os_arch || 'x86_64' }}</span></div>
-          <div class="info-row"><span class="key">{{ 'UI.u_environment' | translate }}</span><span class="val">{{ device?.environment | titlecase }}</span></div>
-          <div class="info-row"><span class="key">{{ 'UI.u_agent_version' | translate }}</span><span class="val">{{ device?.agent_version || 'N/A' }}</span></div>
-          <div class="info-row"><span class="key">{{ 'UI.u_last_seen' | translate }}</span><span class="val">{{ device?.last_seen | relativeTime }}</span></div>
-          <div class="info-row"><span class="key">{{ 'UI.u_last_scan' | translate }}</span><span class="val">{{ device?.last_scan ? (device?.last_scan | relativeTime) : ('UI.u_never' | translate) }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_os_family' | translate }}</span><span class="val">{{
+              device?.os_family | titlecase }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_os_version' | translate }}</span><span class="val">{{
+              device?.metadata?.OSCaption || device?.os_name || device?.os_version || 'N/A' }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_os_arch' | translate }}</span><span class="val">{{
+              device?.metadata?.OSArchitecture || device?.os_arch || 'N/A' }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_environment' | translate }}</span><span class="val">{{
+              device?.environment | titlecase }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_agent_version' | translate }}</span><span class="val">{{
+              device?.agent_version || 'N/A' }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_last_seen' | translate }}</span><span class="val">{{
+              device?.last_seen | relativeTime }}</span></div>
+          <div class="info-row"><span class="key">{{ 'UI.u_last_scan' | translate }}</span><span class="val">{{
+              device?.last_scan ? (device?.last_scan | relativeTime) : ('UI.u_never' | translate) }}</span></div>
         </div>
       </div>
 
@@ -74,12 +82,14 @@
         <div class="compliance-bar-wrap">
           <div class="d-flex justify-content-between mb-1">
             <span class="text-muted small">{{ 'UI.u_compliance_rate' | translate }}</span>
-            <span class="small fw-600" [class]="(device?.compliance_rate || 0) >= 90 ? 'text-success' : (device?.compliance_rate || 0) >= 70 ? 'text-warning' : 'text-danger'">
+            <span class="small fw-600"
+              [class]="(device?.compliance_rate || 0) >= 90 ? 'text-success' : (device?.compliance_rate || 0) >= 70 ? 'text-warning' : 'text-danger'">
               {{ device?.compliance_rate || 0 }}%
             </span>
           </div>
           <div class="progress" style="height:8px; background:#374151;">
-            <div class="progress-bar" [class]="(device?.compliance_rate || 0) >= 90 ? 'bg-success' : (device?.compliance_rate || 0) >= 70 ? 'bg-warning' : 'bg-danger'"
+            <div class="progress-bar"
+              [class]="(device?.compliance_rate || 0) >= 90 ? 'bg-success' : (device?.compliance_rate || 0) >= 70 ? 'bg-warning' : 'bg-danger'"
               [style.width]="(device?.compliance_rate || 0) + '%'" role="progressbar"></div>
           </div>
         </div>
@@ -99,17 +109,13 @@
       <button class="btn btn-sm btn-outline-danger" (click)="delete()">
         {{ 'UI.u_delete_label' | translate }}
       </button>
-      <button class="btn btn-sm btn-primary ms-auto" [routerLink]="['/devices', device?.id]" (click)="close.emit()">{{ 'UI.u_view_full_details' | translate }}</button>
+      <button class="btn btn-sm btn-primary ms-auto" [routerLink]="['/devices', device?.id]" (click)="close.emit()">{{
+        'UI.u_view_full_details' | translate }}</button>
     </div>
   </div>
 </div>
 
-<app-confirm-dialog
-  [visible]="showRebootDialog"
-  [title]="'UI.u_reboot_title' | translate"
+<app-confirm-dialog [visible]="showRebootDialog" [title]="'UI.u_reboot_title' | translate"
   [message]="'MSG.m_reboot_confirm' | translate:{hostname: device?.hostname}"
-  [confirmLabel]="'UI.u_confirm' | translate"
-  severity="warning"
-  (confirm)="confirmReboot()"
-  (cancel)="showRebootDialog = false"
-></app-confirm-dialog>
+  [confirmLabel]="'UI.u_confirm' | translate" severity="warning" (confirm)="confirmReboot()"
+  (cancel)="showRebootDialog = false"></app-confirm-dialog>

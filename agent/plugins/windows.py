@@ -25,8 +25,8 @@ class WindowsPlugin(OSPlugin):
     def get_system_info(self) -> Dict[str, Any]:
         import psutil
         import time
+        import json
         
-        # Calculate uptime
         boot_time = psutil.boot_time()
         uptime_seconds = time.time() - boot_time
         days = int(uptime_seconds // (24 * 3600))
@@ -34,30 +34,61 @@ class WindowsPlugin(OSPlugin):
         minutes = int((uptime_seconds % 3600) // 60)
         uptime_str = f"{days}d {hours}h {minutes}m" if days > 0 else f"{hours}h {minutes}m"
 
-        serial = "N/A"
-        try:
-            if self.powershell:
+        wmi_data = {}
+        if self.powershell:
+            script = """
+            $os = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
+            $cs = Get-CimInstance Win32_ComputerSystem -ErrorAction SilentlyContinue
+            $cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
+            $bios = Get-CimInstance Win32_BIOS -ErrorAction SilentlyContinue
+            $disk = Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'" -ErrorAction SilentlyContinue
+            [PSCustomObject]@{
+                ComputerName = $cs.Name
+                UserName = $cs.PrimaryOwnerName
+                OSCaption = $os.Caption
+                OSVersion = $os.Version
+                OSBuild = $os.BuildNumber
+                OSArchitecture = $os.OSArchitecture
+                InstallDate = if($os.InstallDate){$os.InstallDate.ToString("yyyy-MM-dd")}else{""}
+                LastBootTime = if($os.LastBootUpTime){$os.LastBootUpTime.ToString("yyyy-MM-dd HH:mm:ss")}else{""}
+                CPU = $cpu.Name
+                CPUCores = $cpu.NumberOfCores
+                CPULogical = $cpu.NumberOfLogicalProcessors
+                RAM_GB = [math]::Round($cs.TotalPhysicalMemory/1GB, 2)
+                DiskFree_GB = [math]::Round($disk.FreeSpace/1GB, 2)
+                DiskUsed_GB = [math]::Round(($disk.Size - $disk.FreeSpace)/1GB, 2)
+                BIOSVersion = $bios.SMBIOSBIOSVersion
+                BIOSDate = if($bios.ReleaseDate){$bios.ReleaseDate.ToString("yyyy-MM-dd")}else{""}
+                TimeZone = (Get-TimeZone).Id
+                SerialNumber = $bios.SerialNumber
+            } | ConvertTo-Json -Compress
+            """
+            try:
                 res = subprocess.run(
-                    [self.powershell, "-NoProfile", "-Command", "(Get-CimInstance Win32_Bios).SerialNumber"],
-                    capture_output=True, text=True, timeout=10
+                    [self.powershell, "-NoProfile", "-NonInteractive", "-Command", script],
+                    capture_output=True, text=True, timeout=15
                 )
-                if res.returncode == 0:
-                    serial = res.stdout.strip()
-        except: pass
+                if res.returncode == 0 and res.stdout.strip():
+                    wmi_data = json.loads(res.stdout)
+            except Exception:
+                pass
 
-        return {
+        info = {
             "os_family": "windows",
             "os_name": "Windows",
             "os_version": platform.release(),
             "architecture": platform.machine(),
             "kernel": platform.version(),
-            "serial_number": serial,
+            "serial_number": wmi_data.get("SerialNumber", "N/A"),
             "package_manager": "wusa",
             "cpu_count": psutil.cpu_count(),
             "total_ram": psutil.virtual_memory().total,
             "total_disk": psutil.disk_usage('C:\\').total,
             "uptime": uptime_str,
         }
+        
+        info.update(wmi_data)
+        return info
 
     @trace
     def scan_patches(self) -> List[Dict[str, Any]]:
