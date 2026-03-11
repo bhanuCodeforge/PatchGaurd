@@ -1,704 +1,374 @@
-# PatchGuard Enterprise
+# PatchGuard — Enterprise Patch Management Platform
 
-**PatchGuard** is an enterprise-grade centralized patch management platform. It orchestrates remote fleet patching across Windows, Linux, and macOS endpoints, tracks real-time deployment telemetry, enforces compliance policies, and provides role-based access control with AD/LDAP integration.
-
-This monorepo houses all system components: Django REST API, FastAPI WebSocket layer, Angular SPA, Celery task engine, and Python hardware agents.
-
----
-
-## Build Status
-
-| Component | Stack | Status |
-|-----------|-------|--------|
-| Backend API | Django 6.0 + DRF 3.15 | ✅ Complete |
-| Auth System | SimpleJWT 5.3 + LDAP | ✅ Complete |
-| Task Engine | Celery 5.4 + Redis 7 | ✅ Complete |
-| Real-Time Layer | FastAPI 0.110 + WebSockets | ✅ Complete |
-| Frontend Core | Angular 21.2 (Signals) | ✅ Complete |
-| Agent | Python 3.12+ (WS + REST) | ✅ Complete |
-| Test Suite | pytest + Angular Karma | ⬜ Not Started |
-
-**Overall Progress: 39/44 tasks (89%)**
+> Automated, policy-driven patch deployment across Windows, Linux, and macOS fleets with real-time monitoring, compliance dashboards, and event-sourced audit trails.
 
 ---
 
 ## Table of Contents
 
-- [System Architecture](#system-architecture)
-- [Technology Stack](#technology-stack)
-- [Monorepo Structure](#monorepo-structure)
-- [Local Development Setup (Windows)](#local-development-setup-windows)
-- [Local Development Setup (Docker)](#local-development-setup-docker)
-- [VS Code Launch Configurations](#vs-code-launch-configurations)
-- [API Reference](#api-reference)
-- [WebSocket Protocol](#websocket-protocol)
-- [Authentication & RBAC](#authentication--rbac)
-- [Data Model Overview](#data-model-overview)
-- [Celery Tasks & Beat Schedule](#celery-tasks--beat-schedule)
-- [Agent Configuration](#agent-configuration)
-- [Core Design Decisions](#core-design-decisions)
-- [Progress](#progress)
-
-> For a concise how-to guide covering setup, common workflows, and contributing, see [DEVELOPER.md](DEVELOPER.md).
+1. [Architecture Overview](#architecture-overview)
+2. [Module Explanations](#module-explanations)
+3. [Setup Instructions](#setup-instructions)
+4. [Environment Configuration](#environment-configuration)
+5. [Running the Stack](#running-the-stack)
+6. [VS Code Debug Configurations](#vs-code-debug-configurations)
+7. [API Reference](#api-reference)
+8. [Known Issues & Assumptions](#known-issues--assumptions)
 
 ---
 
-## System Architecture
-
-PatchGuard implements a **Tri-Layer Microservices Topology** connected via a Redis-backed Event Bus. REST operations, WebSocket persistence, and async task execution run in isolated processes.
+## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         EXTERNAL CLIENTS                            │
-│                                                                     │
-│   ╔══════════════╗    ╔══════════════╗    ╔══════════════════════╗ │
-│   ║  Admin UI    ║    ║ Windows Agent║    ║    Linux/macOS Agent ║ │
-│   ║ (Browser SPA)║    ║  agent.py    ║    ║      agent.py        ║ │
-│   ╚══════╤═══════╝    ╚══════╤═══════╝    ╚══════════╤═══════════╝ │
-│          │ HTTPS             │ WSS                    │ WSS         │
-└──────────┼───────────────────┼────────────────────────┼────────────┘
-           │                   │                        │
-           ▼                   ▼                        ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                      NGINX REVERSE PROXY (:443)                     │
-│   /api/*  ──────────────────────────────────────► Django (:8000)    │
-│   /ws/*   ──────────────────────────────────────► FastAPI (:8001)   │
-│   /*      ──────────────────────────────────────► Angular Static    │
-└───────────────┬─────────────────────┬───────────────────────────────┘
-                │                     │
-                ▼                     ▼
-┌───────────────────────┐   ┌─────────────────────────────────────────┐
-│   DJANGO (WSGI)       │   │           FASTAPI (ASGI)                │
-│   Core REST API       │   │         Real-Time Service               │
-│                       │   │                                         │
-│  • JWT Auth + LDAP    │   │  • WebSocket pool management            │
-│  • RBAC Permissions   │   │  • Agent command dispatch               │
-│  • Patch state machine│   │  • Redis Pub/Sub subscriber             │
-│  • Deployment wizard  │   │  • Dashboard event fan-out              │
-│  • OpenAPI/Swagger    │   │  • JWT verification (shared secret)     │
-└──────────┬────────────┘   └──────────────────┬──────────────────────┘
-           │                                    │
-           │  Write/Read                        │  Subscribe
-           ▼                                    ▼
-┌───────────────────────────────────────────────────────────────────┐
-│                         DATA TIER                                 │
-│                                                                   │
-│  ╔══════════════════╗          ╔═════════════════════════════╗    │
-│  ║  PostgreSQL 16   ║          ║       Redis 7               ║    │
-│  ║                  ║          ║                             ║    │
-│  ║ • accounts       ║          ║ Pub/Sub Channels:           ║    │
-│  ║ • inventory      ║          ║  deployment:<id>            ║    │
-│  ║ • patches        ║  ◄────   ║  device:status              ║    │
-│  ║ • deployments    ║  Write   ║  notifications              ║    │
-│  ║ • audit_log      ║          ║  compliance:alert           ║    │
-│  ║ (partitioned)    ║          ║  agent:command:<device_id>  ║    │
-│  ╚══════════════════╝          ║                             ║    │
-│                                ║ Task Queues:                ║    │
-│                                ║  critical / default /       ║    │
-│                                ║  reporting                  ║    │
-│                                ╚══════════════╤══════════════╝    │
-└───────────────────────────────────────────────┼───────────────────┘
-                                                │ Poll
-                                                ▼
-                               ┌─────────────────────────────┐
-                               │     CELERY WORKERS          │
-                               │                             │
-                               │  Beat Schedule (cron):      │
-                               │  • Vendor patch sync (6h)   │
-                               │  • Stale device check (5m)  │
-                               │  • Compliance snapshot (1d) │
-                               │  • Scheduled deployments(1m)│
-                               │  • Partition cleanup (1mo)  │
-                               │                             │
-                               │  Task Queues:               │
-                               │  • execute_deployment       │
-                               │  • scan_device_patches      │
-                               │  • cancel_deployment_task   │
-                               └─────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│                         Angular Frontend                             │
+│                      http://localhost:4200                           │
+└──────────────────────────┬───────────────────────────────────────────┘
+                           │ HTTP / WebSocket
+                           ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│             BFF — Backend-for-Frontend (FastAPI)                     │
+│                      http://localhost:8080                           │
+│  • Single entry point for Angular                                    │
+│  • Proxies REST → Django, WS → Realtime Service                      │
+│  • Caches compliance stats from Redis materialized view              │
+└────────────┬─────────────────────────────────────┬───────────────────┘
+             │ REST                                 │ WS proxy
+             ▼                                     ▼
+┌────────────────────────┐           ┌─────────────────────────────────┐
+│   Django REST API      │           │  Realtime Service (FastAPI WS)  │
+│   http://localhost:8000│           │  ws://localhost:8001             │
+│                        │           │                                 │
+│  • Auth & JWT          │◄──Redis──►│  • /ws/dashboard (JWT)          │
+│  • Devices / Inventory │  Pub/Sub  │  • /ws/agent (API key)          │
+│  • Patches & Scans     │  Streams  │  • Bridges Redis messages →WS   │
+│  • Deployments         │           │  • Persists agent data → Django  │
+│  • Compliance          │           └─────────────┬───────────────────┘
+│  • Audit Log           │                         │ WebSocket
+└────────────┬───────────┘                         │
+             │                                     │
+             ▼                                     ▼
+┌────────────────────────┐           ┌─────────────────────────────────┐
+│  Celery Workers        │           │   PatchGuard Agent              │
+│  (Redis broker)        │           │   (Python daemon on endpoints)   │
+│                        │           │                                 │
+│  • Deployment          │           │  • Collects system inventory    │
+│    orchestration       │           │  • Sends heartbeats             │
+│  • Wave execution      │           │  • Runs patch scans             │
+│  • Result recording    │           │  • Installs patches             │
+│  • Compliance refresh  │           │  • Reports results via WS       │
+│  • Agent key rotation  │           └─────────────────────────────────┘
+└────────────────────────┘
+             │
+             ▼
+┌────────────────────────────────────────────────────────────────────┐
+│                    Shared Infrastructure                            │
+│  PostgreSQL (primary DB)  +  Redis (broker, cache, pub/sub/streams)│
+└────────────────────────────────────────────────────────────────────┘
 ```
 
-```mermaid
-graph TD
-    Admin([Administrator Browser]) -->|HTTPS /api + /ws| Nginx
-    AgentW[Windows Agent] -->|WSS /ws/agent| Nginx
-    AgentL[Linux / macOS Agent] -->|WSS /ws/agent| Nginx
+### Data Flows
 
-    subgraph Proxy["Nginx Reverse Proxy :443"]
-        Nginx{nginx.conf}
-    end
-
-    Nginx -->|/api/*| Django["Django 6 WSGI :8000\nREST API · Auth · RBAC"]
-    Nginx -->|/ws/*| FastAPI["FastAPI ASGI :8001\nWebSocket Pool · Pub/Sub"]
-    Nginx -->|/* SPA| Angular["Angular 21 SPA\nAdmin Dashboard"]
-
-    subgraph DataTier["Data Tier"]
-        Postgres[(PostgreSQL 16\naccounts · inventory\npatches · deployments)]
-        Redis[(Redis 7\nPub/Sub + Task Queues)]
-    end
-
-    Django -->|ORM writes| Postgres
-    Django -->|Enqueue tasks / publish| Redis
-    FastAPI -.->|Subscribe channels| Redis
-    FastAPI -.->|Agent API key lookup| Postgres
-
-    subgraph Workers["Celery Workers"]
-        Beat[Celery Beat\nCron Scheduler]
-        Worker[Celery Worker\ncritical · default · reporting]
-    end
-
-    Beat -->|Trigger| Worker
-    Worker -.->|Poll| Redis
-    Worker -->|Bulk writes| Postgres
-    Worker -.->|Publish progress| Redis
-```
+| Flow | Path |
+|------|------|
+| Agent heartbeat | Agent → WS → Realtime → Django REST `POST /devices/{id}/heartbeat/` |
+| Patch scan | Django Celery → Redis `agent:command:{id}` → Realtime → Agent WS `START_SCAN` → Agent → Realtime → Django REST `POST /devices/{id}/ingest_scan/` |
+| Deployment | Django (`orchestrate_deployment` task) → Redis → Agent → WS `patch_result` → Realtime → Django REST `POST /deployments/{id}/ingest_patch_result/` → `report_device_result` Celery task |
+| Live progress | `report_device_result` Celery → `RedisPublisher.publish_deployment_progress` → Realtime subscriber → WS broadcast → Angular dashboard |
 
 ---
 
-## Technology Stack
+## Module Explanations
 
-| Layer | Technology | Version | Purpose |
-|-------|-----------|---------|---------|
-| Backend | Python | 3.12+ | Runtime |
-| Backend | Django | 6.0.3 | ORM, REST, Auth |
-| Backend | Django REST Framework | 3.15.2 | API serialization + ViewSets |
-| Backend | SimpleJWT | 5.3.1 | JWT access/refresh tokens |
-| Backend | drf-spectacular | 0.27.2 | OpenAPI 3.1 schema + Swagger UI |
-| Backend | Celery | 5.4.0 | Distributed task queue |
-| Backend | django-celery-beat | 2.7.0 | Persistent cron schedules |
-| Real-Time | FastAPI | 0.110.0 | ASGI WebSocket server |
-| Real-Time | Uvicorn | 0.29.0 | ASGI runner |
-| Real-Time | aiohttp | 3.9.0+ | Async HTTP (agent callbacks) |
-| Frontend | Angular | 21.2 | SPA framework (Signals + Standalone) |
-| Frontend | TypeScript | 5.9 | Typed JavaScript |
-| Database | PostgreSQL | 16 | Primary datastore (partitioned audit log) |
-| Cache/Queue | Redis | 7 | Pub/Sub + Celery broker/result backend |
-| Proxy | Nginx | alpine | TLS termination + routing (production) |
+### `backend/` — Django REST API
 
----
+| App | Purpose |
+|-----|---------|
+| `apps/accounts` | User management, JWT auth, RBAC roles (admin/operator/viewer), LDAP sync, audit log |
+| `apps/inventory` | Device registry, device groups (static + dynamic), heartbeat ingestion, compliance rate |
+| `apps/patches` | Patch catalog, scan results, compliance snapshots, SLA breach checks |
+| `apps/deployments` | Deployment lifecycle, wave orchestration (Task 11.4), event sourcing (Task 11.5) |
+| `common/` | Shared utilities: RedisPublisher, agent auth, pagination, middleware, logging |
+| `bff/` | Backend-for-Frontend FastAPI gateway that aggregates and caches API responses |
+| `config/` | Django settings, Celery configuration, URL routing |
 
-## Monorepo Structure
+#### Celery Task Hierarchy (Phase 11.4)
 
-```text
-PatchGuard/
-├── agent/                          # Python endpoint agent
-│   ├── agent.py                    # WS + REST heartbeat, scan/patch execution
-│   ├── config.yaml                 # Server URL, API key, intervals
-│   └── plugins/                    # OS-specific patch backends
-│       ├── windows.py              # Windows Update API
-│       ├── linux.py                # apt/yum
-│       └── macos.py                # softwareupdate
-│
-├── backend/                        # Django REST API
-│   ├── manage.py                   # Entry point (thread-safe signal handling)
-│   ├── celery_worker.py            # Celery CLI wrapper
-│   ├── apps/
-│   │   ├── accounts/               # Users, roles, JWT, LDAP, audit log
-│   │   ├── inventory/              # Devices, DeviceGroups, heartbeat
-│   │   ├── patches/                # Patch catalog, state machine, DevicePatchStatus
-│   │   └── deployments/            # Deployment lifecycle, waves, Celery tasks
-│   ├── common/                     # Shared: middleware, pagination, Redis pub/sub
-│   ├── config/
-│   │   ├── settings/{base,dev,prod}.py
-│   │   ├── celery_app.py           # Celery app + Beat schedule
-│   │   └── urls.py                 # Root URL conf
-│   └── requirements/{base,dev,prod}.txt
-│
-├── frontend/                       # Angular 21 SPA
-│   ├── src/app/
-│   │   ├── core/                   # AuthService, Guards, Interceptor, ApiService
-│   │   │   └── services/           # Device/Patch/Deployment/WebSocket/Report services
-│   │   └── features/              # Feature modules (login, dashboard, etc.)
-│   └── proxy.conf.json            # Dev proxy: /api → :8000, /ws → :8001
-│
-├── realtime/                       # FastAPI WebSocket service
-│   ├── main.py                     # App factory, Redis sub loop
-│   ├── auth.py                     # JWT + agent API key verification
-│   ├── ws_manager.py               # ConnectionManager (dashboard + agent pools)
-│   └── routes/{agents,events,health}.py
-│
-├── nginx/nginx.conf                # Production reverse proxy
-├── scripts/
-│   ├── seed-data.py                # Dev seed data (users, devices, patches)
-│   ├── init-db.sh                  # DB init (roles, migrations)
-│   └── generate-certs.sh           # Self-signed TLS certs
-│
-├── docker-compose.yml              # Dev: postgres, redis, django, fastapi, celery, frontend
-├── docker-compose.prod.yml         # Prod: + nginx, pgbouncer, resource limits
-├── .env                            # Environment variables
-└── .vscode/launch.json             # VS Code launch configs (see below)
+```
+orchestrate_deployment  [critical queue]
+  └─► execute_wave      [deployment-waves queue, 15min soft limit]
+        └─► report_device_result  [deployment-results queue, acks_late=True]
 ```
 
+Beat schedule (key tasks):
+
+| Task | Schedule |
+|------|----------|
+| `mark_stale_devices` | Every 5 min |
+| `process_scheduled_deployments` | Every 1 min |
+| `monitor_stuck_waves` | Every 10 min |
+| `refresh_compliance_materialized_view` | Every hour |
+| `rotate_stale_api_keys` | Daily 02:30 UTC |
+
+### `realtime/` — FastAPI WebSocket Service
+
+| File | Purpose |
+|------|---------|
+| `main.py` | App entrypoint, Redis Pub/Sub subscriber, Streams consumer, asyncpg pool |
+| `ws_manager.py` | `ConnectionManager`: dashboard WS map, agent WS map, deployment subscriptions |
+| `routes/agents.py` | `/ws/agent` (API key auth), `/ws/dashboard` (JWT auth), event routing |
+| `routes/events.py` | REST endpoints: `/rt/agents/online`, `/rt/stats`, `/rt/agents/{id}/command` |
+| `auth.py` | `verify_jwt`, `verify_ws_token`, `verify_agent_key` (asyncpg direct query) |
+| `streams_consumer.py` | New: Redis Streams consumer group (replaces Pub/Sub) |
+| `streams_producer.py` | New: Redis Streams XADD producer |
+| `streams_compat.py` | Migration shim: publishes to BOTH Pub/Sub and Streams during transition |
+
+#### WebSocket Message Envelope
+
+All WS messages follow this envelope:
+```json
+{ "event": "string", "payload": { ... } }
+```
+
+### `agent/` — Endpoint Agent
+
+| File | Purpose |
+|------|---------|
+| `agent.py` | `PatchAgent` class: WS connection loop, heartbeat, command handler, deployment runner |
+| `config.yaml` | Device-specific runtime config (api_key, server_url — gitignored) |
+| `config.yaml.example` | Safe template to copy |
+| `plugins/` | OS-specific patch management (Linux apt/yum, Windows WUA, macOS brew) |
+| `collectors/` | `LaneScheduler`: fast-lane metrics (5s) and slow-lane inventory (15min) |
+
+#### Agent Command Protocol
+
+| Command | Direction | Handler |
+|---------|-----------|---------|
+| `START_SCAN` | Server → Agent | `run_scan()` |
+| `START_DEPLOYMENT` | Server → Agent | `run_deployment()` |
+| `CANCEL_DEPLOYMENT` | Server → Agent | Logs cancellation |
+| `HEALTH_CHECK` | Server → Agent | `run_health_check()` |
+| `KEY_ROTATED` | Server → Agent | Updates `config.yaml`, reconnects |
+| `CONFIG_UPDATE` | Server → Agent | Updates live config |
+| `REBOOT` | Server → Agent | `plugin.reboot()` |
+| `PING` | Server → Agent | Sends `pong` |
+
+### `frontend/` — Angular 21 SPA
+
+| Module | Path | Purpose |
+|--------|------|---------|
+| Dashboard | `features/dashboard` | Fleet overview, compliance KPIs |
+| Devices | `features/devices` | Inventory list, device detail, groups |
+| Patches | `features/patches` | Patch catalog, approval workflow |
+| Deployments | `features/deployments` | Wizard, list, live monitor |
+| Compliance | `features/compliance` | Compliance reports, trend charts |
+| Audit | `features/audit` | Audit log viewer |
+| Settings | `features/settings` | System settings |
+
+Key services: `DeviceService`, `DeploymentService`, `WebsocketService`, `NotificationService`
+
 ---
 
-## Local Development Setup (Windows)
-
-Run all services natively on Windows **without Docker**. Tested on Windows 10/11 with Python 3.12+.
+## Setup Instructions
 
 ### Prerequisites
 
-| Tool | Required | Install |
-|------|----------|---------|
-| Python 3.12+ | Yes | [python.org](https://www.python.org/downloads/) |
-| PostgreSQL 16 | Yes | [postgresql.org](https://www.postgresql.org/download/windows/) |
-| Redis 7 | Yes | [Redis for Windows](https://github.com/tporadowski/redis/releases) or WSL |
-| Node.js 20+ | Yes (frontend) | [nodejs.org](https://nodejs.org/) |
-| Git | Yes | [git-scm.com](https://git-scm.com/) |
+- Python 3.11+
+- Node.js 20+ / npm 10+
+- PostgreSQL 15+ (or SQLite for dev)
+- Redis 7+
 
-### Step 1: Clone & Create Virtual Environment
+### 1. Clone & Environment
 
-```powershell
-git clone <repo-url> D:\PatchGuard
-cd D:\PatchGuard
+```bash
+git clone https://github.com/your-org/patchguard.git
+cd patchguard
+cp .env.example .env
+# Edit .env with your Postgres, Redis, and JWT settings
+```
+
+### 2. Backend Setup
+
+```bash
+# Create Python virtualenv
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
+.venv/Scripts/activate  # Windows
+# source .venv/bin/activate  # Linux/macOS
 
-### Step 2: Install Dependencies
-
-```powershell
-# Backend + Realtime + Agent (shared venv)
+# Install dependencies
 pip install -r backend/requirements/dev.txt
-pip install -r realtime/requirements.txt
-pip install -r agent/requirements.txt
-
-# Frontend
-cd frontend
-npm install
-cd ..
-```
-
-### Step 3: Configure Environment
-
-Copy `.env` and edit as needed:
-
-```powershell
-# Key variables in .env:
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=<your-password>
-POSTGRES_DB=vector_db
-REDIS_URL=redis://localhost:6379/0
-DJANGO_SETTINGS_MODULE=config.settings.dev
-BACKEND_URL=http://localhost:8000/api/v1
-```
-
-### Step 4: Initialize Database
-
-```powershell
-cd backend
-$env:DJANGO_SETTINGS_MODULE="config.settings.dev"
 
 # Run migrations
+cd backend
 python manage.py migrate
 
-# Load seed data (creates users, devices, patches)
-cd ..
-$env:PYTHONPATH="$PWD\backend"
-python scripts/seed-data.py
+# Create superuser
+python manage.py createsuperuser
+
+# (Optional) Load seed data
+python manage.py loaddata fixtures/demo.json
 ```
 
-### Step 5: Start All Services
+### 3. Frontend Setup
 
-Open **5 terminals** (or use VS Code compound launch — see below):
-
-**Terminal 1 — Django API (port 8000)**
-```powershell
-cd backend
-$env:DJANGO_SETTINGS_MODULE="config.settings.dev"
-python manage.py runserver 127.0.0.1:8000
-```
-
-**Terminal 2 — FastAPI WebSocket (port 8001)**
-```powershell
-cd realtime
-python -m uvicorn main:app --host 127.0.0.1 --port 8001 --reload
-```
-
-**Terminal 3 — Celery Worker**
-```powershell
-cd backend
-$env:DJANGO_SETTINGS_MODULE="config.settings.dev"
-python celery_worker.py -A config.celery_app worker --loglevel=info -Q critical,default,reporting --concurrency=4 --pool=solo
-```
-
-> **Windows Note:** `--pool=solo` is required. Celery's default prefork pool does not work on Windows.
-
-**Terminal 4 — Angular Frontend (port 4200)**
-```powershell
+```bash
 cd frontend
-npx ng serve --proxy-config proxy.conf.json --host 127.0.0.1 --port 4200
+npm install
 ```
 
-**Terminal 5 — Agent (optional)**
-```powershell
+### 4. Agent Setup
+
+```bash
 cd agent
-python agent.py
+pip install -r requirements.txt
+cp config.yaml.example config.yaml
+# Edit config.yaml: set api_key and optionally device_id_override
+# OR set auto_register: true to auto-register on first run
 ```
 
-### Step 6: Verify
+### 5. Docker (full stack)
 
-| Service | URL | Expected |
-|---------|-----|----------|
-| Angular UI | http://127.0.0.1:4200 | Login page |
-| Django API | http://127.0.0.1:8000/api/health/ | `{"status": "ok"}` |
-| Swagger UI | http://127.0.0.1:8000/api/docs/ | Interactive docs |
-| ReDoc | http://127.0.0.1:8000/api/redoc/ | API reference |
-| FastAPI Health | http://127.0.0.1:8001/health | `{"status": "ok"}` |
-| FastAPI Docs | http://127.0.0.1:8001/docs | WebSocket docs |
-
-### Test Credentials (from seed data)
-
-| Username | Password | Role |
-|----------|----------|------|
-| `admin` | `Admin@123456` | admin (full access) |
-| `operator` | `Operator@123456` | operator (deploy + manage) |
-| `viewer` | `Viewer@123456` | viewer (read-only) |
-
-### Quick Login Test
-
-```powershell
-# Get JWT tokens
-Invoke-RestMethod -Uri http://127.0.0.1:8000/api/auth/login/ `
-  -Method POST -ContentType "application/json" `
-  -Body '{"username":"admin","password":"Admin@123456"}'
+```bash
+docker compose up --build
 ```
 
 ---
 
-## Local Development Setup (Docker)
+## Environment Configuration
 
-```powershell
-# Start all services
-docker compose up --build -d
+Copy `.env.example` → `.env` and configure:
 
-# Run migrations + seed
-docker compose exec django python manage.py migrate
-docker compose exec django python /app/scripts/seed-data.py
-
-# View logs
-docker compose logs -f
-```
-
-### Docker Services
-
-| Service | Port | Description |
-|---------|------|-------------|
-| `postgres` | 127.0.0.1:5432 | PostgreSQL 16 |
-| `redis` | 127.0.0.1:6379 | Redis 7 |
-| `django` | 8000 | Django REST API |
-| `fastapi` | 8001 | FastAPI WebSocket |
-| `celery-worker` | — | Background task processing |
-| `celery-beat` | — | Cron scheduler |
-| `frontend` | 4200 | Angular dev server |
-
-### Production Docker
-
-```powershell
-docker compose -f docker-compose.prod.yml up -d
-```
-
-Adds: **nginx** (TLS on :443), **pgbouncer** (connection pooling), gunicorn, resource limits. Frontend served as static files through nginx.
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL DSN | SQLite for dev |
+| `CELERY_BROKER_URL` | Redis DSN for Celery | `redis://localhost:6379/0` |
+| `REDIS_CACHE_URL` | Redis DSN for cache | `redis://localhost:6379/1` |
+| `DJANGO_SECRET_KEY` | Django secret key | dev insecure key |
+| `JWT_SECRET_KEY` | JWT signing key | `dev_secret_key_change_in_prod` |
+| `REALTIME_LOG_LEVEL` | Realtime service log level | `INFO` |
+| `BACKEND_URL` | URL realtime uses to POST to Django | `http://localhost:8000/api/v1` |
+| `ENABLE_PUBSUB_SUBSCRIBER` | Legacy Redis Pub/Sub (migration flag) | `true` |
+| `ENABLE_STREAMS_CONSUMER` | New Redis Streams consumer (migration flag) | `true` |
 
 ---
 
-## VS Code Launch Configurations
+## Running the Stack
 
-The project includes pre-configured launch configs in `.vscode/launch.json`.
+### Native (development)
 
-### Individual Services
+```bash
+# Terminal 1 — Django
+cd backend && python manage.py runserver 8000
 
-| Config Name | What It Starts |
-|-------------|----------------|
-| `Django: Run Server` | Django on 127.0.0.1:8000 (with auto-reload) |
-| `Realtime (WS): Server` | FastAPI on 127.0.0.1:8001 (with auto-reload) |
-| `Celery: Worker` | Celery worker (`--pool=solo` for Windows) |
-| `Celery: Beat` | Celery Beat scheduler |
-| `Angular: Serve` | Angular dev server on 127.0.0.1:4200 with proxy |
-| `Agent: Run` | Python agent (connects via WS to FastAPI) |
+# Terminal 2 — Celery Worker
+cd backend && celery -A config.celery_app worker -l info -Q critical,default,deployment-waves,deployment-results,reporting
 
-### Compound Launches (start multiple at once)
+# Terminal 3 — Celery Beat
+cd backend && celery -A config.celery_app beat -l info
 
-| Compound Name | Services Started |
-|---------------|------------------|
-| **Full Stack (Django+FastAPI+Celery)** | Django + FastAPI + Celery Worker |
-| **Full Stack + Frontend** | Django + FastAPI + Celery + Angular |
-| **Everything** | All above + Celery Beat + Agent |
+# Terminal 4 — Realtime WebSocket Service
+cd realtime && uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 
-### Utility Configs
+# Terminal 5 — BFF (optional)
+cd backend && uvicorn bff.main:app --host 0.0.0.0 --port 8080 --reload
 
-| Config Name | Purpose |
-|-------------|---------|
-| `Django: Migrate` | Run database migrations |
-| `Django: Make Migrations` | Generate migration files |
-| `Django: Shell` | Interactive Django shell |
-| `Django: Run Tests` | Run pytest suite |
-| `Seed: Load Data` | Load seed data |
-| `Docker: Up Dev` / `Docker: Down` | Docker compose control |
+# Terminal 6 — Frontend
+cd frontend && npx ng serve --proxy-config proxy.conf.json --host 127.0.0.1 --port 4200
 
-**Recommended:** Use the **"Full Stack + Frontend"** compound to start the entire dev environment in one click.
+# Terminal 7 — Agent (on endpoint machine)
+cd agent && python agent.py
+```
+
+---
+
+## VS Code Debug Configurations
+
+Open the Run & Debug panel (Ctrl+Shift+D) and choose:
+
+| Configuration | Description |
+|---------------|-------------|
+| `Django: Debug Server` | Django on port 8000 with debugpy |
+| `Realtime (WS): Debug Server` | FastAPI realtime on port 8001 |
+| `BFF: Debug Server` | FastAPI BFF on port 8080 |
+| `Celery: Debug Worker` | Celery worker (all queues) |
+| `Celery: Debug Beat` | Celery Beat scheduler |
+| `Angular: Serve` | Frontend dev server on port 4200 |
+| `Agent: Debug Run` | Agent process |
+| **`Debug: Full Platform`** | Django + Realtime + Worker + Angular |
+| **`Debug: Everything`** | Full stack + Beat + Agent |
+| **`Debug: Full Stack + BFF`** | Everything + BFF (Phase 11) |
 
 ---
 
 ## API Reference
 
-### Authentication
+### Django REST API — `http://localhost:8000/api/v1/`
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/auth/login/` | Obtain JWT access + refresh tokens |
-| `POST` | `/api/auth/refresh/` | Rotate refresh token |
-| `POST` | `/api/auth/logout/` | Blacklist refresh token |
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/auth/login/` | Obtain JWT tokens |
+| GET | `/devices/` | List devices |
+| POST | `/devices/{id}/heartbeat/` | Agent heartbeat |
+| GET | `/deployments/` | List deployments |
+| POST | `/deployments/{id}/execute/` | Start deployment |
+| GET | `/deployments/{id}/events/` | Deployment event audit log |
+| POST | `/deployments/{id}/ingest_patch_result/` | Agent patch result |
+| GET | `/patches/` | Patch catalog |
+| GET | `/dashboard/stats/` | Dashboard aggregate stats |
 
-### Devices (Inventory)
+Full OpenAPI docs: `http://localhost:8000/api/schema/swagger-ui/`
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/devices/` | List devices (filterable by status, os_family, environment) |
-| `POST` | `/api/v1/devices/` | Register new device |
-| `GET` | `/api/v1/devices/{id}/` | Device detail |
-| `POST` | `/api/v1/devices/{id}/scan/` | Trigger remote patch scan via Celery → WS → Agent |
-| `GET` | `/api/v1/devices/groups/` | List device groups |
-| `GET` | `/api/v1/devices/dashboard-stats/` | Dashboard KPI metrics |
+### Realtime WebSocket — `ws://localhost:8001`
 
-### Patches
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/patches/` | Patch catalog (filter by severity, os_family, status) |
-| `GET` | `/api/v1/patches/{id}/` | Patch detail |
-| `POST` | `/api/v1/patches/{id}/approve/` | Approve patch (admin/operator only) |
-
-### Deployments
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/deployments/` | List deployments |
-| `POST` | `/api/v1/deployments/` | Create deployment (accepts `target_device_ids` or `target_groups`) |
-| `POST` | `/api/v1/deployments/{id}/approve/` | Approve draft deployment |
-| `POST` | `/api/v1/deployments/{id}/execute/` | Execute deployment immediately |
-| `POST` | `/api/v1/deployments/{id}/pause/` | Pause in-progress deployment |
-| `POST` | `/api/v1/deployments/{id}/resume/` | Resume paused deployment |
-| `POST` | `/api/v1/deployments/{id}/cancel/` | Cancel deployment |
-| `POST` | `/api/v1/deployments/{id}/rollback/` | Initiate rollback |
-| `GET` | `/api/v1/deployments/{id}/targets/` | Per-device deployment status |
-
-### Reports
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/reports/dashboard/` | Dashboard stats (device counts, patch rates, etc.) |
-| `GET` | `/api/v1/reports/compliance/` | Compliance summary report |
-
-### Documentation & Health
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/docs/` | Swagger UI |
-| `GET` | `/api/redoc/` | ReDoc |
-| `GET` | `/api/schema/` | OpenAPI 3.1 JSON schema |
-| `GET` | `/api/health/` | Health check (DB, cache, Celery) |
-
----
-
-## WebSocket Protocol
-
-### Dashboard Events (`/ws/dashboard`)
-
-Connect with JWT Bearer token in query params or headers.
-
-**Client → Server (subscribe)**
-```json
-{ "type": "subscribe_deployment", "deployment_id": "uuid" }
-```
-
-**Server → Client (events)**
-```json
-{ "event": "deployment_progress", "payload": { "deployment_id": "...", "status": "in_progress", "progress_percentage": 42 } }
-{ "event": "device_status_changed", "payload": { "device_id": "...", "hostname": "web-01", "status": "offline" } }
-{ "event": "system_notification", "payload": { "level": "error", "message": "Deployment halted" } }
-{ "event": "compliance_alert", "payload": { "scope": "global", "rate": 0.73 } }
-```
-
-### Agent Channel (`/ws/agent`)
-
-Connect with `api_key` query parameter. The agent authenticates using a per-device API key stored in the `Device` model.
-
-**Server → Agent (commands via Redis pub/sub)**
-```json
-{ "event": "START_SCAN", "payload": { "task_id": "celery-task-uuid" } }
-{ "event": "START_DEPLOYMENT", "payload": { "deployment_id": "...", "target_id": "..." } }
-{ "event": "CANCEL_DEPLOYMENT", "payload": { "deployment_id": "..." } }
-```
-
-**Agent → Server (results)**
-```json
-{ "event": "scan_result", "payload": { "patches": [...], "os_info": {...} } }
-{ "event": "deployment_result", "payload": { "target_id": "...", "status": "completed" } }
-{ "event": "heartbeat", "payload": { "uptime": 3600, "cpu": 12.5 } }
-```
-
-### Redis Pub/Sub Channels
-
-| Channel Pattern | Publisher | Subscriber |
-|----------------|-----------|------------|
-| `deployment:progress` | Celery worker | FastAPI → Dashboard WS |
-| `system:notification` | Django views | FastAPI → Dashboard WS |
-| `system:compliance_alert` | Celery worker | FastAPI → Dashboard WS |
-| `agent:command:{device_id}` | Celery/Django | FastAPI → Agent WS |
-
----
-
-## Authentication & RBAC
-
-JWT access tokens (30 min) with rotating refresh tokens (7 days). Tokens include custom claims: `role`, `username`, `email`.
-
-| Role | Permissions |
-|------|-------------|
-| `admin` | Full access: user management, system settings, all CRUD |
-| `operator` | Create, approve, execute deployments; manage patches and devices |
-| `viewer` | Read-only access to all resources |
-| `agent` | Service account for field agents (API key auth, no human login) |
-
-LDAP/Active Directory authentication available via `python-ldap`. Configure `LDAP_*` variables in `.env`.
-
----
-
-## Data Model Overview
-
-```
-┌──────────┐     ┌─────────────┐     ┌────────────────────┐
-│   User   │     │    Device   │     │       Patch        │
-│(accounts)│     │ (inventory) │     │    (patches)       │
-│          │     │             │     │                    │
-│ role     │     │ hostname    │     │ cve_ids            │
-│ locked_  │     │ os_family   │     │ severity           │
-│ until    │     │ ip_address  │     │ status (state      │
-│          │     │ status      │     │  machine)          │
-└──────────┘     │ agent_api_  │     │ imported→approved  │
-                 │ key (hidden)│     │ →superseded        │
-                 └──────┬──────┘     └──────┬─────────────┘
-                        │                   │
-                        ▼                   ▼
-               ┌────────────────────────────────────┐
-               │         DevicePatchStatus           │
-               │  device → Device                    │
-               │  patch  → Patch                     │
-               │  state  (pending/installed/failed)  │
-               └────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────┐
-│                     Deployment                          │
-│  patches      → ManyToMany(Patch)                       │
-│  target_groups→ ManyToMany(DeviceGroup)                 │
-│  strategy     → immediate / canary / rolling            │
-│  status       → draft → scheduled → in_progress →      │
-│                 paused → completed / failed              │
-│  created_by   → User                                    │
-│  approved_by  → User                                    │
-└────────────────────────┬────────────────────────────────┘
-                         ▼
-┌─────────────────────────────────────────────────────────┐
-│                  DeploymentTarget                        │
-│  deployment   → Deployment                              │
-│  device       → Device                                  │
-│  wave_number  → int                                     │
-│  status       → queued / in_progress / completed /      │
-│                 failed / skipped / rolled_back           │
-└─────────────────────────────────────────────────────────┘
-```
-
----
-
-## Celery Tasks & Beat Schedule
-
-### Registered Tasks
-
-| Task | Queue | Description |
-|------|-------|-------------|
-| `deployments.tasks.execute_deployment` | critical | Execute deployment waves against target devices |
-| `deployments.tasks.cancel_deployment_task` | critical | Cancel running deployment |
-| `deployments.tasks.process_scheduled_deployments` | default | Check for deployments due to start |
-| `patches.tasks.sync_vendor_patches` | default | Import patches from vendor feeds |
-| `patches.tasks.scan_device_patches` | default | Trigger agent scan via Redis → WS |
-| `inventory.tasks.check_stale_devices` | default | Mark devices offline after heartbeat timeout |
-| `inventory.tasks.generate_compliance_snapshot` | reporting | Generate compliance metrics |
-| `deployments.tasks.cleanup_old_partitions` | reporting | Archive old audit log partitions |
-
-### Beat Schedule (Cron)
-
-| Schedule | Task | Description |
+| Endpoint | Auth | Description |
 |----------|------|-------------|
-| Every 6 hours | `sync_vendor_patches` | Pull latest patches from vendors |
-| Every 5 minutes | `check_stale_devices` | Detect offline devices |
-| Daily at midnight | `generate_compliance_snapshot` | Compliance report |
-| Every 1 minute | `process_scheduled_deployments` | Start scheduled deployments |
-| 1st of month at 2 AM | `cleanup_old_partitions` | Archive audit log |
+| `/ws/dashboard?token=JWT` | JWT | Dashboard real-time feed |
+| `/ws/agent?api_key=KEY` | Agent API Key | Agent command & reporting channel |
+
+### BFF — `http://localhost:8080`
+
+| Path | Description |
+|------|-------------|
+| `/bff/health` | Health check |
+| `/bff/docs` | OpenAPI docs |
+| `/bff/api/v1/*` | Proxy → Django |
+| `/bff/ws/*` | Proxy → Realtime |
 
 ---
 
-## Agent Configuration
+## Known Issues & Assumptions
 
-The agent connects to both the FastAPI WebSocket and Django REST API. Configuration is in `agent/config.yaml`:
+### Platform Assumptions
 
-```yaml
-server_url: "ws://localhost:8001/ws/agent"    # FastAPI WS endpoint
-rest_url: "http://localhost:8000/api/v1"       # Django REST API
-api_key: "<device-agent-api-key>"              # From Device.agent_api_key
-device_id_override: "<device-uuid>"            # Must match a Device record
-heartbeat_interval: 60                         # WS heartbeat (seconds)
-rest_heartbeat_interval: 300                   # REST heartbeat (seconds)
-```
+- **PostgreSQL required** for production. The compliance materialized view (`mv_compliance_stats`) and audit log partitioning are PostgreSQL-specific. The materialized view refresh task gracefully skips on SQLite.
+- **Redis required** for deployment orchestration. Without Redis, Celery tasks queue in memory only and are lost on restart.
+- **aiohttp required** on the agent for REST heartbeat and auto-registration. If absent, these features silently disable themselves.
 
-The agent:
-1. Connects to FastAPI via WebSocket (authenticated with `api_key` query param)
-2. Sends periodic heartbeats (WS + REST fallback)
-3. Listens for commands (`START_SCAN`, `START_DEPLOYMENT`, `CANCEL_DEPLOYMENT`)
-4. Executes OS-specific patch operations via plugins (`windows.py`, `linux.py`, `macos.py`)
-5. Reports results back through WebSocket
+### Architecture Decisions
 
----
+- **Dual-path Redis (Pub/Sub + Streams)**: The realtime service currently runs both the legacy Pub/Sub subscriber and the new Streams consumer simultaneously. This ensures zero-downtime migration. Disable Pub/Sub via `ENABLE_PUBSUB_SUBSCRIBER=false` once all workers are confirmed on Streams.
+- **Synchronous wave loop**: The orchestrator calls `execute_wave()` directly (blocking) rather than via `.delay()`. This is intentional — the orchestrator owns the wave loop and enforces inter-wave delays. The `deployment-waves` queue isolation provides timeout protection at the Celery level.
+- **Idempotent orchestrator**: `orchestrate_deployment` is safe to retry/re-run. Already-completed waves are skipped. This handles Celery worker restarts gracefully.
 
-## Core Design Decisions
+### Security Notes
 
-### 1. Django WSGI — Source of Truth
-The Django service owns all persistent state: REST authentication, patch lifecycle state machine, RBAC enforcement, and deployment orchestration.
-- **Patch State Machine** (`patches/state_machine.py`): Enforces `imported → approved → superseded`, blocking installation of unapproved patches.
-- **Deployment Waves** (`deployments/tasks.py`): Celery chunks device groups into canary/rolling waves, respecting `max_failure_percentage` thresholds.
-- **Audit Log** (`accounts/models.py`): Every API write logged to a time-partitioned table.
+- `agent/config.yaml` is now in `.gitignore` — real API keys must not be committed. Use `config.yaml.example` as the template.
+- Agent API key rotation runs daily at 02:30 UTC with a 90-day rotation threshold. Agents receive the new key via the `KEY_ROTATED` WebSocket command before the server invalidates the old one.
+- The realtime service authenticates agents directly via asyncpg (bypassing Django ORM) to avoid blocking the event loop.
 
-### 2. FastAPI ASGI — Real-Time Edge Layer
-Stateless microservice that never touches the database for hot paths. Only persistent state is an in-memory `ConnectionManager`.
-- Validates WebSocket connections using the same JWT secret as Django.
-- Subscribes to Redis channels and fans out events to dashboard clients and agents.
-- Agents authenticate with a per-device `agent_api_key` (looked up once at connect-time).
+### Windows Dev Notes
 
-### 3. Angular 21 SPA — Reactive Dashboard
-Standalone components with Angular Signals for fine-grained reactivity.
-- Auth interceptor attaches Bearer tokens. `WebSocketService` maintains a socket to `/ws/dashboard`.
-- Role-based route guards (`authGuard`, `roleGuard`) enforce URL-level access.
+- The `.venv` Scripts path uses backslash on Windows: `.venv\Scripts\activate`
+- Celery on Windows requires `--pool=solo` or `--pool=gevent` — see Makefile.
+- The agent `_disk_usage()` uses `C:\` on Windows, `/` on Linux/macOS.
 
-### 4. Celery → Redis Pub/Sub → FastAPI → Agent Pipeline
-When Django needs to send a command to an agent (e.g., scan), it enqueues a Celery task → the task publishes to Redis `agent:command:{device_id}` → FastAPI subscribes and forwards via WebSocket → agent executes and reports back.
+### Phase 11 Migration Status
 
----
-
-## Progress
-
-| Phase | Description | Tasks | Status |
-|-------|-------------|-------|--------|
-| 1 | Scaffolding & Infrastructure | 6/6 | ✅ Complete |
-| 2 | Django Models & Migrations | 5/5 | ✅ Complete |
-| 3 | Authentication & Authorization | 3/3 | ✅ Complete |
-| 4 | Django REST API | 4/4 | ✅ Complete |
-| 5 | Celery Task Engine | 3/3 | ✅ Complete |
-| 6 | FastAPI Real-Time Service | 3/3 | ✅ Complete |
-| 7 | Angular Frontend | 12/12 | ✅ Complete |
-| 8 | Python Agent | 1/1 | ✅ Complete |
-| 9 | Testing & Quality | 0/3 | ⬜ Not Started |
-| 10 | Production Hardening | 0/4 | ⬜ Not Started |
-| **Total** | | **39/44** | **89%** |
-
-### Remaining Work
-- **Phase 9:** Unit tests (pytest + factory-boy), integration tests, Angular Karma/Jest tests
-- **Phase 10:** Production Dockerfile optimization, CI/CD pipeline, monitoring (Sentry), load testing
+| Task | Status |
+|------|--------|
+| 11.4 Celery task hierarchy | ✅ Complete |
+| 11.5 DeploymentEvent sourcing | ✅ Complete |
+| 11.6 Compliance materialized view | ✅ Complete |
+| 11.7 Agent API key rotation | ✅ Complete |
+| 11.8 Frontend UX (virtual scroll) | ✅ Complete |
+| Redis Streams migration | 🔄 In progress (dual-path active) |

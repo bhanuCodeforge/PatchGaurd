@@ -1,0 +1,44 @@
+# PatchGuard Agent Configuration — EXAMPLE
+# -----------------------------------------------------------------------
+# Copy this file to config.yaml and fill in the values below.
+# agent/config.yaml is in .gitignore — never commit real API keys.
+#
+# Native dev (Windows/Linux/macOS):
+#   server_url should point to the FastAPI WebSocket service.
+#   rest_url   should point to the Django REST API.
+#
+# Docker / remote deployment:
+#   Replace 'localhost' with the hostname or IP of the server.
+#   e.g. server_url: "ws://192.168.1.100:8001/ws/agent"
+# -----------------------------------------------------------------------
+# IMPORTANT: After registering this device via the admin UI or API,
+# copy the agent_api_key from the Device record here.
+# OR set auto_register: true to register automatically on first run.
+# -----------------------------------------------------------------------
+rest_url: http://localhost:8000/api/v1
+server_url: ws://localhost:8001/ws/agent
+
+# Replace with the actual key from the Device record
+api_key: AGENT_SECRET_KEY_PLACEHOLDER
+
+# Auto-registration (set to true if the device is not yet registered)
+auto_register: false
+auto_register_environment: production
+auto_register_hostname: null   # null = use socket.gethostname()
+auto_register_os_family: null  # null = auto-detect
+
+# Once registered, the device ID is written here by auto-register.
+# You can also set it manually from the Device record UUID.
+device_id_override: null
+
+# Intervals (seconds)
+heartbeat_interval: 60
+rest_heartbeat_interval: 300
+fast_lane_interval: 5
+slow_lane_interval: 900
+
+log_level: info
+
+# Optional tags for grouping in the dashboard
+tags:
+  - production

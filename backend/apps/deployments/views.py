@@ -154,7 +154,11 @@ class DeploymentViewSet(viewsets.ModelViewSet):
 
     @extend_schema(
         summary="Ingest patch result from agent",
-        description="Called by realtime service after agent reports patch_result. Updates DeploymentTarget status and advances deployment when all targets are complete.",
+        description=(
+            "Called by realtime service after agent reports patch_result. "
+            "Enqueues report_device_result Celery task which atomically updates "
+            "DeploymentTarget status and Deployment counters via F() expressions."
+        ),
     )
     @action(
         detail=True, methods=["post"],
@@ -171,42 +175,19 @@ class DeploymentViewSet(viewsets.ModelViewSet):
         if not target_id:
             return Response({"error": "target_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            target = DeploymentTarget.objects.get(id=target_id, deployment=deployment)
-        except DeploymentTarget.DoesNotExist:
+        # Validate target exists and belongs to this deployment
+        if not DeploymentTarget.objects.filter(id=target_id, deployment=deployment).exists():
             return Response({"error": "Target not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        if target.status in (DeploymentTarget.Status.COMPLETED, DeploymentTarget.Status.FAILED):
-            return Response({"status": "already finalized", "target_id": target_id})
+        # Delegate atomic counter update + progress broadcast to the Celery task.
+        # report_device_result uses F() expressions — no race conditions, no stale reads.
+        from .tasks import report_device_result
+        report_device_result.apply_async(
+            args=[str(deployment.id), str(target_id), result_status == "completed", error],
+            queue="deployment-results",
+        )
 
-        if result_status == "completed":
-            target.status = DeploymentTarget.Status.COMPLETED
-        else:
-            target.status = DeploymentTarget.Status.FAILED
-            target.error_log = error
-        target.completed_at = timezone.now()
-        target.save()
-
-        from .tasks import update_deployment_counters, publish_progress
-        update_deployment_counters(deployment)
-        deployment.refresh_from_db()
-        publish_progress(deployment)
-
-        # Mark deployment complete/failed when all targets are finalized
-        pending = DeploymentTarget.objects.filter(
-            deployment=deployment,
-            status__in=[DeploymentTarget.Status.QUEUED, DeploymentTarget.Status.IN_PROGRESS],
-        ).exists()
-        if not pending and deployment.status == Deployment.Status.IN_PROGRESS:
-            if deployment.failure_rate > deployment.max_failure_percentage:
-                deployment.status = Deployment.Status.FAILED
-            else:
-                deployment.status = Deployment.Status.COMPLETED
-            deployment.completed_at = timezone.now()
-            deployment.save(update_fields=["status", "completed_at"])
-            publish_progress(deployment)
-
-        return Response({"status": "patch result ingested", "target_id": target_id})
+        return Response({"status": "queued", "target_id": target_id}, status=status.HTTP_202_ACCEPTED)
 
     @extend_schema(summary="Get progress targets", responses=DeploymentTargetSerializer(many=True))
     @action(detail=True, methods=["get"])

@@ -1,5 +1,4 @@
 import secrets
-import json
 from typing import Generator, Any, Optional, Callable, Dict
 from django.core.cache import cache
 
@@ -31,19 +30,6 @@ def batch_qs(queryset, batch_size: int = 500) -> Generator[Any, None, None]:
         end = min(start + batch_size, total)
         yield queryset[start:end]
 
-def publish_to_redis(channel: str, data: dict) -> None:
-    """
-    Helper to publish JSON data to a Redis pub/sub channel.
-    Uses the default Django cache client backing Redis.
-    """
-    try:
-        # Get the underlying redis client from django-redis
-        client = cache.client.get_client()
-        client.publish(channel, json.dumps(data))
-    except Exception as e:
-        import structlog
-        logger = structlog.get_logger(__name__)
-        logger.error("redis_publish_failed", channel=channel, error=str(e))
 
 class CacheHelper:
     """

@@ -1,4 +1,4 @@
-﻿# ─── Python ───
+# ─── Python ───
 __pycache__/
 *.py[cod]
 *$py.class
@@ -95,3 +95,16 @@ nginx/ssl/*.crt
 *.bak
 *.tmp
 *.temp
+*.bak.json
+launch.json.bak.json
+
+# ─── Agent — real keys should not be committed ───
+# Copy agent/config.yaml.example to agent/config.yaml and fill in your api_key
+agent/config.yaml
+
+# ─── Frontend backup / scratch directories ───
+frontend_backup/
+
+# ─── Django logs ───
+django.log
+logs/

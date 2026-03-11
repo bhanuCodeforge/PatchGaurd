@@ -13,11 +13,9 @@ Design:
 
 Replaces the monolithic execute_deployment task.
 """
-from celery import shared_task, chain, chord
-from celery.exceptions import SoftTimeLimitExceeded
+from celery import shared_task
 from django.utils import timezone
 from django.db import transaction
-import math
 import time
 import logging
 
@@ -406,6 +404,8 @@ def monitor_stuck_waves() -> dict:
         dep_id = str(t.deployment_id)
         stuck_by_deployment.setdefault(dep_id, []).append(t)
 
+    from django.db.models import F
+
     total_stuck = 0
     for dep_id, targets in stuck_by_deployment.items():
         with transaction.atomic():
@@ -414,9 +414,10 @@ def monitor_stuck_waves() -> dict:
                 t.error_log = f"Wave timed out after {WAVE_TIMEOUT_MINUTES} minutes"
                 t.completed_at = timezone.now()
                 t.save(update_fields=["status", "error_log", "completed_at"])
-                Deployment.objects.filter(id=dep_id).update(
-                    __import__("django.db.models", fromlist=["F"]).F  # use F() above
-                )
+            # Atomically bump failed_devices counter for all stuck targets at once
+            Deployment.objects.filter(id=dep_id).update(
+                failed_devices=F("failed_devices") + len(targets)
+            )
             total_stuck += len(targets)
 
         try:

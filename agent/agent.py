@@ -469,6 +469,20 @@ class PatchAgent:
                             logger.info("Agent configuration updated from server.")
                     elif command == "UPDATE_AGENT":
                         await self.run_self_update(payload)
+                    elif command == "KEY_ROTATED":
+                        # Task 11.7 — server rotated our API key
+                        new_key = payload.get("new_api_key", "")
+                        if new_key:
+                            logger.info("Received KEY_ROTATED command — updating api_key in config.yaml.")
+                            self.config["api_key"] = new_key
+                            self._persist_config()
+                            logger.info(
+                                "API key updated. Reconnecting with new key after current session ends."
+                            )
+                            # Signal the connect loop to reconnect so WS auth uses the new key
+                            self._connected = False
+                        else:
+                            logger.warning("KEY_ROTATED payload missing new_api_key — ignoring.")
                     else:
                         logger.warning(f"Unknown command: {command}")
                 except Exception as e:
