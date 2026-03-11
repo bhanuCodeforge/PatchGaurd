@@ -181,6 +181,25 @@ class DeviceViewSet(viewsets.ModelViewSet):
     # Agent-accessible endpoints (API key OR JWT)                         #
     # ------------------------------------------------------------------ #
 
+    @extend_schema(
+        summary="Agent self-identify",
+        description="Returns the device record for the currently authenticated agent (by X-Agent-API-Key). "
+                    "Used by the realtime service as a fallback auth mechanism in dev/SQLite mode.",
+    )
+    @action(
+        detail=False, methods=["get"],
+        url_path="me",
+        authentication_classes=_AGENT_AUTH,
+        permission_classes=[IsAgentOrOperatorOrAbove],
+    )
+    def me(self, request):
+        from common.agent_auth import AgentPrincipal
+        if isinstance(request.user, AgentPrincipal):
+            device = request.user.device
+            serializer = DeviceDetailSerializer(device, context={"request": request})
+            return Response(serializer.data)
+        return Response({"error": "Not an agent"}, status=status.HTTP_403_FORBIDDEN)
+
     @extend_schema(summary="Agent Heartbeat", description="Agent POSTs this to update last_seen, status, and system metrics.")
     @action(
         detail=True, methods=["post"],
@@ -281,7 +300,15 @@ class DeviceViewSet(viewsets.ModelViewSet):
             )
 
         from .tasks import process_scan_results
-        process_scan_results.delay(str(device.id), patches)
+        try:
+            process_scan_results.delay(str(device.id), patches)
+        except Exception:
+            # Fallback: run synchronously if Celery broker is unavailable (dev mode)
+            import logging
+            logging.getLogger(__name__).warning(
+                "Celery broker unavailable — running process_scan_results synchronously"
+            )
+            process_scan_results.apply(args=[str(device.id), patches])
 
         return Response(
             {

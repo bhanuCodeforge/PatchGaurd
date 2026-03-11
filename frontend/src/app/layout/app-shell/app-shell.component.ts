@@ -6,6 +6,7 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
 import { TopbarComponent } from '../topbar/topbar.component';
 import { ToastContainerComponent } from '../../shared/components/toast-container.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { WebsocketService } from '../../core/services/websocket.service';
 
 @Component({
   selector: 'app-shell',
@@ -23,6 +24,7 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class AppShellComponent implements OnInit {
   private router = inject(Router);
+  private wsService = inject(WebsocketService);
   pageTitle = 'UI.u_dashboard';
 
   private titleMap: Record<string, string> = {
@@ -56,6 +58,9 @@ export class AppShellComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Ensure WebSocket connects on app load (handles page refresh case)
+    this.wsService.connect();
+
     this.router.events
       .pipe(
         filter((e) => e instanceof NavigationEnd),
