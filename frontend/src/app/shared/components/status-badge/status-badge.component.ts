@@ -11,47 +11,43 @@ import { CommonModule } from '@angular/common';
 export class StatusBadgeComponent {
   @Input() value = '';
   @Input() label = '';
-  @Input() type: 'severity' | 'status' = 'status';
-  @Input() dot = false;
+  @Input() type: 'severity' | 'status' | 'env' | 'workflow' = 'status';
+  @Input() dot = true;
 
-  private statusColorMap: Record<string, string> = {
-    online:       '#22c55e',
-    offline:      '#ef4444',
-    decommissioned:'#6b7280',
-    imported:     '#6b7280',
-    reviewed:     '#3b82f6',
-    approved:     '#22c55e',
-    rejected:     '#ef4444',
-    superseded:   '#a855f7',
-    draft:        '#6b7280',
-    scheduled:    '#3b82f6',
-    in_progress:  '#f59e0b',
-    paused:       '#f97316',
-    completed:    '#22c55e',
-    failed:       '#ef4444',
-    cancelled:    '#6b7280',
-    rolling_back: '#a855f7',
-  };
+  getBadgeClass(): string {
+    const v = this.value?.toLowerCase() || '';
+    
+    // Environment Mapping
+    if (this.type === 'env') {
+      if (v.includes('prod')) return 'badge-production';
+      if (v.includes('stag')) return 'badge-staging';
+      if (v.includes('dev')) return 'badge-development';
+      return 'badge-gray';
+    }
 
-  private severityColorMap: Record<string, string> = {
-    critical: '#ef4444',
-    high:     '#f97316',
-    medium:   '#eab308',
-    low:      '#22c55e',
-  };
+    // Severity Mapping
+    if (this.type === 'severity') {
+      if (v === 'critical') return 'badge-critical';
+      if (v === 'high') return 'badge-high';
+      if (v === 'medium') return 'badge-medium';
+      if (v === 'low') return 'badge-low';
+      return 'badge-gray';
+    }
 
-  getColor(): string {
-    const v = this.value?.toLowerCase();
-    if (this.type === 'severity') return this.severityColorMap[v] ?? '#6b7280';
-    return this.statusColorMap[v] ?? '#6b7280';
-  }
+    // Workflow Mapping
+    if (this.type === 'workflow') {
+      if (v === 'approved') return 'badge-online';
+      if (v === 'rejected') return 'badge-critical';
+      if (v === 'reviewed') return 'badge-maintenance';
+      if (v === 'imported') return 'badge-gray';
+      return 'badge-gray';
+    }
 
-  getStyle() {
-    const color = this.getColor();
-    return {
-      color,
-      background: color + '22',
-      border: `1px solid ${color}44`,
-    };
+    // Generic Status Mapping
+    if (v === 'online' || v === 'active' || v === 'connected' || v === 'success') return 'badge-online';
+    if (v === 'offline' || v === 'disconnected' || v === 'locked' || v === 'error') return 'badge-offline';
+    if (v === 'maintenance' || v === 'warning' || v === 'pending' || v === 'in_progress') return 'badge-maintenance';
+    
+    return 'badge-gray';
   }
 }
