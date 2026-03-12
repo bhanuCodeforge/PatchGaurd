@@ -1,10 +1,11 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { WebsocketService } from '../../../core/services/websocket.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { UserService } from '../../../core/services/user.service';
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
@@ -14,12 +15,13 @@ import { TranslateModule } from '@ngx-translate/core';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private wsService = inject(WebsocketService);
   public notificationService = inject(NotificationService);
   private router = inject(Router);
+  private userSvc = inject(UserService);
 
   loginForm = this.fb.group({
     username: ['', Validators.required],
@@ -29,8 +31,30 @@ export class LoginComponent {
   });
 
   isLoading = signal(false);
+  samlProviders = signal<{ id: string; name: string }[]>([]);
+  samlLoadingId = signal<string | null>(null);
 
   constructor() {}
+
+  ngOnInit() {
+    this.userSvc.getPublicSAMLProviders().subscribe({
+      next: (providers) => this.samlProviders.set(providers),
+      error: () => { /* silently ignore – SSO section just won't show */ },
+    });
+  }
+
+  signInWithSaml(configId: string) {
+    this.samlLoadingId.set(configId);
+    this.userSvc.getSAMLLoginUrl(configId).subscribe({
+      next: ({ redirect_url }) => {
+        window.location.href = redirect_url;
+      },
+      error: () => {
+        this.samlLoadingId.set(null);
+        this.notificationService.error('SSO Error', 'Unable to initiate SSO login. Please try again.');
+      },
+    });
+  }
 
   onSubmit() {
     if (this.loginForm.invalid) {

@@ -218,6 +218,242 @@
         </div>
       </div>
 
+      <!-- Admin: SAML / SSO Configurations -->
+      <div *ngIf="activeSection === 'saml'" class="section">
+        <div class="saml-header">
+          <div>
+            <h3 class="section-title">SAML / SSO Configuration</h3>
+            <p class="section-desc">Connect an Identity Provider (IdP) to enable Single Sign-On for your organisation.</p>
+          </div>
+          <button class="saml-add-btn" (click)="openSamlPanel()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add IdP
+          </button>
+        </div>
+
+        <!-- Loading -->
+        <div class="saml-loading" *ngIf="samlLoading">
+          <div class="saml-skeleton" *ngFor="let i of [1,2]"></div>
+        </div>
+
+        <!-- Empty -->
+        <div class="saml-empty" *ngIf="!samlLoading && samlConfigs.length === 0">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <p>No SAML configurations yet.</p>
+          <button class="saml-add-btn" (click)="openSamlPanel()">Configure first IdP</button>
+        </div>
+
+        <!-- Config cards -->
+        <div class="saml-cards" *ngIf="!samlLoading && samlConfigs.length > 0">
+          <div class="saml-card" *ngFor="let cfg of samlConfigs" [class.saml-inactive]="!cfg.is_active">
+
+            <!-- Card header -->
+            <div class="saml-card-head">
+              <div class="saml-idp-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
+              <div class="saml-card-info">
+                <div class="saml-card-name">{{ cfg.name }}
+                  <span class="saml-active-badge" *ngIf="cfg.is_active">Active</span>
+                  <span class="saml-inactive-badge" *ngIf="!cfg.is_active">Disabled</span>
+                </div>
+                <div class="saml-card-entity">{{ cfg.idp_entity_id }}</div>
+              </div>
+              <div class="saml-card-actions">
+                <button class="saml-act-btn" title="Edit" (click)="openSamlPanel(cfg)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <a class="saml-act-btn" [href]="samlMetadataUrl(cfg.id!)" target="_blank" title="View SP metadata XML">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </a>
+                <button class="saml-act-btn saml-act-danger" title="Delete" (click)="confirmDeleteSaml(cfg)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Card meta row -->
+            <div class="saml-card-meta">
+              <div class="saml-meta-item">
+                <span class="saml-meta-key">SSO URL</span>
+                <span class="saml-meta-val">{{ cfg.idp_sso_url }}</span>
+              </div>
+              <div class="saml-meta-item">
+                <span class="saml-meta-key">Default role</span>
+                <span class="saml-role-badge" [class]="'role-' + cfg.default_role">{{ cfg.default_role }}</span>
+              </div>
+              <div class="saml-meta-item">
+                <span class="saml-meta-key">Auto-provision</span>
+                <span class="saml-bool" [class.yes]="cfg.auto_create_users">{{ cfg.auto_create_users ? 'Yes' : 'No' }}</span>
+              </div>
+            </div>
+
+            <!-- SP metadata URL -->
+            <div class="saml-sp-url">
+              <span class="saml-sp-label">SP Metadata URL</span>
+              <code class="saml-sp-value">{{ origin }}/api/v1/saml/{{ cfg.id }}/metadata/</code>
+              <button class="saml-copy-btn" title="Copy" (click)="copySamlUrl(cfg.id!)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- How-to box -->
+        <div class="saml-howto">
+          <h4 class="howto-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Integration guide
+          </h4>
+          <ol class="howto-steps">
+            <li>Create a SAML 2.0 application in your IdP (Okta, Azure AD, ADFS, etc.)</li>
+            <li>Set the <strong>ACS URL</strong> to: <code>https://&lt;your-domain&gt;/api/v1/saml/&lt;config-id&gt;/acs/</code></li>
+            <li>Set the <strong>Entity ID (SP)</strong> to the SP Metadata URL shown on the card above</li>
+            <li>Copy the IdP SSO URL and X.509 certificate from your IdP into the form below</li>
+            <li>Set attribute mappings: <code>email → email</code>, <code>cn → full_name</code> (optional: <code>role → role</code>)</li>
+          </ol>
+          <div class="howto-attr-table">
+            <div class="attr-row attr-header">
+              <span>SAML Attribute</span><span>User Field</span><span>Example Value</span>
+            </div>
+            <div class="attr-row"><span>email</span><span>email</span><span>john@corp.com</span></div>
+            <div class="attr-row"><span>cn / givenName</span><span>full_name</span><span>John Doe</span></div>
+            <div class="attr-row"><span>role (optional)</span><span>role</span><span>admin | operator | viewer</span></div>
+            <div class="attr-row"><span>department (optional)</span><span>department</span><span>IT Operations</span></div>
+          </div>
+        </div>
+
+      </div><!-- /saml section -->
+
     </div>
   </div>
 </div>
+
+<!-- ═══ SAML PANEL OVERLAY ══════════════════════════════════════════════════ -->
+<div class="saml-overlay" *ngIf="samlPanelOpen" (click)="samlPanelOpen = false">
+  <div class="saml-panel" (click)="$event.stopPropagation()">
+
+    <div class="saml-panel-header">
+      <div>
+        <h3>{{ samlEditTarget ? 'Edit IdP' : 'Add Identity Provider' }}</h3>
+        <p>Configure a SAML 2.0 IdP for Single Sign-On</p>
+      </div>
+      <button class="saml-close-btn" (click)="samlPanelOpen = false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="saml-panel-body">
+
+      <div class="saml-form-section">
+        <h4 class="saml-form-label">General</h4>
+        <div class="saml-field">
+          <label>Display name <span class="req">*</span></label>
+          <input [(ngModel)]="samlForm.name" placeholder="e.g. Okta Corporate" />
+        </div>
+        <div class="saml-field-row">
+          <div class="saml-field">
+            <label>Default role</label>
+            <select [(ngModel)]="samlForm.default_role">
+              <option value="viewer">Viewer</option>
+              <option value="operator">Operator</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="saml-field saml-toggle-field">
+            <label>Auto-provision users</label>
+            <div class="stgl" [class.on]="samlForm.auto_create_users" (click)="samlForm.auto_create_users = !samlForm.auto_create_users">
+              <div class="stgl-thumb"></div>
+            </div>
+          </div>
+          <div class="saml-field saml-toggle-field">
+            <label>Update attrs on login</label>
+            <div class="stgl" [class.on]="samlForm.auto_update_attrs" (click)="samlForm.auto_update_attrs = !samlForm.auto_update_attrs">
+              <div class="stgl-thumb"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="saml-form-section">
+        <h4 class="saml-form-label">Identity Provider (IdP)</h4>
+        <div class="saml-field">
+          <label>IdP Entity ID <span class="req">*</span></label>
+          <input [(ngModel)]="samlForm.idp_entity_id" placeholder="https://idp.corp.com/saml2/metadata" />
+        </div>
+        <div class="saml-field">
+          <label>IdP SSO URL <span class="req">*</span></label>
+          <input [(ngModel)]="samlForm.idp_sso_url" placeholder="https://idp.corp.com/saml2/sso" />
+        </div>
+        <div class="saml-field">
+          <label>IdP SLO URL (optional)</label>
+          <input [(ngModel)]="samlForm.idp_slo_url" placeholder="https://idp.corp.com/saml2/slo" />
+        </div>
+        <div class="saml-field">
+          <label>IdP X.509 Certificate <span class="req">*</span></label>
+          <textarea [(ngModel)]="samlForm.idp_x509_cert" rows="5"
+            placeholder="Paste the base64-encoded certificate (with or without -----BEGIN CERTIFICATE----- headers)"></textarea>
+        </div>
+      </div>
+
+      <div class="saml-form-section">
+        <h4 class="saml-form-label">Attribute Mapping</h4>
+        <p class="saml-form-hint">Map SAML attribute names to PatchGuard user fields.</p>
+        <div class="attr-mapping-grid">
+          <div class="attr-map-header">
+            <span>SAML Attribute Name</span><span>User Field</span>
+          </div>
+          <div class="attr-map-row" *ngFor="let m of samlAttrMappings; let i = index">
+            <input [(ngModel)]="m.samlAttr" placeholder="e.g. email" />
+            <select [(ngModel)]="m.userField">
+              <option value="">— ignore —</option>
+              <option value="email">email</option>
+              <option value="full_name">full_name</option>
+              <option value="role">role</option>
+              <option value="department">department</option>
+            </select>
+            <button class="attr-map-remove" (click)="removeAttrMapping(i)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <button class="attr-map-add" (click)="addAttrMapping()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add mapping
+          </button>
+        </div>
+      </div>
+
+      <div class="saml-form-section">
+        <h4 class="saml-form-label">Status</h4>
+        <div class="saml-field saml-toggle-field">
+          <label>Enable this configuration</label>
+          <div class="stgl" [class.on]="samlForm.is_active" (click)="samlForm.is_active = !samlForm.is_active">
+            <div class="stgl-thumb"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /body -->
+
+    <div class="saml-panel-footer">
+      <button class="saml-btn-cancel" (click)="samlPanelOpen = false">Cancel</button>
+      <button class="saml-btn-save" [disabled]="samlSaving" (click)="saveSamlConfig()">
+        <span class="spin" *ngIf="samlSaving"></span>
+        {{ samlSaving ? 'Saving…' : (samlEditTarget ? 'Save changes' : 'Create IdP') }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Delete SAML confirm -->
+<app-confirm-dialog
+  [visible]="samlDeleteVisible"
+  title="Remove IdP"
+  [message]="'Remove ' + (samlDeleteTarget?.name ?? '') + '? Users who sign in via this IdP will fall back to local login.'"
+  confirmLabel="Remove"
+  severity="danger"
+  (confirm)="doDeleteSaml()"
+  (cancel)="samlDeleteVisible = false"
+></app-confirm-dialog>

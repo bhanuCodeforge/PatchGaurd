@@ -62,6 +62,7 @@ export class DeploymentLiveComponent implements OnInit, OnDestroy, AfterViewChec
   private subs: Subscription[] = [];
   deploymentId = '';
   private _shouldScroll = false;
+  private _liveToastId: string | null = null;
 
   progressPct() {
     return this.deployment()?.progress_percentage || 0;
@@ -170,10 +171,40 @@ export class DeploymentLiveComponent implements OnInit, OnDestroy, AfterViewChec
             Math.max(0, Math.floor((Date.now() - new Date(d.started_at).getTime()) / 1000)),
           );
         }
+        this._syncLiveToast(d);
         this.loadTargets();
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  private _syncLiveToast(d: any) {
+    const running = d?.status === 'in_progress' || d?.status === 'running';
+    const pct     = this.progressPct();
+    const label   = d?.target_count ? `${d.success_count ?? 0} of ${d.target_count} devices` : undefined;
+
+    if (running) {
+      if (!this._liveToastId) {
+        this._liveToastId = this.ns.deployment(
+          'Deployment in progress',
+          d.name ?? 'Executing…',
+          pct,
+          label,
+        );
+      } else {
+        this.ns.updateProgress(this._liveToastId, pct, label);
+      }
+    } else if (this._liveToastId) {
+      // Dismiss the live banner once the deployment finishes
+      this.ns.dismiss(this._liveToastId);
+      this._liveToastId = null;
+
+      if (d?.status === 'completed' || d?.status === 'success') {
+        this.ns.success('Deployment complete', d.name ?? 'Finished successfully.');
+      } else if (d?.status === 'failed') {
+        this.ns.error('Deployment failed', d.name ?? 'Check the log for details.');
+      }
+    }
   }
 
   loadTargets() {
@@ -255,5 +286,8 @@ export class DeploymentLiveComponent implements OnInit, OnDestroy, AfterViewChec
 
   ngOnDestroy() {
     this.subs.forEach((s) => s.unsubscribe());
+    if (this._liveToastId) {
+      this.ns.dismiss(this._liveToastId);
+    }
   }
 }

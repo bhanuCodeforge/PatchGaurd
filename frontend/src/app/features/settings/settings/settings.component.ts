@@ -5,12 +5,14 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../core/auth/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { SettingsService } from '../../../core/services/settings.service';
+import { UserService, SAMLConfig } from '../../../core/services/user.service';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, ConfirmDialogComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
@@ -18,6 +20,7 @@ export class SettingsComponent implements OnInit {
   private auth = inject(AuthService);
   private ns = inject(NotificationService);
   private settingsSvc = inject(SettingsService);
+  private userSvc = inject(UserService);
 
   activeSection = 'profile';
   isAdmin = this.auth.currentUser()?.role === 'admin';
@@ -29,14 +32,28 @@ export class SettingsComponent implements OnInit {
     { id: 'system', label: 'UI.u_system_info_tab', icon: 'ℹ️' },
     ...(this.auth.currentUser()?.role === 'admin'
       ? [
-          { id: 'general', label: 'General', icon: '⚙️' },
-          { id: 'vendor_feeds', label: 'Vendor Feeds', icon: '📡' },
-          { id: 'email', label: 'Email / SMTP', icon: '✉️' },
-          { id: 'maintenance', label: 'Maintenance Windows', icon: '🔧' },
-          { id: 'retention', label: 'Data Retention', icon: '🗃️' },
+          { id: 'general',      label: 'General',           icon: '⚙️' },
+          { id: 'vendor_feeds', label: 'Vendor Feeds',       icon: '📡' },
+          { id: 'email',        label: 'Email / SMTP',       icon: '✉️' },
+          { id: 'saml',         label: 'SAML / SSO',         icon: '🔐' },
+          { id: 'maintenance',  label: 'Maintenance Windows',icon: '🔧' },
+          { id: 'retention',    label: 'Data Retention',     icon: '🗃️' },
         ]
       : []),
   ];
+
+  // ── SAML state ─────────────────────────────────────────────────────────────
+  samlConfigs: SAMLConfig[]    = [];
+  samlLoading                  = false;
+  samlPanelOpen                = false;
+  samlSaving                   = false;
+  samlEditTarget: SAMLConfig | null = null;
+  samlDeleteVisible            = false;
+  samlDeleteTarget: SAMLConfig | null = null;
+  readonly origin              = window.location.origin;
+
+  samlForm: Partial<SAMLConfig> & { is_active: boolean; auto_create_users: boolean; auto_update_attrs: boolean } = this._blankSaml();
+  samlAttrMappings: { samlAttr: string; userField: string }[] = [];
 
   profile = {
     name: this.auth.currentUser()?.username ?? '',
@@ -121,6 +138,7 @@ export class SettingsComponent implements OnInit {
   ngOnInit() {
     if (this.auth.isAdmin()) {
       this.loadAdminSettings();
+      this.loadSamlConfigs();
     }
   }
 
@@ -196,5 +214,98 @@ export class SettingsComponent implements OnInit {
       next: () => this.ns.success('UI.u_saved', 'Data retention policy saved'),
       error: () => this.ns.error('Error', 'Failed to save retention settings')
     });
+  }
+
+  // ── SAML methods ──────────────────────────────────────────────────────────
+  loadSamlConfigs() {
+    this.samlLoading = true;
+    this.userSvc.getSAMLConfigs().subscribe({
+      next: (r) => { this.samlConfigs = r.results ?? []; this.samlLoading = false; },
+      error: ()  => { this.samlLoading = false; },
+    });
+  }
+
+  openSamlPanel(cfg?: SAMLConfig) {
+    this.samlEditTarget = cfg ?? null;
+    if (cfg) {
+      this.samlForm = {
+        name: cfg.name, idp_entity_id: cfg.idp_entity_id,
+        idp_sso_url: cfg.idp_sso_url, idp_slo_url: cfg.idp_slo_url ?? '',
+        idp_x509_cert: cfg.idp_x509_cert, sp_entity_id: cfg.sp_entity_id ?? '',
+        default_role: cfg.default_role ?? 'viewer',
+        auto_create_users: cfg.auto_create_users ?? true,
+        auto_update_attrs: cfg.auto_update_attrs ?? true,
+        is_active: cfg.is_active ?? true,
+      };
+      // Explode attribute_mapping JSON into editable rows
+      this.samlAttrMappings = Object.entries(cfg.attribute_mapping ?? {})
+        .map(([samlAttr, userField]) => ({ samlAttr, userField }));
+    } else {
+      this.samlForm         = this._blankSaml();
+      this.samlAttrMappings = [
+        { samlAttr: 'email',     userField: 'email'     },
+        { samlAttr: 'cn',        userField: 'full_name'  },
+        { samlAttr: 'role',      userField: 'role'       },
+      ];
+    }
+    this.samlPanelOpen = true;
+  }
+
+  addAttrMapping()           { this.samlAttrMappings.push({ samlAttr: '', userField: '' }); }
+  removeAttrMapping(i: number) { this.samlAttrMappings.splice(i, 1); }
+
+  saveSamlConfig() {
+    if (!this.samlForm.name || !this.samlForm.idp_entity_id || !this.samlForm.idp_sso_url || !this.samlForm.idp_x509_cert) {
+      this.ns.error('Validation', 'Name, IdP Entity ID, SSO URL, and Certificate are required.');
+      return;
+    }
+    // Collapse attribute mapping rows back to JSON
+    const attribute_mapping: Record<string, string> = {};
+    this.samlAttrMappings.filter(m => m.samlAttr && m.userField)
+      .forEach(m => { attribute_mapping[m.samlAttr] = m.userField; });
+
+    const payload: Partial<SAMLConfig> = { ...this.samlForm, attribute_mapping };
+    this.samlSaving = true;
+    const obs = this.samlEditTarget
+      ? this.userSvc.updateSAMLConfig(this.samlEditTarget.id!, payload)
+      : this.userSvc.createSAMLConfig(payload);
+
+    obs.subscribe({
+      next: () => {
+        this.ns.success('Saved', this.samlEditTarget ? 'IdP updated.' : 'IdP created.');
+        this.samlSaving = false; this.samlPanelOpen = false;
+        this.loadSamlConfigs();
+      },
+      error: (err: any) => {
+        const msg = err?.error?.detail ?? JSON.stringify(err?.error ?? 'Save failed.');
+        this.ns.error('Error', msg); this.samlSaving = false;
+      },
+    });
+  }
+
+  confirmDeleteSaml(cfg: SAMLConfig) { this.samlDeleteTarget = cfg; this.samlDeleteVisible = true; }
+
+  doDeleteSaml() {
+    this.samlDeleteVisible = false;
+    if (!this.samlDeleteTarget?.id) return;
+    this.userSvc.deleteSAMLConfig(this.samlDeleteTarget.id).subscribe({
+      next: () => { this.ns.success('Removed', `${this.samlDeleteTarget!.name} removed.`); this.loadSamlConfigs(); },
+      error: ()  => this.ns.error('Error', 'Failed to remove IdP.'),
+    });
+  }
+
+  samlMetadataUrl(id: string): string { return this.userSvc.getSAMLMetadataUrl(id); }
+
+  copySamlUrl(id: string) {
+    navigator.clipboard.writeText(`${this.origin}/api/v1/saml/${id}/metadata/`);
+    this.ns.success('Copied', 'SP metadata URL copied to clipboard.');
+  }
+
+  private _blankSaml() {
+    return {
+      name: '', idp_entity_id: '', idp_sso_url: '', idp_slo_url: '',
+      idp_x509_cert: '', sp_entity_id: '', default_role: 'viewer',
+      auto_create_users: true, auto_update_attrs: true, is_active: true,
+    };
   }
 }

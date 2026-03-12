@@ -24,3 +24,10 @@ dj-database-url==2.2.0
 python-dotenv>=1.0.0
 tzdata>=2024.1
 httpx==0.28.1
+
+# ── SAML 2.0 SSO ─────────────────────────────────────────────────────────────
+# Requires system packages on Linux:
+#   apt install xmlsec1 libxml2-dev libxmlsec1-dev pkg-config
+# On Windows with Python 3.10+, pre-built wheels are available via:
+#   pip install xmlsec
+python3-saml>=1.16.0

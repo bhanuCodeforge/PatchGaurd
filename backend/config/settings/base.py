@@ -38,6 +38,7 @@ INSTALLED_APPS = [
 
     # Local apps
     "apps.accounts",
+    "apps.users",        # user management, SAML SSO, CSV import/export
     "apps.inventory",
     "apps.patches",
     "apps.deployments",
@@ -317,4 +318,22 @@ LDAP_OPERATOR_GROUP = os.getenv('LDAP_OPERATOR_GROUP', 'PatchMgr-Operators')
 AUTHENTICATION_BACKENDS = [
     "apps.accounts.ldap_backend.LDAPBackend",
     "django.contrib.auth.backends.ModelBackend",
+    # SAML authentication is handled directly in the ACS view (not as an auth backend),
+    # so no entry is needed here for python3-saml.
 ]
+
+# ── SAML Settings ─────────────────────────────────────────────────────────────
+# Generate a self-signed cert + key for signing SP metadata / requests:
+#   openssl req -x509 -newkey rsa:2048 -keyout saml_sp.key -out saml_sp.crt -days 3650 -nodes
+#
+# Then set these environment variables (raw base64, no PEM headers):
+#   SAML_SP_CERT        — contents of saml_sp.crt between the PEM markers
+#   SAML_SP_PRIVATE_KEY — contents of saml_sp.key between the PEM markers
+#
+# Leave blank to disable SP signing (still validates IdP signatures).
+SAML_SP_CERT        = os.getenv("SAML_SP_CERT", "")
+SAML_SP_PRIVATE_KEY = os.getenv("SAML_SP_PRIVATE_KEY", "")
+
+# Lock-out configuration (also used by the login serializer)
+AUTH_MAX_FAILED_ATTEMPTS = int(os.getenv("AUTH_MAX_FAILED_ATTEMPTS", 5))
+AUTH_LOCKOUT_MINUTES     = int(os.getenv("AUTH_LOCKOUT_MINUTES", 30))

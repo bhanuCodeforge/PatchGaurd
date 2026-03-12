@@ -1,124 +1,474 @@
-<div class="users-page container-fluid py-4">
+<div class="um-page">
 
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="page-title mb-0">{{ 'UI.u_user_management' | translate }}</h2>
-    <button class="btn btn-primary btn-sm" (click)="openNewUserPanel()">+ {{ 'UI.u_invite_user' | translate }}</button>
+  <!-- ═══ PAGE HEADER ══════════════════════════════════════════════════════ -->
+  <div class="um-header">
+    <div class="header-left">
+      <h1 class="page-title">User Management</h1>
+      <p class="page-sub">
+        {{ stats().all }} users
+        <ng-container *ngIf="stats().locked > 0"> · <span class="text-danger">{{ stats().locked }} locked</span></ng-container>
+        <span class="ldap-badge" *ngIf="true"> · LDAP sync active</span>
+      </p>
+    </div>
+    <div class="header-actions">
+      <!-- CSV export -->
+      <button class="btn-outline" title="Export current view as CSV" (click)="exportCsv()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
+
+      <!-- CSV import trigger -->
+      <label class="btn-outline btn-import" title="Import users from CSV" [class.importing]="csvImporting()">
+        <ng-container *ngIf="!csvImporting()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import CSV
+        </ng-container>
+        <ng-container *ngIf="csvImporting()">
+          <span class="spin-sm"></span> Importing…
+        </ng-container>
+        <input type="file" accept=".csv" style="display:none" (change)="onCsvFileSelected($event)" />
+      </label>
+
+      <!-- Add user -->
+      <button class="btn-add" (click)="openAddPanel()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add user
+      </button>
+    </div>
   </div>
 
-  <!-- Filter -->
-  <div class="d-flex flex-wrap gap-2 mb-3">
-    <div class="search-wrap flex-grow-1">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input class="search-input" [(ngModel)]="search" (ngModelChange)="applyFilter()" [placeholder]="'UI.u_search_placeholder' | translate" />
+  <!-- ═══ CSV IMPORT RESULT ════════════════════════════════════════════════ -->
+  <div class="csv-result-banner" *ngIf="csvResultVisible() && csvResult()">
+    <div class="csv-result-inner">
+      <div class="csv-stats">
+        <div class="csv-stat csv-stat-ok">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          {{ csvResult()!.created }} created
+        </div>
+        <div class="csv-stat csv-stat-warn" *ngIf="csvResult()!.skipped > 0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {{ csvResult()!.skipped }} skipped
+        </div>
+        <div class="csv-stat csv-stat-err" *ngIf="csvResult()!.errors > 0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          {{ csvResult()!.errors }} errors
+        </div>
+      </div>
+      <div class="csv-detail-rows" *ngIf="csvResult()!.error_rows.length > 0 || csvResult()!.skipped_rows.length > 0">
+        <div class="csv-detail-row" *ngFor="let r of csvResult()!.skipped_rows">
+          <span class="csv-row-num">Row {{ r.row }}</span>
+          <span class="csv-row-user">{{ r.username }}</span>
+          <span class="csv-row-msg warn">{{ r.reason }}</span>
+        </div>
+        <div class="csv-detail-row" *ngFor="let r of csvResult()!.error_rows">
+          <span class="csv-row-num">Row {{ r.row }}</span>
+          <span class="csv-row-msg err">{{ r.errors | json }}</span>
+        </div>
+      </div>
+      <div class="csv-result-actions">
+        <button class="csv-template-link" (click)="downloadCsvTemplate()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download template
+        </button>
+        <button class="csv-close" (click)="csvResultVisible.set(false)">Dismiss</button>
+      </div>
     </div>
-    <select class="pg-select" [(ngModel)]="roleFilter" (ngModelChange)="applyFilter()">
-      <option value="">{{ 'UI.u_all_roles' | translate }}</option>
-      <option value="admin">Admin</option>
-      <option value="engineer">Engineer</option>
-      <option value="viewer">Viewer</option>
+  </div>
+
+  <!-- ═══ STAT CARDS ════════════════════════════════════════════════════════ -->
+  <div class="stat-cards">
+    <div class="stat-card" [class.active]="activeTab() === 'all'" (click)="setTab('all')">
+      <span class="sc-num">{{ stats().all }}</span>
+      <span class="sc-lbl">All users</span>
+      <div class="sc-accent all-accent"></div>
+    </div>
+    <div class="stat-card" [class.active]="activeTab() === 'admin'" (click)="setTab('admin')">
+      <span class="sc-num">{{ stats().admin }}</span>
+      <span class="sc-lbl">Admins</span>
+      <div class="sc-accent admin-accent"></div>
+    </div>
+    <div class="stat-card" [class.active]="activeTab() === 'operator'" (click)="setTab('operator')">
+      <span class="sc-num">{{ stats().operator }}</span>
+      <span class="sc-lbl">Operators</span>
+      <div class="sc-accent operator-accent"></div>
+    </div>
+    <div class="stat-card" [class.active]="activeTab() === 'viewer'" (click)="setTab('viewer')">
+      <span class="sc-num">{{ stats().viewer }}</span>
+      <span class="sc-lbl">Viewers</span>
+      <div class="sc-accent viewer-accent"></div>
+    </div>
+    <div class="stat-card" [class.active]="activeTab() === 'agent'" (click)="setTab('agent')">
+      <span class="sc-num">{{ stats().agent }}</span>
+      <span class="sc-lbl">Service accounts</span>
+      <div class="sc-accent agent-accent"></div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB BAR ══════════════════════════════════════════════════════════ -->
+  <div class="tab-bar">
+    <button class="tab-btn" [class.active]="activeTab() === 'all'" (click)="setTab('all')">
+      All users <span class="tab-count">{{ stats().all }}</span>
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'admin'" (click)="setTab('admin')">
+      Admins <span class="tab-count">{{ stats().admin }}</span>
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'operator'" (click)="setTab('operator')">
+      Operators <span class="tab-count">{{ stats().operator }}</span>
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'viewer'" (click)="setTab('viewer')">
+      Viewers <span class="tab-count">{{ stats().viewer }}</span>
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'agent'" (click)="setTab('agent')">
+      Service accounts <span class="tab-count">{{ stats().agent }}</span>
+    </button>
+  </div>
+
+  <!-- ═══ FILTER TOOLBAR ═══════════════════════════════════════════════════ -->
+  <div class="filter-bar">
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input [(ngModel)]="search" (ngModelChange)="applyFilter()" placeholder="Search users, email, department..." />
+    </div>
+    <select class="filter-select" [(ngModel)]="sourceFilter" (ngModelChange)="applyFilter()">
+      <option value="">All sources</option>
+      <option value="ldap">LDAP</option>
+      <option value="local">Local</option>
+    </select>
+    <select class="filter-select" [(ngModel)]="statusFilter" (ngModelChange)="applyFilter()">
+      <option value="">All statuses</option>
+      <option value="active">Active</option>
+      <option value="locked">Locked</option>
+    </select>
+    <select class="filter-select" [(ngModel)]="deptFilter" (ngModelChange)="applyFilter()">
+      <option value="">All departments</option>
+      <option *ngFor="let d of departments()" [value]="d">{{ d }}</option>
     </select>
   </div>
 
-  <!-- Loading / Empty -->
+  <!-- ═══ LOADING ═══════════════════════════════════════════════════════════ -->
   <app-loading-skeleton *ngIf="loading()" variant="table"></app-loading-skeleton>
-  <app-empty-state *ngIf="!loading() && filtered().length === 0" icon="👤" [title]="'UI.u_no_data' | translate" [description]="'UI.u_no_data' | translate"></app-empty-state>
 
-  <!-- Table -->
-  <div class="pg-card" *ngIf="!loading() && filtered().length > 0">
-    <div class="table-responsive">
-      <table class="table table-dark table-hover table-sm mb-0">
-        <thead>
-          <tr>
-            <th>{{ 'UI.u_user_label' | translate }}</th>
-            <th>{{ 'UI.u_role_label' | translate }}</th>
-            <th>{{ 'UI.u_status' | translate }}</th>
-            <th>{{ 'UI.u_last_login' | translate }}</th>
-            <th>{{ 'UI.u_actions' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let u of filtered()">
-            <td>
-              <div class="user-cell">
-                <div class="avatar">{{ initials(u) }}</div>
-                <div>
-                  <div class="username">{{ u.username }}</div>
-                  <div class="email text-muted small">{{ u.email }}</div>
+  <!-- ═══ TABLE ════════════════════════════════════════════════════════════ -->
+  <div class="um-table-wrap" *ngIf="!loading()">
+    <table class="um-table">
+      <thead>
+        <tr>
+          <th class="col-check"><input type="checkbox" /></th>
+          <th class="col-user">User</th>
+          <th class="col-role">Role</th>
+          <th class="col-source">Source</th>
+          <th class="col-dept">Department</th>
+          <th class="col-status">Status</th>
+          <th class="col-login">Last login</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of pagedUsers()"
+            class="um-row"
+            [class.row-locked]="u.is_locked"
+            [class.row-agent]="isServiceAccount(u)">
+
+          <!-- Checkbox -->
+          <td class="col-check"><input type="checkbox" /></td>
+
+          <!-- User cell -->
+          <td class="col-user">
+            <div class="user-cell">
+              <div class="avatar"
+                   [class.avatar-agent]="isServiceAccount(u)"
+                   [style.background]="isServiceAccount(u) ? 'transparent' : avatarColor(u.role)">
+                <ng-container *ngIf="!isServiceAccount(u)">{{ initials(u) }}</ng-container>
+                <svg *ngIf="isServiceAccount(u)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </div>
+              <div class="user-info">
+                <div class="user-name" [class.monospace]="isServiceAccount(u)">
+                  {{ u.username }}
+                  <span *ngIf="u.is_locked" class="locked-tag">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Locked
+                  </span>
+                </div>
+                <div class="user-email">{{ u.email }}</div>
+                <div *ngIf="u.failed_login_attempts > 0 && u.is_locked" class="failed-attempts">
+                  {{ u.failed_login_attempts }} failed · {{ u.last_failed_login | relativeTime }}
                 </div>
               </div>
-            </td>
-            <td>
-              <select class="role-select" [ngModel]="u.role" (ngModelChange)="changeRole(u, $event)">
-                <option value="admin">Admin</option>
-                <option value="engineer">Engineer</option>
-                <option value="viewer">Viewer</option>
-              </select>
-            </td>
-            <td>
-              <span class="status-pill" [class.pill-active]="!u.is_locked" [class.pill-locked]="u.is_locked">
-                {{ u.is_locked ? ('UI.u_locked' | translate) : ('UI.u_active' | translate) }}
-              </span>
-            </td>
-            <td class="text-muted small">{{ u.last_login | relativeTime }}</td>
-            <td>
-              <button *ngIf="u.is_locked" class="action-btn btn-unlock me-1" (click)="unlock(u)">{{ 'UI.u_unlock' | translate }}</button>
-              <button class="action-btn btn-delete" (click)="confirmDel(u)">{{ 'UI.u_delete_label' | translate }}</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+          </td>
+
+          <!-- Role -->
+          <td class="col-role">
+            <span class="role-badge" [class]="'role-' + u.role">{{ u.role }}</span>
+          </td>
+
+          <!-- Source -->
+          <td class="col-source">
+            <span class="source-badge" [class.source-ldap]="(u.source || 'local') === 'ldap'"
+                  [class.source-local]="(u.source || 'local') === 'local'">
+              {{ (u.source || 'local') | uppercase }}
+            </span>
+          </td>
+
+          <!-- Department -->
+          <td class="col-dept">
+            <span class="dept-text">{{ u.department || '—' }}</span>
+          </td>
+
+          <!-- Status -->
+          <td class="col-status">
+            <div class="status-dot" [class.dot-active]="!u.is_locked" [class.dot-locked]="u.is_locked">
+              <span class="dot"></span>
+              {{ u.is_locked ? 'Locked' : 'Active' }}
+            </div>
+          </td>
+
+          <!-- Last login -->
+          <td class="col-login">
+            <span class="login-time">{{ u.last_login ? (u.last_login | relativeTime) : 'Never' }}</span>
+          </td>
+
+          <!-- Actions -->
+          <td class="col-actions" (click)="$event.stopPropagation()">
+            <div class="action-bar">
+
+              <!-- Unlock (always visible when locked) -->
+              <button *ngIf="u.is_locked" class="act-btn act-unlock" title="Unlock account" (click)="unlock(u, $event)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+              </button>
+
+              <!-- Edit -->
+              <button class="act-btn" title="Edit user" (click)="openEditPanel(u, $event)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+
+              <!-- Change Role dropdown -->
+              <div class="dropdown-wrap" (click)="$event.stopPropagation()">
+                <button class="act-btn" title="Change role" (click)="toggleRoleMenu(u.id, $event)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </button>
+                <div class="dropdown-menu" *ngIf="roleMenuOpen() === u.id">
+                  <button *ngFor="let r of ROLES" class="dd-item" [class.dd-active]="u.role === r" (click)="changeRole(u, r, $event)">
+                    <span class="role-dot" [class]="'rdot-' + r"></span>
+                    {{ r | titlecase }}
+                    <svg *ngIf="u.role === r" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="ml-auto"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Reset password -->
+              <button *ngIf="!isServiceAccount(u)" class="act-btn" title="Reset password" (click)="resetPassword(u, $event)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </button>
+
+              <!-- Rotate API key (service accounts only) -->
+              <button *ngIf="isServiceAccount(u)" class="act-btn act-key" title="Rotate API key">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+              </button>
+
+              <!-- Delete -->
+              <button class="act-btn act-danger" title="Delete user" (click)="confirmDelete(u, $event)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              </button>
+
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngIf="filtered().length === 0">
+          <td colspan="8" class="empty-row">
+            <div class="empty-state">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <p>No users found</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination-bar" *ngIf="totalPages() > 1 || filtered().length > 0">
+      <span class="pag-info">
+        Showing {{ (currentPage()-1)*pageSize + 1 }}–{{ currentPage()*pageSize > filtered().length ? filtered().length : currentPage()*pageSize }} of {{ filtered().length }} users
+      </span>
+      <div class="pag-controls">
+        <button class="pag-btn" [disabled]="currentPage() === 1" (click)="goPage(currentPage()-1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <ng-container *ngFor="let p of pageNumbers()">
+          <button *ngIf="p !== '...'" class="pag-btn" [class.active]="p === currentPage()" (click)="goPage(p)">{{ p }}</button>
+          <span *ngIf="p === '...'" class="pag-ellipsis">...</span>
+        </ng-container>
+        <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="goPage(currentPage()+1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- New User Panel -->
-  <div class="panel-overlay" *ngIf="showNewPanel()" (click)="showNewPanel.set(false)">
-    <div class="panel" (click)="$event.stopPropagation()">
+  <!-- ═══ ADD / EDIT PANEL ══════════════════════════════════════════════════ -->
+  <div class="panel-overlay" *ngIf="showPanel()" (click)="showPanel.set(false)">
+    <div class="side-panel" (click)="$event.stopPropagation()">
+
+      <!-- Panel header -->
       <div class="panel-header">
-        <h3>{{ 'UI.u_create_user' | translate }}</h3>
-        <button class="close-btn" (click)="showNewPanel.set(false)">✕</button>
+        <div>
+          <h3 class="panel-title">{{ panelMode() === 'add' ? 'Add new user' : 'Edit user' }}</h3>
+          <p class="panel-sub">{{ panelMode() === 'add' ? 'Create a local or LDAP-linked account' : 'Update account settings and role' }}</p>
+        </div>
+        <button class="close-btn" (click)="showPanel.set(false)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
+
       <div class="panel-body">
-        <div class="mb-3">
-          <label class="form-label-sm">{{ 'UI.u_username_label' | translate }} *</label>
-          <input class="pg-input" [(ngModel)]="newUser.username" />
-        </div>
-        <div class="mb-3">
-          <label class="form-label-sm">{{ 'UI.u_email_label' | translate }} *</label>
-          <input class="pg-input" type="email" [(ngModel)]="newUser.email" />
-        </div>
-        <div class="mb-3">
-          <label class="form-label-sm">{{ 'UI.u_role_label' | translate }}</label>
-          <select class="pg-input" [(ngModel)]="newUser.role">
-            <option value="admin">Admin</option>
-            <option value="engineer">Engineer</option>
-            <option value="viewer">Viewer</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label class="form-label-sm">{{ 'UI.u_confirm_password' | translate }} *</label>
-          <input class="pg-input" type="password" [(ngModel)]="newUser.password" />
-        </div>
-        <div class="d-flex justify-content-end gap-2">
-          <button class="btn btn-secondary btn-sm" (click)="showNewPanel.set(false)">{{ 'UI.u_cancel' | translate }}</button>
-          <button class="btn btn-primary btn-sm" [disabled]="creating()" (click)="createUser()">
-            {{ creating() ? ('UI.u_saving' | translate) : ('UI.u_create_user' | translate) }}
+
+        <!-- Source toggle (add only) -->
+        <div class="source-toggle mb-4" *ngIf="panelMode() === 'add'">
+          <button class="src-btn" [class.active]="newUser.source === 'local'" (click)="newUser.source = 'local'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+            Local
+          </button>
+          <button class="src-btn" [class.active]="newUser.source === 'ldap'" (click)="newUser.source = 'ldap'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            LDAP / Active Directory
           </button>
         </div>
+
+        <!-- Account details -->
+        <div class="form-section">
+          <h4 class="section-label">Account details</h4>
+          <div class="form-row-2">
+            <div class="form-field">
+              <label>Username <span class="req">*</span></label>
+              <input [(ngModel)]="newUser.username" placeholder="john.doe" [disabled]="panelMode() === 'edit'" />
+            </div>
+            <div class="form-field">
+              <label>Email address <span class="req">*</span></label>
+              <input type="email" [(ngModel)]="newUser.email" placeholder="john@corp.com" />
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-field">
+              <label>Full name</label>
+              <input [(ngModel)]="newUser.full_name" placeholder="John Doe" />
+            </div>
+            <div class="form-field">
+              <label>Department</label>
+              <input [(ngModel)]="newUser.department" placeholder="IT Operations" />
+            </div>
+          </div>
+          <div class="form-field" *ngIf="newUser.source === 'local' && panelMode() === 'add'">
+            <label>Temporary password <span class="req">*</span></label>
+            <input type="password" [(ngModel)]="newUser.password" placeholder="Minimum 12 characters" />
+          </div>
+          <div class="form-check-row" *ngIf="panelMode() === 'add'">
+            <div class="checkbox" [class.checked]="newUser.force_password_change" (click)="newUser.force_password_change = !newUser.force_password_change">
+              <svg *ngIf="newUser.force_password_change" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <span>Force password change on first login</span>
+          </div>
+        </div>
+
+        <!-- Role selection -->
+        <div class="form-section">
+          <h4 class="section-label">Assign role</h4>
+          <div class="role-cards">
+            <div class="role-card" [class.selected]="newUser.role === 'viewer'" (click)="newUser.role = 'viewer'">
+              <div class="rc-icon viewer-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </div>
+              <div class="rc-label">Viewer</div>
+              <div class="rc-desc">Read-only access to all resources</div>
+            </div>
+            <div class="role-card" [class.selected]="newUser.role === 'operator'" (click)="newUser.role = 'operator'">
+              <div class="rc-icon operator-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <div class="rc-label">Operator</div>
+              <div class="rc-desc">Manage devices, patches and deployments</div>
+            </div>
+            <div class="role-card" [class.selected]="newUser.role === 'admin'" (click)="newUser.role = 'admin'">
+              <div class="rc-icon admin-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div class="rc-label">Admin</div>
+              <div class="rc-desc">Full access including user management</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Permission matrix -->
+        <div class="form-section">
+          <h4 class="section-label">Permission matrix</h4>
+          <div class="perm-table">
+            <div class="perm-header">
+              <span class="perm-resource">Permission</span>
+              <span class="perm-role" *ngFor="let r of ROLES">{{ r | titlecase }}</span>
+            </div>
+            <ng-container *ngFor="let group of permGroups">
+              <div class="perm-group-row">{{ group }}</div>
+              <div class="perm-row" *ngFor="let perm of ROLE_PERMS[group]">
+                <span class="perm-resource">{{ perm.label }}</span>
+                <span class="perm-cell">
+                  <svg *ngIf="perm.viewer" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg *ngIf="!perm.viewer" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </span>
+                <span class="perm-cell">
+                  <svg *ngIf="perm.operator" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg *ngIf="!perm.operator" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </span>
+                <span class="perm-cell">
+                  <svg *ngIf="perm.admin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg *ngIf="!perm.admin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </span>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="form-section">
+          <h4 class="section-label">Notification preferences</h4>
+          <div class="toggle-list">
+            <div class="toggle-row" (click)="newUser.notify_critical = !newUser.notify_critical">
+              <div class="tgl" [class.on]="newUser.notify_critical"><div class="tgl-thumb"></div></div>
+              <span>Critical patch alerts</span>
+            </div>
+            <div class="toggle-row" (click)="newUser.notify_deploy = !newUser.notify_deploy">
+              <div class="tgl" [class.on]="newUser.notify_deploy"><div class="tgl-thumb"></div></div>
+              <span>Deployment failure notifications</span>
+            </div>
+            <div class="toggle-row" (click)="newUser.notify_digest = !newUser.notify_digest">
+              <div class="tgl" [class.on]="newUser.notify_digest"><div class="tgl-thumb"></div></div>
+              <span>Weekly compliance digest</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /panel-body -->
+
+      <!-- Panel footer -->
+      <div class="panel-footer">
+        <button class="btn-cancel" (click)="showPanel.set(false)">Cancel</button>
+        <button class="btn-save" [disabled]="saving()" (click)="saveUser()">
+          <span *ngIf="saving()" class="spin"></span>
+          {{ saving() ? 'Saving...' : (panelMode() === 'add' ? 'Create user' : 'Save changes') }}
+        </button>
       </div>
-    </div>
+
+    </div><!-- /side-panel -->
   </div>
 
-  <!-- Confirm Delete -->
+  <!-- ═══ CONFIRM DELETE ════════════════════════════════════════════════════ -->
   <app-confirm-dialog
     [visible]="delVisible()"
-    [title]="'UI.u_delete_label' | translate"
-    [message]="('MSG.m_confirm_delete' | translate:{name: delTarget()?.username ?? ''})"
-    [confirmLabel]="'UI.u_delete_label' | translate"
+    title="Delete user"
+    [message]="'This will permanently remove ' + (delTarget()?.username ?? '') + ' and revoke all access. This action cannot be undone.'"
+    confirmLabel="Delete user"
     severity="danger"
     (confirm)="doDelete()"
     (cancel)="delVisible.set(false)"
   ></app-confirm-dialog>
+
 </div>

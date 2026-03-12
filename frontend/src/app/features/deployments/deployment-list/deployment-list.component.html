@@ -27,7 +27,7 @@
     </app-empty-state>
 
     <div *ngIf="!loading() && deployments().length > 0" class="table-responsive">
-      <table class="table table-dark table-hover mb-0">
+      <table class="table table-hover mb-0">
         <thead>
           <tr>
             <th>{{ 'UI.u_name_label' | translate }}</th>
@@ -43,7 +43,7 @@
         <tbody>
           <tr *ngFor="let d of deployments()">
             <td>
-              <div class="fw-600 text-white">{{ d.name }}</div>
+              <div class="fw-600">{{ d.name }}</div>
               <div class="text-muted small" *ngIf="d.description">{{ d.description }}</div>
             </td>
             <td><app-status-badge [value]="d.status"></app-status-badge></td>
@@ -52,7 +52,7 @@
             <td class="text-muted">{{ d.total_devices ?? 0 }}</td>
             <td style="min-width:120px">
               <div class="d-flex align-items-center gap-2">
-                <div class="progress flex-grow-1" style="height:6px; background:#374151;">
+                <div class="progress flex-grow-1" style="height:6px;">
                   <div class="progress-bar bg-primary" [style.width]="getProgress(d) + '%'" role="progressbar"></div>
                 </div>
                 <span class="text-muted small">{{ getProgress(d) }}%</span>

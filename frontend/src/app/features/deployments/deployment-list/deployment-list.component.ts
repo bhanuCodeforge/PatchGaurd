@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { DeploymentService } from '../../../core/services/deployment.service';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -29,6 +29,7 @@ export class DeploymentListComponent implements OnInit {
   private deploySvc = inject(DeploymentService);
   private auth = inject(AuthService);
   private ns = inject(NotificationService);
+  private router = inject(Router);
 
   isAdmin = this.auth.isAdmin;
 
@@ -102,12 +103,19 @@ export class DeploymentListComponent implements OnInit {
     event.stopPropagation();
     this.deploySvc.execute(d.id).subscribe({
       next: () => {
-        this.ns.success('Started', `Deployment "${d.name}" execution started.`);
+        const id = d.id;
+        this.ns.deployment(
+          'Deployment started',
+          `"${d.name}" is now executing`,
+          undefined,
+          undefined,
+          [{ label: 'Watch live', variant: 'primary', onClick: () => this.router.navigate(['/deployments', id]) }]
+        );
         this.load();
       },
       error: (err: any) => {
         const msg = err?.error?.error || 'Failed to execute deployment.';
-        this.ns.error('Error', msg);
+        this.ns.error('Execution failed', msg);
       },
     });
   }

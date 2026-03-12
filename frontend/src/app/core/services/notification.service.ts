@@ -1,46 +1,85 @@
 import { Injectable, signal } from '@angular/core';
 
-export interface Toast {
-  type: 'success' | 'error' | 'info' | 'warning';
-  title: string;
-  message: string;
-  duration?: number;
+export interface ToastAction {
+  label: string;
+  variant?: 'primary' | 'default' | 'danger';
+  onClick: () => void;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface Toast {
+  id: string;
+  type: 'success' | 'error' | 'warning' | 'info' | 'critical' | 'deployment';
+  title: string;
+  message: string;
+  duration: number | null;   // ms — null = never auto-dismiss
+  actions?: ToastAction[];
+  progress?: number;         // 0-100 (deployment live progress bar)
+  progressLabel?: string;    // e.g. "808 of 1,123 devices"
+  timestamp: Date;
+  exiting?: boolean;
+}
+
+@Injectable({ providedIn: 'root' })
 export class NotificationService {
   private _toasts = signal<Toast[]>([]);
-  public readonly toasts = this._toasts.asReadonly();
+  readonly toasts = this._toasts.asReadonly();
+  private _seq = 0;
 
-  show(toast: Toast) {
-    const defaultDuration = toast.duration || 3000;
-    const currentToasts = this._toasts();
-    this._toasts.set([...currentToasts, toast]);
+  private push(opts: Omit<Toast, 'id' | 'timestamp' | 'exiting'>): string {
+    const id = `t${Date.now()}_${++this._seq}`;
+    const toast: Toast = { ...opts, id, timestamp: new Date() };
 
-    setTimeout(() => {
-      this.remove(toast);
-    }, defaultDuration);
+    this._toasts.update(ts => [toast, ...ts].slice(0, 6));
+
+    if (toast.duration !== null) {
+      setTimeout(() => this.dismiss(id), toast.duration);
+    }
+    return id;
   }
 
-  remove(toast: Toast) {
-    this._toasts.update(toasts => toasts.filter(t => t !== toast));
+  dismiss(id: string) {
+    this._toasts.update(ts => ts.map(t => t.id === id ? { ...t, exiting: true } : t));
+    setTimeout(() => this._toasts.update(ts => ts.filter(t => t.id !== id)), 350);
   }
+
+  updateProgress(id: string, progress: number, progressLabel?: string) {
+    this._toasts.update(ts => ts.map(t =>
+      t.id === id ? { ...t, progress, ...(progressLabel !== undefined ? { progressLabel } : {}) } : t
+    ));
+  }
+
+  /** @deprecated pass id – kept for backward compat */
+  remove(toast: Toast) { this.dismiss(toast.id); }
+
+  // ── Convenience methods (backward-compatible signatures) ─────────────────
 
   success(title: string, message: string) {
-    this.show({ type: 'success', title, message });
+    this.push({ type: 'success', title, message, duration: 5000 });
   }
 
-  error(title: string, message: string) {
-    this.show({ type: 'error', title, message, duration: 5000 });
+  error(title: string, message: string, actions?: ToastAction[]) {
+    this.push({ type: 'error', title, message, duration: null, actions });
+  }
+
+  warning(title: string, message: string, actions?: ToastAction[]) {
+    this.push({ type: 'warning', title, message, duration: 8000, actions });
   }
 
   info(title: string, message: string) {
-    this.show({ type: 'info', title, message });
+    this.push({ type: 'info', title, message, duration: 5000 });
   }
 
-  warning(title: string, message: string) {
-    this.show({ type: 'warning', title, message, duration: 4000 });
+  critical(title: string, message: string, actions?: ToastAction[]) {
+    return this.push({ type: 'critical', title, message, duration: null, actions });
+  }
+
+  deployment(
+    title: string,
+    message: string,
+    progress?: number,
+    progressLabel?: string,
+    actions?: ToastAction[]
+  ): string {
+    return this.push({ type: 'deployment', title, message, duration: null, progress, progressLabel, actions });
   }
 }

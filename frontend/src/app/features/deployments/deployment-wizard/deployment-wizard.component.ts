@@ -353,10 +353,16 @@ export class DeploymentWizardComponent implements OnInit {
 
     this.deploySvc.createDeployment(payload).subscribe({
       next: (d: any) => {
-        this.ns.success('Created', 'Deployment created successfully.');
         this.createdDeploymentId.set(d.id);
         this.success.set(true);
         this.submitting.set(false);
+        this.ns.deployment(
+          'Deployment scheduled',
+          `"${this.form.name}" created and queued`,
+          undefined,
+          undefined,
+          [{ label: 'Watch live', variant: 'primary', onClick: () => this.router.navigate(['/deployments', d.id]) }]
+        );
       },
       error: (err: any) => {
         const msg =

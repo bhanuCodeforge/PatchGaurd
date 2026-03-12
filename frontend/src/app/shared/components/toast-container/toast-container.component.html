@@ -1,25 +1,93 @@
-<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000">
-  <div *ngFor="let toast of toasts()" 
-       class="toast show align-items-center border-0 mb-2 shadow-lg" 
-       [class.text-bg-success]="toast.type === 'success'"
-       [class.text-bg-danger]="toast.type === 'error'"
-       [class.text-bg-warning]="toast.type === 'warning'"
-       [class.text-bg-primary]="toast.type === 'info'"
-       role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="d-flex">
-      <div class="toast-body d-flex align-items-start gap-2 py-3 px-3">
-        <div class="fs-5 lh-1">
-          <span *ngIf="toast.type === 'success'">✓</span>
-          <span *ngIf="toast.type === 'error'">✕</span>
-          <span *ngIf="toast.type === 'warning'">⚠</span>
-          <span *ngIf="toast.type === 'info'">ℹ</span>
+<div class="toast-stack">
+  @for (toast of toasts(); track toast.id) {
+    <div class="toast toast--{{ toast.type }}" [class.toast--exiting]="toast.exiting">
+
+      <!-- left accent bar -->
+      <div class="toast-bar"></div>
+
+      <div class="toast-body">
+
+        <!-- top row: icon · text · close -->
+        <div class="toast-top">
+
+          <div class="toast-icon">
+            @switch (toast.type) {
+              @case ('success') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              }
+              @case ('error') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              }
+              @case ('warning') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              }
+              @case ('info') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              }
+              @case ('critical') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              }
+              @case ('deployment') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
+              }
+            }
+          </div>
+
+          <div class="toast-text">
+            <div class="toast-title">{{ toast.title | translate }}</div>
+            <div class="toast-msg">{{ toast.message | translate }}</div>
+
+            <!-- deployment live progress -->
+            @if (toast.type === 'deployment') {
+              <div class="toast-progress-row">
+                @if (toast.progress !== undefined) {
+                  <div class="toast-progress-track">
+                    <div class="toast-progress-live" [style.width.%]="toast.progress"></div>
+                  </div>
+                }
+                <span class="toast-progress-lbl">
+                  <span class="pulse-dot"></span>
+                  @if (toast.progress !== undefined) {
+                    {{ toast.progress }}% complete
+                    @if (toast.progressLabel) { &middot; {{ toast.progressLabel }} }
+                  } @else {
+                    In progress&hellip;
+                  }
+                </span>
+              </div>
+            }
+          </div>
+
+          <button class="toast-x" (click)="ns.dismiss(toast.id)" aria-label="Dismiss">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
-        <div>
-          <div class="fw-bold fs-7">{{ toast.title | translate }}</div>
-          <div class="opacity-75 small">{{ toast.message | translate }}</div>
+
+        <!-- action buttons -->
+        @if (toast.actions?.length) {
+          <div class="toast-actions">
+            @for (action of toast.actions!; track action.label) {
+              <button
+                class="toast-action toast-action--{{ action.variant ?? 'default' }}"
+                (click)="action.onClick()"
+              >{{ action.label }}</button>
+            }
+          </div>
+        }
+
+        <!-- footer: timestamp -->
+        <div class="toast-foot">
+          <span class="toast-ts">{{ toast.timestamp | date:'HH:mm:ss' }}</span>
         </div>
+
+        <!-- draining timer bar (auto-dismiss toasts only) -->
+        @if (toast.duration !== null) {
+          <div class="toast-timer">
+            <div class="toast-timer-fill" [style.animation-duration]="toast.duration + 'ms'"></div>
+          </div>
+        }
+
       </div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="ns.remove(toast)" aria-label="Close"></button>
     </div>
-  </div>
+  }
 </div>

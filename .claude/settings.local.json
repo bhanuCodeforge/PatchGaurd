@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(DJANGO_SETTINGS_MODULE=config.settings.dev /d/PatchGaurd/.venv/Scripts/python.exe manage.py makemigrations accounts --name alter_auditlog_action_maxlength)"
+      "Bash(DJANGO_SETTINGS_MODULE=config.settings.dev /d/PatchGaurd/.venv/Scripts/python.exe manage.py makemigrations accounts --name alter_auditlog_action_maxlength)",
+      "Bash(python manage.py shell -c ':*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }
