@@ -330,6 +330,20 @@ export class PatchCatalogComponent implements OnInit {
     });
   }
 
+  createDeploymentSingle(p: any) {
+    if (p.status !== 'approved') return;
+    this.router.navigate(['/deployments/new'], { state: { patch_ids: [p.id] } });
+  }
+
+  exportPatchDetail(p: any) {
+    const data = JSON.stringify(p, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `patch-${p.vendor_id || p.id}.json`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   resetFilters() {
     this.searchTerm = '';
     this.severityFilter = '';

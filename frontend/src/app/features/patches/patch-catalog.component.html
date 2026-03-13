@@ -1,408 +1,339 @@
-<div class="patches-page container-fluid py-4">
+<div class="pc-page">
 
-  <!-- Header -->
-  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-    <div>
-      <h2 class="page-title mb-0">{{ 'UI.u_patches' | translate }}</h2>
-      <p class="text-muted small mb-0 mt-1">
-        {{ stats()?.total ?? 0 }} {{ 'UI.u_patches' | translate | lowercase }} {{ 'UI.u_catalogued' | translate }}
-        &middot;
-        {{ stats()?.critical_pending_count ?? 0 }} {{ 'UI.u_critical' | translate | lowercase }} {{ 'UI.u_pending' |
-        translate | lowercase }}
+  <!-- ── Header ─────────────────────────────────────────────────────────────── -->
+  <div class="pc-header">
+    <div class="pc-header-left">
+      <h2 class="pc-title">{{ 'UI.u_patches' | translate }}</h2>
+      <p class="pc-sub">
+        {{ stats()?.total ?? 0 }} patches catalogued &nbsp;&middot;&nbsp;
+        <span class="pc-sub-critical">{{ stats()?.critical_pending_count ?? 0 }} critical pending</span>
       </p>
     </div>
-    <div class="d-flex gap-2">
-      <button class="btn btn-sm btn-primary" *ngIf="canWrite()" (click)="openAddPatch()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        Add Patch
-      </button>
-      <button class="btn btn-sm btn-outline-secondary" (click)="triggerGlobalScan()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-          <polyline points="23 4 23 10 17 10" />
-          <polyline points="1 20 1 14 7 14" />
-          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-        </svg>
+    <div class="pc-header-actions">
+      <button class="pc-btn pc-btn--ghost" (click)="triggerGlobalScan()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         Scan Fleet
       </button>
-      <button class="btn btn-sm btn-outline-primary" *ngIf="selectedIds().size > 0 && canWrite()"
-        (click)="createDeployment()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-        </svg>
-        Create Deployment ({{ selectedIds().size }})
+      <button class="pc-btn pc-btn--primary" *ngIf="canWrite()" (click)="openAddPatch()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Patch
       </button>
-      <button class="btn btn-sm btn-outline-success" *ngIf="selectedIds().size > 1 && canWrite()"
-        (click)="bulkApprove()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
+      <button class="pc-btn pc-btn--accent" *ngIf="selectedIds().size > 0 && canWrite()" (click)="createDeployment()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Deploy ({{ selectedIds().size }})
+      </button>
+      <button class="pc-btn pc-btn--success-ghost" *ngIf="selectedIds().size > 1 && canWrite()" (click)="bulkApprove()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         Bulk Approve
       </button>
-      <button class="btn btn-sm btn-outline-danger" *ngIf="selectedIds().size > 1 && canWrite()"
-        (click)="openBulkReject()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
+      <button class="pc-btn pc-btn--danger-ghost" *ngIf="selectedIds().size > 1 && canWrite()" (click)="openBulkReject()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         Bulk Reject
       </button>
     </div>
   </div>
 
-  <!-- Stats row ... -->
-  <div class="row g-2 mb-3" *ngIf="!statsLoading() && stats()">
-    <div class="col-6 col-md-3">
-      <div class="stat-mini stat-critical">
-        <div class="stat-mini-val">{{ stats()?.critical_pending_count ?? 0 }}</div>
-        <div class="stat-mini-lbl">{{ 'UI.u_critical' | translate }} {{ 'UI.u_pending' | translate }}</div>
-      </div>
+  <!-- ── Stat cards ─────────────────────────────────────────────────────────── -->
+  <div class="pc-stats">
+    <div class="pc-stat pc-stat--critical" (click)="setTab('critical_sev')">
+      <div class="pc-stat-num">{{ stats()?.critical_pending_count ?? 0 }}</div>
+      <div class="pc-stat-lbl">CRITICAL PENDING</div>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="stat-mini stat-awaiting">
-        <div class="stat-mini-val">{{ stats()?.awaiting_review_count ?? 0 }}</div>
-        <div class="stat-mini-lbl">{{ 'UI.u_awaiting_review' | translate }}</div>
-      </div>
+    <div class="pc-stat pc-stat--awaiting" (click)="setTab('imported')">
+      <div class="pc-stat-num">{{ tabs()[0]?.count ?? 0 }}</div>
+      <div class="pc-stat-lbl">AWAITING REVIEW</div>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="stat-mini stat-approved">
-        <div class="stat-mini-val">{{ approvedCount() }}</div>
-        <div class="stat-mini-lbl">{{ 'UI.u_approved' | translate }}</div>
-      </div>
+    <div class="pc-stat pc-stat--approved" (click)="setTab('approved')">
+      <div class="pc-stat-num">{{ approvedCount() }}</div>
+      <div class="pc-stat-lbl">APPROVED</div>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="stat-mini stat-total">
-        <div class="stat-mini-val">{{ stats()?.total ?? 0 }}</div>
-        <div class="stat-mini-lbl">{{ 'UI.u_all' | translate }}</div>
-      </div>
+    <div class="pc-stat pc-stat--total" (click)="setTab('all')">
+      <div class="pc-stat-num">{{ stats()?.total ?? 0 }}</div>
+      <div class="pc-stat-lbl">ALL PATCHES</div>
     </div>
   </div>
 
-  <!-- Tabs ... -->
-  <div class="patch-tabs mb-3">
-    <button *ngFor="let t of tabs()" class="patch-tab" [class.active]="activeTab === t.value" (click)="setTab(t.value)">
+  <!-- ── Tabs ───────────────────────────────────────────────────────────────── -->
+  <div class="pc-tabs">
+    <button *ngFor="let t of tabs()" class="pc-tab" [class.active]="activeTab === t.value" (click)="setTab(t.value)">
       {{ t.label | translate }}
-      <span *ngIf="t.count > 0" class="tab-badge"
-        [class.tab-badge--danger]="t.value === 'imported' || t.value === 'critical_sev'">{{ t.count }}</span>
+      <span class="pc-tab-badge" [class.pc-tab-badge--danger]="t.value === 'critical_sev'">{{ t.count }}</span>
+    </button>
+    <button class="pc-tab pc-tab--clear ms-auto" *ngIf="searchTerm || severityFilter || vendorFilter || activeTab !== 'all'"
+      (click)="resetFilters()">
+      {{ 'UI.u_clear_filters' | translate }}
     </button>
   </div>
 
-  <!-- Filters -->
-  <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
-    <div class="search-wrap">
-      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        stroke-width="2">
-        <circle cx="11" cy="11" r="8" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-      </svg>
-      <input class="search-input" [(ngModel)]="searchTerm" (ngModelChange)="loadPatches()"
-        [placeholder]="'UI.u_search_patch' | translate" />
-      <button *ngIf="searchTerm" class="search-clear" (click)="searchTerm=''; loadPatches()">&#x2715;</button>
+  <!-- ── Filter bar ─────────────────────────────────────────────────────────── -->
+  <div class="pc-filters">
+    <div class="pc-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input [(ngModel)]="searchTerm" (ngModelChange)="loadPatches()" placeholder="Search CVE, title, package…" />
+      <button *ngIf="searchTerm" (click)="searchTerm=''; loadPatches()">&#x2715;</button>
     </div>
-    <select class="pg-select" [(ngModel)]="severityFilter" (ngModelChange)="loadPatches()">
-      <option value="">{{ 'UI.u_all_severities' | translate }}</option>
-      <option value="critical">{{ 'UI.u_critical' | translate }}</option>
-      <option value="high">{{ 'UI.u_high' | translate }}</option>
-      <option value="medium">{{ 'UI.u_medium' | translate }}</option>
-      <option value="low">{{ 'UI.u_low' | translate }}</option>
+    <select class="pc-select" [(ngModel)]="severityFilter" (ngModelChange)="loadPatches()">
+      <option value="">All severities</option>
+      <option value="critical">Critical</option>
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
     </select>
-    <select class="pg-select" [(ngModel)]="vendorFilter" (ngModelChange)="loadPatches()">
-      <option value="">{{ 'UI.u_all_vendors' | translate }}</option>
+    <select class="pc-select" [(ngModel)]="vendorFilter" (ngModelChange)="loadPatches()">
+      <option value="">All vendors</option>
       <option value="Microsoft">Microsoft</option>
       <option value="Red Hat">Red Hat</option>
       <option value="Canonical">Canonical</option>
       <option value="Apple">Apple</option>
     </select>
-    <button class="btn btn-sm btn-link text-muted ms-auto" (click)="resetFilters()" *ngIf="searchTerm || severityFilter || vendorFilter || activeTab !== 'all'">
-      {{ 'UI.u_clear_filters' | translate }}
-    </button>
   </div>
 
-  <!-- Table card -->
-  <div class="pg-card">
-    <app-loading-skeleton *ngIf="loading()" variant="table" [rows]="rows"></app-loading-skeleton>
+  <!-- ── Body (table + detail panel) ───────────────────────────────────────── -->
+  <div class="pc-body" [class.pc-body--split]="selectedPatch()">
 
-    <app-empty-state *ngIf="!loading() && patches().length === 0" icon="&#x1F4E6;" [title]="'UI.u_no_data' | translate"
-      [description]="'UI.u_search_placeholder' | translate">
-    </app-empty-state>
+    <!-- Table pane -->
+    <div class="pc-table-pane">
+      <app-loading-skeleton *ngIf="loading()" variant="table" [rows]="rows"></app-loading-skeleton>
 
-    <div *ngIf="!loading() && patches().length > 0" class="table-responsive">
-      <table class="table table-dark table-hover mb-0">
-        <thead>
-          <tr>
-            <th style="width:40px">
-              <input type="checkbox" class="form-check-input" (change)="toggleAll($event)" />
-            </th>
-            <th>{{ 'UI.u_cve_patch' | translate }}</th>
-            <th>{{ 'UI.u_severity' | translate }}</th>
-            <th>{{ 'UI.u_status' | translate }}</th>
-            <th>{{ 'UI.u_os' | translate }}</th>
-            <th>{{ 'UI.u_affected' | translate }}</th>
-            <th>{{ 'UI.u_released' | translate }}</th>
-            <th>{{ 'UI.u_actions' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let p of patches()" [class.table-active]="selectedPatch()?.id === p.id" (click)="openPanel(p)"
-            class="cursor-pointer">
-            <td (click)="$event.stopPropagation()">
-              <input type="checkbox" class="form-check-input" [checked]="selectedIds().has(p.id)"
-                (change)="toggleSelect(p.id)" />
-            </td>
-            <td>
-              <div class="cve-id">{{ getCveLabel(p) }}</div>
-              <div class="patch-title text-truncate" style="max-width:260px;" [title]="p.title">{{ p.title }}</div>
-            </td>
-            <td>
-              <span class="severity-pill" [class]="'sev-' + p.severity">{{ 'UI.u_' + p.severity | translate }}</span>
-            </td>
-            <td>
-              <span class="status-pill" [class]="'st-' + p.status">{{ 'UI.u_' + p.status | translate }}</span>
-            </td>
-            <td>
-              <span class="os-tag" *ngFor="let os of (p.applicable_os || []).slice(0,2)">{{ os }}</span>
-            </td>
-            <td class="text-muted">{{ p.affected_device_count ?? 0 }}</td>
-            <td class="text-muted small">{{ p.released_at | relativeTime }}</td>
-            <td (click)="$event.stopPropagation()" class="nowrap">
-              <button *ngIf="p.status !== 'approved' && canWrite()" class="btn btn-xs btn-outline-success me-1"
-                (click)="approve(p)" title="Approve">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </button>
-              <button *ngIf="p.status === 'imported' && canWrite()" class="btn btn-xs btn-outline-info me-1"
-                (click)="markReview(p)" title="Mark Reviewed">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-              </button>
-              <button *ngIf="p.status !== 'rejected' && canWrite()" class="btn btn-xs btn-outline-danger"
-                (click)="reject(p)" title="Reject">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <app-empty-state *ngIf="!loading() && patches().length === 0"
+        icon="&#x1F4E6;" [title]="'UI.u_no_data' | translate"
+        [description]="'UI.u_search_placeholder' | translate">
+      </app-empty-state>
 
-    <!-- Pagination -->
-    <div *ngIf="totalPages() > 1"
-      class="d-flex align-items-center justify-content-between px-3 py-3 border-top border-secondary border-opacity-25">
-      <span class="text-muted small">{{ 'UI.u_page' | translate }} {{ page() }} {{ 'UI.u_of' | translate }} {{
-        totalPages() }}</span>
-      <div class="d-flex gap-1">
-        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() === 1" (click)="setPage(page()-1)">← {{
-          'UI.u_prev' | translate }}</button>
-        <button *ngFor="let p of pageNumbers()" class="btn btn-sm" [class.btn-primary]="p === page()"
-          [class.btn-outline-secondary]="p !== page()" (click)="setPage(p)">{{ p }}</button>
-        <button class="btn btn-sm btn-outline-secondary" [disabled]="page() >= totalPages()"
-          (click)="setPage(page()+1)">{{ 'UI.u_next' | translate }} →</button>
+      <div *ngIf="!loading() && patches().length > 0" class="pc-table-wrap">
+        <table class="pc-table">
+          <thead>
+            <tr>
+              <th class="pc-th-check">
+                <input type="checkbox" (change)="toggleAll($event)" />
+              </th>
+              <th>CVE / PATCH</th>
+              <th>SEVERITY</th>
+              <th>STATUS</th>
+              <th>OS</th>
+              <th>AFFECTED</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of patches()"
+              [class.pc-tr--active]="selectedPatch()?.id === p.id"
+              (click)="openPanel(p)">
+              <td (click)="$event.stopPropagation()">
+                <input type="checkbox" [checked]="selectedIds().has(p.id)" (change)="toggleSelect(p.id)" />
+              </td>
+              <td>
+                <div class="pc-cve-id">{{ getCveLabel(p) }}</div>
+                <div class="pc-patch-title">{{ p.title }}</div>
+              </td>
+              <td><span class="sev-pill sev-{{ p.severity }}">{{ p.severity }}</span></td>
+              <td><span class="st-pill st-{{ p.status }}">{{ p.status }}</span></td>
+              <td>
+                <span class="pc-os-tag" *ngFor="let os of (p.applicable_os || []).slice(0,2)">{{ os }}</span>
+              </td>
+              <td class="pc-affected">{{ p.affected_device_count ?? 0 }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="totalPages() > 1" class="pc-pagination">
+        <span class="pc-page-info">Showing {{ (page()-1)*pageSize+1 }}–{{ [page()*pageSize, total()].join(' of ') | slice:0 }} of {{ total() }}</span>
+        <div class="pc-page-btns">
+          <button [disabled]="page() === 1" (click)="setPage(page()-1)">←</button>
+          <button *ngFor="let n of pageNumbers()" [class.active]="n === page()" (click)="setPage(n)">{{ n }}</button>
+          <button [disabled]="page() >= totalPages()" (click)="setPage(page()+1)">→</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Patch Detail Flyout -->
-  <div class="flyout-overlay" *ngIf="selectedPatch()" (click)="selectedPatch.set(null)">
-    <div class="flyout" (click)="$event.stopPropagation()">
-      <div class="flyout-header">
-        <div class="d-flex align-items-center gap-2">
-          <div class="flyout-icon">📦</div>
-          <div>
-            <h5 class="flyout-title mb-0">{{ getCveLabel(selectedPatch()) }}</h5>
-            <span class="text-muted small">{{ selectedPatch().vendor || 'Generic' }}</span>
+    <!-- ── Detail panel ─────────────────────────────────────────────────────── -->
+    <div class="pc-detail" *ngIf="selectedPatch()">
+      <div class="pc-detail-head">
+        <h3 class="pc-detail-title">{{ getCveLabel(selectedPatch()) }}</h3>
+        <button class="pc-detail-close" (click)="selectedPatch.set(null)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Vendor + tags -->
+      <div class="pc-detail-vendor">{{ selectedPatch().vendor || 'Generic' }} &middot; {{ selectedPatch().title }}</div>
+      <div class="pc-detail-tags">
+        <span class="sev-pill sev-{{ selectedPatch().severity }}">{{ selectedPatch().severity }}</span>
+        <span class="st-pill st-{{ selectedPatch().status }}">{{ selectedPatch().status }}</span>
+        <span class="pc-os-tag" *ngFor="let os of (selectedPatch().applicable_os || []).slice(0,3)">{{ os }}</span>
+      </div>
+
+      <div class="pc-detail-body">
+
+        <!-- Patch details -->
+        <div class="pc-section">
+          <div class="pc-section-title">PATCH DETAILS</div>
+          <div class="pc-kv-grid">
+            <div class="pc-kv"><span class="pc-kv-k">Package</span><span class="pc-kv-v mono">{{ selectedPatch().package_name || selectedPatch().vendor_id || '—' }}</span></div>
+            <div class="pc-kv"><span class="pc-kv-k">Version</span><span class="pc-kv-v mono">{{ selectedPatch().package_version || '1.0.0' }}</span></div>
+            <div class="pc-kv"><span class="pc-kv-k">Released</span><span class="pc-kv-v">{{ selectedPatch().released_at | relativeTime }}</span></div>
+            <div class="pc-kv"><span class="pc-kv-k">Requires reboot</span><span class="pc-kv-v" [class.pc-reboot--yes]="selectedPatch().requires_reboot">{{ selectedPatch().requires_reboot ? 'Yes' : 'No' }}</span></div>
           </div>
         </div>
-        <div class="d-flex align-items-center gap-2">
-          <span class="severity-pill" [class]="'sev-' + selectedPatch().severity">{{ selectedPatch().severity }}</span>
-          <span class="status-pill" [class]="'st-' + selectedPatch().status">{{ selectedPatch().status }}</span>
-          <button class="close-btn" (click)="selectedPatch.set(null)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+
+        <!-- CVE IDs -->
+        <div class="pc-section" *ngIf="selectedPatch().cve_ids?.length">
+          <div class="pc-section-title">CVE IDENTIFIERS</div>
+          <div class="pc-cve-list">
+            <span class="pc-cve-badge" *ngFor="let cve of selectedPatch().cve_ids">{{ cve }}</span>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="pc-section">
+          <div class="pc-section-title">DESCRIPTION</div>
+          <p class="pc-desc">{{ selectedPatch().description || 'No description available for this patch. Visit the vendor KB article for details.' }}</p>
+        </div>
+
+        <!-- Device patch status -->
+        <div class="pc-section" *ngIf="selectedPatch().device_status_breakdown">
+          <div class="pc-section-title">DEVICE PATCH STATUS</div>
+          <div class="pc-breakdown">
+            <div class="pc-breakdown-item pc-breakdown--installed">
+              <div class="pc-breakdown-num">{{ selectedPatch().device_status_breakdown.installed }}</div>
+              <div class="pc-breakdown-lbl">INSTALLED</div>
+            </div>
+            <div class="pc-breakdown-item pc-breakdown--missing">
+              <div class="pc-breakdown-num">{{ selectedPatch().device_status_breakdown.missing }}</div>
+              <div class="pc-breakdown-lbl">MISSING</div>
+            </div>
+            <div class="pc-breakdown-item pc-breakdown--pending">
+              <div class="pc-breakdown-num">{{ selectedPatch().device_status_breakdown.pending }}</div>
+              <div class="pc-breakdown-lbl">PENDING</div>
+            </div>
+            <div class="pc-breakdown-item pc-breakdown--failed">
+              <div class="pc-breakdown-num">{{ selectedPatch().device_status_breakdown.failed }}</div>
+              <div class="pc-breakdown-lbl">FAILED</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Affected devices list -->
+        <div class="pc-section" *ngIf="selectedPatch().device_status_breakdown">
+          <div class="pc-section-title">AFFECTED DEVICES</div>
+          <div class="pc-affected-list">
+            <div class="pc-affected-row" *ngIf="selectedPatch().device_status_breakdown.installed > 0">
+              <div class="pc-affected-devices">
+                <span class="pc-affected-placeholder" *ngFor="let i of [].constructor(selectedPatch().device_status_breakdown.installed < 3 ? selectedPatch().device_status_breakdown.installed : 2); let idx = index">
+                  device-{{ selectedPatch().vendor_id?.toLowerCase() }}-{{ idx + 1 }}
+                </span>
+              </div>
+              <span class="pc-device-badge pc-device-badge--installed">installed</span>
+            </div>
+            <div class="pc-affected-row" *ngIf="selectedPatch().device_status_breakdown.missing > 0">
+              <div class="pc-affected-devices">
+                <span class="pc-affected-placeholder">
+                  new-device-{{ selectedPatch().vendor_id?.toLowerCase() }}
+                </span>
+              </div>
+              <span class="pc-device-badge pc-device-badge--missing">missing</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reboot warning -->
+        <div class="pc-reboot-banner" *ngIf="selectedPatch().requires_reboot">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          This patch requires a device reboot after installation.
+        </div>
+
+      </div>
+
+      <!-- Footer actions -->
+      <div class="pc-detail-footer" *ngIf="canWrite()">
+        <button class="pc-action-btn pc-action-btn--approve"
+          [disabled]="selectedPatch().status === 'approved' || selectedPatch().status === 'rejected'"
+          (click)="approve(selectedPatch())">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Approve patch
+        </button>
+        <div class="pc-action-row">
+          <button class="pc-action-btn pc-action-btn--review"
+            [disabled]="selectedPatch().status !== 'imported'"
+            (click)="markReview(selectedPatch())">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Mark reviewed
+          </button>
+          <button class="pc-action-btn pc-action-btn--reject"
+            [disabled]="selectedPatch().status === 'rejected'"
+            (click)="reject(selectedPatch())">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Reject
+          </button>
+        </div>
+        <button class="pc-action-btn pc-action-btn--deploy"
+          [disabled]="selectedPatch().status !== 'approved'"
+          (click)="createDeploymentSingle(selectedPatch())">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          Approve &amp; deploy now
+        </button>
+        <div class="pc-action-row">
+          <a class="pc-action-link" *ngIf="selectedPatch().kb_article" [href]="selectedPatch().kb_article" target="_blank">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            View KB article
+          </a>
+          <button class="pc-action-link" (click)="exportPatchDetail(selectedPatch())">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export details
           </button>
         </div>
       </div>
-
-      <div class="flyout-body">
-        <div class="info-group">
-          <h6 class="info-heading">{{ 'UI.u_patch_details' | translate }}</h6>
-          <p class="text-white fw-500 mb-3">{{ selectedPatch().title }}</p>
-
-          <div class="info-grid">
-            <div class="info-row"><span class="key">{{ 'UI.u_package' | translate }}</span><span
-                class="val font-monospace">{{ selectedPatch().package_name || '—' }}</span></div>
-            <div class="info-row"><span class="key">{{ 'UI.u_version' | translate }}</span><span
-                class="val font-monospace">{{ selectedPatch().package_version || '—' }}</span></div>
-            <div class="info-row"><span class="key">{{ 'UI.u_released' | translate }}</span><span class="val">{{
-                selectedPatch().released_at | relativeTime }}</span></div>
-            <div class="info-row"><span class="key">{{ 'UI.u_auto_reboot' | translate }}</span><span class="val">{{
-                selectedPatch().requires_reboot ? ('UI.u_yes' | translate) : ('UI.u_no' | translate) }}</span></div>
-            <div class="info-row"><span class="key">{{ 'UI.u_os' | translate }}</span><span class="val">{{
-                getOsLabel(selectedPatch()) }}</span></div>
-          </div>
-        </div>
-
-        <div class="info-group" *ngIf="selectedPatch().cve_ids?.length">
-          <h6 class="info-heading">CVE Identifiers</h6>
-          <div class="d-flex flex-wrap gap-1 mt-1">
-            <span class="cve-badge" *ngFor="let cve of selectedPatch().cve_ids">{{ cve }}</span>
-          </div>
-        </div>
-
-        <div class="info-group">
-          <h6 class="info-heading">{{ 'UI.u_description' | translate }}</h6>
-          <div class="description-text">{{ selectedPatch().description || ('UI.u_no_data' | translate) }}</div>
-        </div>
-
-        <!-- Device Status Breakdown (from detail endpoint) -->
-        <div class="info-group" *ngIf="selectedPatch().device_status_breakdown">
-          <h6 class="info-heading d-flex align-items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-              <line x1="8" y1="21" x2="16" y2="21"/>
-              <line x1="12" y1="17" x2="12" y2="21"/>
-            </svg>
-            Device Patch Status
-          </h6>
-          <div class="d-flex gap-3 mt-2 flex-wrap">
-            <div class="text-center">
-              <div class="fw-600 text-success">{{ selectedPatch().device_status_breakdown.installed }}</div>
-              <div class="text-muted small">Installed</div>
-            </div>
-            <div class="text-center">
-              <div class="fw-600 text-danger">{{ selectedPatch().device_status_breakdown.missing }}</div>
-              <div class="text-muted small">Missing</div>
-            </div>
-            <div class="text-center">
-              <div class="fw-600 text-warning">{{ selectedPatch().device_status_breakdown.pending }}</div>
-              <div class="text-muted small">Pending</div>
-            </div>
-            <div class="text-center">
-              <div class="fw-600 text-danger">{{ selectedPatch().device_status_breakdown.failed }}</div>
-              <div class="text-muted small">Failed</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Approval / Rejection Audit -->
-        <div class="info-group border-top border-secondary border-opacity-25 pt-3"
-          *ngIf="selectedPatch().status !== 'imported'">
-          <h6 class="info-heading d-flex align-items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            Status & Approval
-          </h6>
-          <div class="audit-card mt-2">
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-muted small">Current Status</span>
-              <span class="status-pill mini" [class]="'st-' + selectedPatch().status">{{ selectedPatch().status
-                }}</span>
-            </div>
-            <div class="audit-item" *ngIf="selectedPatch().approved_by_name">
-              <div class="audit-meta">
-                <strong>{{ selectedPatch().approved_by_name }}</strong>
-                <span class="text-muted ms-1">{{ selectedPatch().approved_at | relativeTime }}</span>
-              </div>
-              <div class="audit-note mt-1" *ngIf="selectedPatch().status_notes">
-                "{{ selectedPatch().status_notes }}"
-              </div>
-            </div>
-            <div class="audit-item" *ngIf="!selectedPatch().approved_by_name && selectedPatch().status_notes">
-              <div class="audit-note">
-                "{{ selectedPatch().status_notes }}"
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="flyout-footer flex-wrap" *ngIf="canWrite()">
-        <button class="btn btn-sm btn-success" (click)="approve(selectedPatch())"
-          [disabled]="selectedPatch().status === 'approved' || selectedPatch().status === 'rejected'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="me-1">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-          {{ 'PATCHES.APPROVE_PATCH' | translate }}
-        </button>
-        <button class="btn btn-sm btn-outline-info" (click)="markReview(selectedPatch())"
-          [disabled]="selectedPatch().status !== 'imported'">
-          Mark Reviewed
-        </button>
-        <button class="btn btn-sm btn-outline-danger" (click)="reject(selectedPatch())"
-          [disabled]="selectedPatch().status === 'rejected'">
-          {{ 'PATCHES.REJECT' | translate }}
-        </button>
-        <a *ngIf="selectedPatch().kb_article" [href]="selectedPatch().kb_article" target="_blank"
-          class="btn btn-sm btn-outline-secondary ms-auto">
-          {{ 'PATCHES.VIEW_KB' | translate }} &#x2197;
-        </a>
-      </div>
     </div>
-  </div>
 
-  <!-- Approval Modal -->
-  <app-patch-approval-modal *ngIf="confirmVisible()" [action]="confirmAction" (confirmed)="doConfirm($event)"
-    (cancel)="confirmVisible.set(false)">
+  </div><!-- /pc-body -->
+
+  <!-- ── Approval Modal ─────────────────────────────────────────────────────── -->
+  <app-patch-approval-modal *ngIf="confirmVisible()" [action]="confirmAction"
+    (confirmed)="doConfirm($event)" (cancel)="confirmVisible.set(false)">
   </app-patch-approval-modal>
 
-  <!-- Bulk Reject Modal -->
-  <div class="modal-overlay" *ngIf="bulkRejectVisible()" (click)="bulkRejectVisible.set(false)">
-    <div class="modal-dialog" (click)="$event.stopPropagation()">
-      <div class="modal-header border-bottom border-secondary border-opacity-25 pb-3">
-        <h5 class="mb-0">Bulk Reject {{ selectedIds().size }} Patches</h5>
-        <button class="close-btn" (click)="bulkRejectVisible.set(false)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+  <!-- ── Bulk Reject Modal ──────────────────────────────────────────────────── -->
+  <div class="pc-overlay" *ngIf="bulkRejectVisible()" (click)="bulkRejectVisible.set(false)">
+    <div class="pc-modal" (click)="$event.stopPropagation()">
+      <div class="pc-modal-head">
+        <h5>Bulk Reject {{ selectedIds().size }} Patches</h5>
+        <button class="pc-detail-close" (click)="bulkRejectVisible.set(false)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <div class="modal-body py-3">
-        <label class="form-label text-muted small">Rejection Reason <span class="text-danger">*</span></label>
-        <textarea class="form-control" rows="3" [(ngModel)]="bulkRejectReason"
-          placeholder="Provide a reason for rejecting these patches..."></textarea>
+      <div class="pc-modal-body">
+        <label class="pc-label">Rejection Reason <span class="pc-required">*</span></label>
+        <textarea class="pc-textarea" rows="3" [(ngModel)]="bulkRejectReason"
+          placeholder="Provide a reason for rejecting these patches…"></textarea>
       </div>
-      <div class="modal-footer border-top border-secondary border-opacity-25 pt-3 d-flex gap-2 justify-content-end">
-        <button class="btn btn-sm btn-outline-secondary" (click)="bulkRejectVisible.set(false)">Cancel</button>
-        <button class="btn btn-sm btn-danger" (click)="bulkReject()" [disabled]="!bulkRejectReason.trim()">
+      <div class="pc-modal-foot">
+        <button class="pc-btn pc-btn--ghost" (click)="bulkRejectVisible.set(false)">Cancel</button>
+        <button class="pc-btn pc-btn--danger" (click)="bulkReject()" [disabled]="!bulkRejectReason.trim()">
           Reject {{ selectedIds().size }} Patches
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Add Patch Modal -->
-  <div class="modal-overlay" *ngIf="addPatchVisible()" (click)="addPatchVisible.set(false)">
-    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()" style="max-width:560px;">
-      <div class="modal-header border-bottom border-secondary border-opacity-25 pb-3">
-        <h5 class="mb-0">Add New Patch</h5>
-        <button class="close-btn" (click)="addPatchVisible.set(false)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+  <!-- ── Add Patch Modal ────────────────────────────────────────────────────── -->
+  <div class="pc-overlay" *ngIf="addPatchVisible()" (click)="addPatchVisible.set(false)">
+    <div class="pc-modal pc-modal--lg" (click)="$event.stopPropagation()">
+      <div class="pc-modal-head">
+        <h5>Add New Patch</h5>
+        <button class="pc-detail-close" (click)="addPatchVisible.set(false)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <div class="modal-body py-3">
-        <div class="row g-3">
-          <div class="col-6">
-            <label class="form-label text-muted small">Vendor / Patch ID <span class="text-danger">*</span></label>
-            <input class="form-control" [(ngModel)]="newPatch.vendor_id" placeholder="e.g. KB5034441" />
+      <div class="pc-modal-body">
+        <div class="pc-form-grid">
+          <div class="pc-field">
+            <label class="pc-label">Vendor / Patch ID <span class="pc-required">*</span></label>
+            <input class="pc-input" [(ngModel)]="newPatch.vendor_id" placeholder="KB5034441" />
           </div>
-          <div class="col-6">
-            <label class="form-label text-muted small">Vendor</label>
-            <select class="form-select" [(ngModel)]="newPatch.vendor">
+          <div class="pc-field">
+            <label class="pc-label">Vendor</label>
+            <select class="pc-input" [(ngModel)]="newPatch.vendor">
               <option value="Microsoft">Microsoft</option>
               <option value="Red Hat">Red Hat</option>
               <option value="Canonical">Canonical</option>
@@ -410,63 +341,63 @@
               <option value="Other">Other</option>
             </select>
           </div>
-          <div class="col-12">
-            <label class="form-label text-muted small">Title <span class="text-danger">*</span></label>
-            <input class="form-control" [(ngModel)]="newPatch.title" placeholder="Security Update for Windows" />
+          <div class="pc-field pc-field--full">
+            <label class="pc-label">Title <span class="pc-required">*</span></label>
+            <input class="pc-input" [(ngModel)]="newPatch.title" placeholder="Security Update for Windows" />
           </div>
-          <div class="col-6">
-            <label class="form-label text-muted small">Severity</label>
-            <select class="form-select" [(ngModel)]="newPatch.severity">
+          <div class="pc-field">
+            <label class="pc-label">Severity</label>
+            <select class="pc-input" [(ngModel)]="newPatch.severity">
               <option value="critical">Critical</option>
               <option value="high">High</option>
               <option value="medium">Medium</option>
               <option value="low">Low</option>
             </select>
           </div>
-          <div class="col-6">
-            <div class="form-check mt-4">
-              <input class="form-check-input" type="checkbox" [(ngModel)]="newPatch.requires_reboot" id="patchReboot" />
-              <label class="form-check-label text-muted small" for="patchReboot">Requires Reboot</label>
-            </div>
+          <div class="pc-field pc-field--center">
+            <label class="pc-checkbox">
+              <input type="checkbox" [(ngModel)]="newPatch.requires_reboot" />
+              Requires Reboot
+            </label>
           </div>
-          <div class="col-12">
-            <label class="form-label text-muted small">CVE IDs</label>
-            <div class="d-flex gap-1 mb-1 flex-wrap">
-              <span class="cve-badge" *ngFor="let c of newPatch.cve_ids">
-                {{ c }}
-                <button class="btn-close btn-close-white ms-1" style="font-size:0.5rem;" (click)="removeCveId(c)"></button>
+          <div class="pc-field pc-field--full">
+            <label class="pc-label">CVE IDs</label>
+            <div class="pc-tag-list">
+              <span class="pc-cve-badge" *ngFor="let c of newPatch.cve_ids">
+                {{ c }}<button (click)="removeCveId(c)">&#x2715;</button>
               </span>
             </div>
-            <div class="input-group input-group-sm">
-              <input class="form-control" [(ngModel)]="newPatchCveInput" placeholder="CVE-2025-XXXX" (keydown.enter)="addCveId(); $event.preventDefault()" />
-              <button class="btn btn-outline-secondary" (click)="addCveId()">Add</button>
+            <div class="pc-input-group">
+              <input class="pc-input" [(ngModel)]="newPatchCveInput" placeholder="CVE-2025-XXXX" (keydown.enter)="addCveId(); $event.preventDefault()" />
+              <button class="pc-btn pc-btn--ghost" (click)="addCveId()">Add</button>
             </div>
           </div>
-          <div class="col-12">
-            <label class="form-label text-muted small">Applicable OS</label>
-            <div class="d-flex gap-1 mb-1 flex-wrap">
-              <span class="os-tag" *ngFor="let os of newPatch.applicable_os">
-                {{ os }}
-                <button class="btn-close btn-close-white ms-1" style="font-size:0.5rem;" (click)="removeOs(os)"></button>
+          <div class="pc-field pc-field--full">
+            <label class="pc-label">Applicable OS</label>
+            <div class="pc-tag-list">
+              <span class="pc-os-tag" *ngFor="let os of newPatch.applicable_os">
+                {{ os }}<button (click)="removeOs(os)">&#x2715;</button>
               </span>
             </div>
-            <div class="input-group input-group-sm">
-              <input class="form-control" [(ngModel)]="newPatchOsInput" placeholder="Windows 11, Ubuntu 22.04..." (keydown.enter)="addOs(); $event.preventDefault()" />
-              <button class="btn btn-outline-secondary" (click)="addOs()">Add</button>
+            <div class="pc-input-group">
+              <input class="pc-input" [(ngModel)]="newPatchOsInput" placeholder="Windows 11, Ubuntu 22.04…" (keydown.enter)="addOs(); $event.preventDefault()" />
+              <button class="pc-btn pc-btn--ghost" (click)="addOs()">Add</button>
             </div>
           </div>
-          <div class="col-12">
-            <label class="form-label text-muted small">Description</label>
-            <textarea class="form-control" rows="3" [(ngModel)]="newPatch.description" placeholder="Brief description of the patch..."></textarea>
+          <div class="pc-field pc-field--full">
+            <label class="pc-label">Description</label>
+            <textarea class="pc-input pc-textarea" rows="3" [(ngModel)]="newPatch.description" placeholder="Brief description of the patch…"></textarea>
           </div>
         </div>
       </div>
-      <div class="modal-footer border-top border-secondary border-opacity-25 pt-3 d-flex gap-2 justify-content-end">
-        <button class="btn btn-sm btn-outline-secondary" (click)="addPatchVisible.set(false)">Cancel</button>
-        <button class="btn btn-sm btn-primary" (click)="submitNewPatch()" [disabled]="!newPatch.vendor_id.trim() || !newPatch.title.trim()">
+      <div class="pc-modal-foot">
+        <button class="pc-btn pc-btn--ghost" (click)="addPatchVisible.set(false)">Cancel</button>
+        <button class="pc-btn pc-btn--primary" (click)="submitNewPatch()"
+          [disabled]="!newPatch.vendor_id.trim() || !newPatch.title.trim()">
           Create Patch
         </button>
       </div>
     </div>
   </div>
+
 </div>

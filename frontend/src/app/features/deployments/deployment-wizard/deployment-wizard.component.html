@@ -194,8 +194,9 @@
                 <line x1="3" y1="18" x2="21" y2="18" />
               </svg>
             </div>
-            <h4 class="strat-label">{{ s.label }}</h4>
-            <p class="strat-desc">{{ s.desc }}</p>
+            </div>
+            <h4 class="strat-label">{{ s.label | translate }}</h4>
+            <p class="strat-desc">{{ s.desc | translate }}</p>
             <ul class="strat-pros">
               <li *ngFor="let pro of s.pros">+ {{ pro }}</li>
             </ul>
@@ -223,7 +224,7 @@
             </div>
             <input type="range" class="slider" min="10" max="200" step="5" [(ngModel)]="form.wave_size" />
             <div class="param-range"><span>10</span><span>200</span></div>
-            <div class="param-hint">{{ waveCount() }} waves total</div>
+            <div class="param-hint">{{ waveCount() }} {{ 'UI.u_total_waves' | translate }}</div>
           </div>
           <div class="param-card">
             <div class="param-head">
@@ -232,7 +233,7 @@
             </div>
             <input type="range" class="slider" min="1" max="25" step="1" [(ngModel)]="form.max_failure_percentage" />
             <div class="param-range"><span>1%</span><span>25%</span></div>
-            <div class="param-hint">Halt if exceeded</div>
+            <div class="param-hint">{{ 'UI.u_halt_if_exceeded' | translate }}</div>
           </div>
         </div>
 
@@ -240,7 +241,7 @@
         <div class="param-grid" *ngIf="form.strategy === 'immediate'">
           <div class="param-card">
             <div class="param-head">
-              <span class="param-label">Max failure rate</span>
+              <span class="param-label">{{ 'UI.u_max_failure' | translate }}</span>
               <span class="param-val">{{ form.max_failure_percentage }}%</span>
             </div>
             <input type="range" class="slider" min="1" max="25" step="1" [(ngModel)]="form.max_failure_percentage" />
@@ -252,7 +253,7 @@
         <!-- Wave delay + Maintenance window -->
         <div class="scheduling-row mt-3">
           <div class="sched-field">
-            <label class="field-label">Wave delay</label>
+            <label class="field-label">{{ 'UI.u_wave_delay' | translate }}</label>
             <select class="field-select" [(ngModel)]="form.wave_delay_seconds">
               <option [value]="300">5 minutes</option>
               <option [value]="900">15 minutes</option>
@@ -274,7 +275,7 @@
       <!-- ══ STEP 2: Strategy ══════════════════════════════════════════════ -->
       <ng-container *ngIf="step() === 2">
 
-        <h3 class="section-title mb-4">Choose a strategy</h3>
+        <h3 class="section-title mb-4">{{ 'UI.u_rollout_strategy' | translate }}</h3>
         <div class="strategy-grid">
           <div *ngFor="let s of strategies" class="strategy-card" [class.selected]="form.strategy === s.value"
             (click)="form.strategy = s.value">
@@ -313,7 +314,7 @@
           <div class="param-grid">
             <div class="param-card" *ngIf="form.strategy === 'canary'">
               <div class="param-head">
-                <span class="param-label">Canary size</span>
+                <span class="param-label">{{ 'UI.u_canary_size' | translate }}</span>
                 <span class="param-val">{{ form.canary_percentage }}%</span>
               </div>
               <input type="range" class="slider" min="1" max="20" step="1" [(ngModel)]="form.canary_percentage" />
@@ -322,12 +323,12 @@
             </div>
             <div class="param-card">
               <div class="param-head">
-                <span class="param-label">Wave size</span>
+                <span class="param-label">{{ 'UI.u_wave_size' | translate }}</span>
                 <span class="param-val">{{ form.wave_size }}</span>
               </div>
               <input type="range" class="slider" min="10" max="200" step="5" [(ngModel)]="form.wave_size" />
               <div class="param-range"><span>10</span><span>200</span></div>
-              <div class="param-hint">{{ waveCount() }} waves total</div>
+              <div class="param-hint">{{ waveCount() }} {{ 'UI.u_total_waves' | translate }}</div>
             </div>
             <div class="param-card">
               <div class="param-head">
@@ -336,7 +337,7 @@
               </div>
               <input type="range" class="slider" min="1" max="25" step="1" [(ngModel)]="form.max_failure_percentage" />
               <div class="param-range"><span>1%</span><span>25%</span></div>
-              <div class="param-hint">Halt if exceeded</div>
+              <div class="param-hint">{{ 'UI.u_halt_if_exceeded' | translate }}</div>
             </div>
           </div>
         </div>
@@ -359,10 +360,10 @@
 
         <!-- Scheduling -->
         <div class="config-block">
-          <h4 class="config-title">Scheduling</h4>
+          <h4 class="config-title">{{ 'UI.u_scheduling' | translate }}</h4>
           <div class="scheduling-row">
             <div class="sched-field">
-              <label class="field-label">Wave delay</label>
+              <label class="field-label">{{ 'UI.u_wave_delay' | translate }}</label>
               <select class="field-select" [(ngModel)]="form.wave_delay_seconds">
                 <option [value]="300">5 minutes</option>
                 <option [value]="900">15 minutes</option>
@@ -372,7 +373,7 @@
               </select>
             </div>
             <div class="sched-field">
-              <label class="field-label">Maintenance window</label>
+              <label class="field-label">{{ 'UI.u_maintenance_window' | translate }}</label>
               <select class="field-select" [(ngModel)]="form.maintenance_window">
                 <option *ngFor="let w of maintenanceWindows" [value]="w.value">{{ w.label }}</option>
               </select>
@@ -393,40 +394,40 @@
 
         <!-- Options -->
         <div class="config-block">
-          <h4 class="config-title">Options</h4>
+          <h4 class="config-title">{{ 'UI.u_options' | translate }}</h4>
           <div class="options-list">
             <div class="toggle-row" (click)="form.requires_reboot = !form.requires_reboot">
               <div class="toggle-switch" [class.on]="form.requires_reboot">
                 <div class="toggle-thumb"></div>
               </div>
-              <span>Allow reboot after installation (if required by patch)</span>
+              <span>{{ 'UI.u_allow_reboot' | translate }}</span>
             </div>
             <div class="toggle-row" (click)="form.pre_flight_check = !form.pre_flight_check">
               <div class="toggle-switch" [class.on]="form.pre_flight_check">
                 <div class="toggle-thumb"></div>
               </div>
-              <span>Run pre-flight health check before each wave</span>
+              <span>{{ 'UI.u_pre_flight' | translate }}</span>
             </div>
             <div class="toggle-row" (click)="form.rollback_on_failure = !form.rollback_on_failure">
               <div class="toggle-switch" [class.on]="form.rollback_on_failure">
                 <div class="toggle-thumb"></div>
               </div>
-              <span>Auto-rollback on failure threshold breach</span>
+              <span>{{ 'UI.u_auto_rollback_desc' | translate }}</span>
             </div>
           </div>
         </div>
 
         <!-- Execution plan -->
         <div class="config-block exec-plan" *ngIf="totalTargetDevices() > 0">
-          <h4 class="config-title">Estimated execution plan</h4>
+          <h4 class="config-title">{{ 'UI.u_est_exec_plan' | translate }}</h4>
           <div class="exec-metrics">
             <div class="exec-metric">
               <span class="em-num">{{ totalTargetDevices() | number }}</span>
-              <span class="em-lbl">Total devices</span>
+              <span class="em-lbl">{{ 'UI.u_total_devices' | translate }}</span>
             </div>
             <div class="exec-metric">
               <span class="em-num">{{ waveCount() }}</span>
-              <span class="em-lbl">Waves</span>
+              <span class="em-lbl">{{ 'UI.u_waves' | translate }}</span>
             </div>
             <div class="exec-metric">
               <span class="em-num">~{{ estDurationHours() }}</span>
@@ -459,7 +460,7 @@
                 <rect x="9" y="9" width="13" height="13" rx="2" />
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
               </svg>
-              Patches ({{ form.patch_ids.length }})
+              {{ 'UI.u_patches' | translate }} ({{ form.patch_ids.length }})
             </div>
             <div *ngFor="let p of selectedPatches()" class="rp-row">
               <div class="rp-title">
@@ -480,15 +481,15 @@
                 <line x1="8" y1="21" x2="16" y2="21" />
                 <line x1="12" y1="17" x2="12" y2="21" />
               </svg>
-              Targets
+              {{ 'UI.u_targets' | translate }}
             </div>
             <div *ngFor="let gid of form.target_group_ids" class="rt-row">
               <span class="rt-name">{{ getGroupName(gid) }}</span>
-              <span class="rt-count">{{ getGroupDeviceCount(gid) | number }} devices</span>
+              <span class="rt-count">{{ getGroupDeviceCount(gid) | number }} {{ 'UI.u_devices' | translate }}</span>
             </div>
             <div class="rt-row rt-total">
-              <span class="rt-name fw-semibold">Total</span>
-              <span class="rt-count fw-bold">{{ totalTargetDevices() | number }} devices</span>
+              <span class="rt-name fw-semibold">{{ 'UI.u_total' | translate }}</span>
+              <span class="rt-count fw-bold">{{ totalTargetDevices() | number }} {{ 'UI.u_devices' | translate }}</span>
             </div>
           </div>
         </div>
@@ -500,25 +501,25 @@
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
-            Strategy and schedule
+            {{ 'UI.u_strategy' | translate }} and {{ 'UI.u_schedule' | translate }}
           </div>
           <div class="strat-review-grid">
-            <div class="sr-item"><span class="sr-key">Strategy</span><span class="sr-val">{{
+            <div class="sr-item"><span class="sr-key">{{ 'UI.u_strategy' | translate }}</span><span class="sr-val">{{
                 getStrategyLabel(form.strategy) }}</span></div>
-            <div class="sr-item"><span class="sr-key">Wave delay</span><span class="sr-val">{{ form.wave_delay_seconds /
-                60 }} minutes</span></div>
-            <div class="sr-item" *ngIf="form.strategy === 'canary'"><span class="sr-key">Canary size</span><span
-                class="sr-val">{{ canaryDeviceCount() }} devices ({{ form.canary_percentage }}%)</span></div>
-            <div class="sr-item"><span class="sr-key">Schedule</span><span class="sr-val">{{ form.maintenance_window ||
-                'No maintenance window' }}</span></div>
-            <div class="sr-item" *ngIf="form.strategy !== 'immediate'"><span class="sr-key">Wave size</span><span
-                class="sr-val">{{ form.wave_size }} devices</span></div>
-            <div class="sr-item"><span class="sr-key">Est. duration</span><span class="sr-val">~{{ estDurationHours() }}
-                hours</span></div>
-            <div class="sr-item" *ngIf="form.strategy !== 'immediate'"><span class="sr-key">Total waves</span><span
+            <div class="sr-item"><span class="sr-key">{{ 'UI.u_wave_delay' | translate }}</span><span class="sr-val">{{ form.wave_delay_seconds /
+                60 }} {{ 'UI.u_mins' | translate }}</span></div>
+            <div class="sr-item" *ngIf="form.strategy === 'canary'"><span class="sr-key">{{ 'UI.u_canary_size' | translate }}</span><span
+                class="sr-val">{{ canaryDeviceCount() }} {{ 'UI.u_devices' | translate }} ({{ form.canary_percentage }}%)</span></div>
+            <div class="sr-item"><span class="sr-key">{{ 'UI.u_schedule' | translate }}</span><span class="sr-val">{{ form.maintenance_window ||
+                'UI.u_no_maintenance' | translate }}</span></div>
+            <div class="sr-item" *ngIf="form.strategy !== 'immediate'"><span class="sr-key">{{ 'UI.u_wave_size' | translate }}</span><span
+                class="sr-val">{{ form.wave_size }} {{ 'UI.u_devices' | translate }}</span></div>
+            <div class="sr-item"><span class="sr-key">{{ 'UI.u_est_duration' | translate }}</span><span class="sr-val">~{{ estDurationHours() }}
+                {{ 'UI.u_hours' | translate }}</span></div>
+            <div class="sr-item" *ngIf="form.strategy !== 'immediate'"><span class="sr-key">{{ 'UI.u_total_waves' | translate }}</span><span
                 class="sr-val">{{ waveCount() }}</span></div>
-            <div class="sr-item"><span class="sr-key">Max failure rate</span><span class="sr-val danger">{{
-                form.max_failure_percentage }}% ({{ maxFailuresBeforeHalt() }} devices)</span></div>
+            <div class="sr-item"><span class="sr-key">{{ 'UI.u_max_failure' | translate }}</span><span class="sr-val danger">{{
+                form.max_failure_percentage }}% ({{ maxFailuresBeforeHalt() }} {{ 'UI.u_devices' | translate }})</span></div>
           </div>
         </div>
 
@@ -528,7 +529,7 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
-            Safety options
+            {{ 'UI.u_safety_options' | translate }}
           </div>
           <div class="safety-list">
             <div class="safety-item" [class.on]="form.requires_reboot">
@@ -538,7 +539,7 @@
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
-              Allow reboot after installation (if required by patch)
+              {{ 'UI.u_allow_reboot' | translate }}
             </div>
             <div class="safety-item" [class.on]="form.pre_flight_check">
               <div class="safety-check" [class.checked]="form.pre_flight_check">
@@ -547,7 +548,7 @@
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
-              Run pre-flight health check before each wave
+              {{ 'UI.u_pre_flight' | translate }}
             </div>
             <div class="safety-item" [class.on]="form.rollback_on_failure">
               <div class="safety-check" [class.checked]="form.rollback_on_failure">
@@ -556,7 +557,7 @@
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               </div>
-              Auto-rollback on failure threshold breach
+              {{ 'UI.u_auto_rollback_desc' | translate }}
             </div>
           </div>
         </div>
@@ -569,13 +570,10 @@
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
-            Important: Review before deploying
+            {{ 'UI.u_important_review' | translate }}
           </div>
           <p class="confirm-text">
-            This deployment will install {{ form.patch_ids.length }} patch{{ form.patch_ids.length !== 1 ? 'es' : '' }}
-            on {{ totalTargetDevices() | number }} devices<ng-container *ngIf="form.requires_reboot"> and trigger a
-              reboot on affected servers</ng-container>.
-            Ensure change management approval is in place and affected teams have been notified.
+            {{ 'UI.u_review_desc' | translate:{ patchCount: form.patch_ids.length, deviceCount: (totalTargetDevices() | number) } }}
           </p>
           <div class="confirm-check-row" (click)="confirmed.set(!confirmed())">
             <div class="checkbox" [class.checked]="confirmed()">
@@ -595,13 +593,13 @@
     <!-- ─── RIGHT: Sidebar (steps 0–1) ────────────────────────────────── -->
 
     <div class="wiz-sidebar" *ngIf="step() === 0">
-      <h4 class="sidebar-title">Patch selection</h4>
-      <div class="sb-stat"><span>Selected</span><strong>{{ form.patch_ids.length }} patches</strong></div>
+      <h4 class="sidebar-title">{{ 'UI.u_patch_selection' | translate }}</h4>
+      <div class="sb-stat"><span>{{ 'UI.u_selected' | translate }}</span><strong>{{ form.patch_ids.length }} {{ 'UI.u_patches' | translate }}</strong></div>
       <div class="sb-stat" *ngIf="criticalPatchCount() > 0">
-        <span>Critical</span><strong class="danger">{{ criticalPatchCount() }}</strong>
+        <span>{{ 'UI.u_critical' | translate }}</span><strong class="danger">{{ criticalPatchCount() }}</strong>
       </div>
       <div class="sidebar-section" *ngIf="selectedPatches().length > 0">
-        <div class="sb-sub">Selected patches</div>
+        <div class="sb-sub">{{ 'UI.u_patch_selection' | translate }}</div>
         <div *ngFor="let p of selectedPatches()" class="sb-item">
           <span class="sb-name">{{ p.vendor_id || p.title }}</span>
           <span class="sev-badge sm" [class]="sevClass(p.severity)">{{ p.severity }}</span>
@@ -615,9 +613,9 @@
 
       <!-- Patches -->
       <div class="dsum-row">
-        <span class="dsum-key">Patches</span>
+        <span class="dsum-key">{{ 'UI.u_patches' | translate }}</span>
         <div class="dsum-rhs">
-          <span class="dsum-val">{{ form.patch_ids.length }} patches</span>
+          <span class="dsum-val">{{ form.patch_ids.length }} {{ 'UI.u_patches' | translate }}</span>
           <span class="sev-badge sev-critical sm" *ngIf="criticalPatchCount() > 0">{{ criticalPatchCount() }}
             critical</span>
         </div>
@@ -631,8 +629,8 @@
 
       <!-- Target groups -->
       <div class="dsum-row">
-        <span class="dsum-key">Target groups</span>
-        <span class="dsum-val">{{ form.target_group_ids.length }} groups</span>
+        <span class="dsum-key">{{ 'UI.u_target_groups' | translate }}</span>
+        <span class="dsum-val">{{ form.target_group_ids.length }} {{ 'UI.u_groups' | translate }}</span>
       </div>
       <div class="dsum-row" *ngIf="totalTargetDevices() > 0">
         <span class="dsum-key">{{ 'UI.u_devices' | translate }}</span>
@@ -643,20 +641,20 @@
 
       <!-- Strategy -->
       <div class="dsum-row">
-        <span class="dsum-key">Strategy</span>
+        <span class="dsum-key">{{ 'UI.u_strategy' | translate }}</span>
         <span class="dsum-strat-badge">{{ getStrategyLabel(form.strategy) }}</span>
       </div>
       <div class="dsum-row" *ngIf="form.strategy === 'canary' && totalTargetDevices() > 0">
-        <span class="dsum-key">Canary size</span>
-        <span class="dsum-val">{{ canaryDeviceCount() }} devices ({{ form.canary_percentage }}%)</span>
+        <span class="dsum-key">{{ 'UI.u_canary_size' | translate }}</span>
+        <span class="dsum-val">{{ canaryDeviceCount() }} {{ 'UI.u_devices' | translate }} ({{ form.canary_percentage }}%)</span>
       </div>
       <div class="dsum-row" *ngIf="form.maintenance_window">
-        <span class="dsum-key">Schedule</span>
+        <span class="dsum-key">{{ 'UI.u_schedule' | translate }}</span>
         <span class="dsum-val">{{ maintenanceWindowLabel() }}</span>
       </div>
       <div class="dsum-row" *ngIf="totalTargetDevices() > 0">
-        <span class="dsum-key">Est. duration</span>
-        <span class="dsum-val">~{{ estDurationHours() }} hours</span>
+        <span class="dsum-key">{{ 'UI.u_est_duration' | translate }}</span>
+        <span class="dsum-val">~{{ estDurationHours() }} {{ 'UI.u_hours' | translate }}</span>
       </div>
       <div class="dsum-row">
         <span class="dsum-key">{{ 'UI.u_auto_reboot' | translate }}</span>
