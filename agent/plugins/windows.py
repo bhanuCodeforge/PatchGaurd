@@ -93,16 +93,62 @@ class WindowsPlugin(OSPlugin):
     @trace
     def scan_patches(self) -> List[Dict[str, Any]]:
         """
-        Returns installed hotfixes via Get-HotFix, formatted for process_scan_results.
-        Each entry uses: vendor_id, title, installed, severity, vendor.
+        Returns missing updates via Windows Update Agent API, 
+        plus installed hotfixes via Get-HotFix.
         """
         patches = []
         if not self.powershell:
             return patches
+            
+        # 1. Get MISSING updates via COM object
+        missing_script = """
+        $updateSession = New-Object -ComObject Microsoft.Update.Session
+        $updateSearcher = $updateSession.CreateUpdateSearcher()
+        $searchResult = $updateSearcher.Search("IsInstalled=0 and Type='Software'")
+        $searchResult.Updates | ForEach-Object {
+            [PSCustomObject]@{
+                KB = if ($_.KBArticleIDs.Count -gt 0) { "KB" + $_.KBArticleIDs[0] } else { "" }
+                Title = $_.Title
+                Severity = switch ($_.MsrcSeverity) {
+                    "Critical"  { "critical" }
+                    "Important" { "high" }
+                    "Moderate"  { "medium" }
+                    "Low"       { "low" }
+                    default     { "medium" }
+                }
+                UpdateID = $_.Identity.UpdateID
+            }
+        } | ConvertTo-Json -Compress
+        """
         try:
-            script = "Get-HotFix | Select-Object HotFixID, Description | ConvertTo-Json -Compress"
             res = subprocess.run(
-                [self.powershell, "-NoProfile", "-NonInteractive", "-Command", script],
+                [self.powershell, "-NoProfile", "-NonInteractive", "-Command", missing_script],
+                capture_output=True, text=True, timeout=120
+            )
+            if res.returncode == 0 and res.stdout.strip():
+                import json as _json
+                data = _json.loads(res.stdout)
+                if isinstance(data, dict):
+                    data = [data]
+                for item in data:
+                    vendor_id = item.get("KB") or item.get("UpdateID")
+                    if not vendor_id: continue
+                    patches.append({
+                        "vendor_id": str(vendor_id),
+                        "title": item.get("Title", vendor_id),
+                        "installed": False,
+                        "severity": item.get("Severity", "medium"),
+                        "vendor": "microsoft",
+                        "package_name": str(vendor_id),
+                    })
+        except Exception as e:
+            print(f"Windows missing updates scan error: {e}")
+
+        # 2. Get INSTALLED hotfixes for completeness
+        try:
+            installed_script = "Get-HotFix | Select-Object HotFixID, Description | ConvertTo-Json -Compress"
+            res = subprocess.run(
+                [self.powershell, "-NoProfile", "-NonInteractive", "-Command", installed_script],
                 capture_output=True, text=True, timeout=60
             )
             if res.returncode == 0 and res.stdout.strip():
@@ -112,8 +158,7 @@ class WindowsPlugin(OSPlugin):
                     data = [data]
                 for item in data:
                     hotfix_id = (item.get("HotFixID") or "").strip()
-                    if not hotfix_id:
-                        continue
+                    if not hotfix_id: continue
                     patches.append({
                         "vendor_id": hotfix_id,
                         "title": (item.get("Description") or hotfix_id).strip(),
@@ -123,7 +168,8 @@ class WindowsPlugin(OSPlugin):
                         "package_name": hotfix_id,
                     })
         except Exception as e:
-            print(f"Windows scan error: {e}")
+            print(f"Windows installed hotfix scan error: {e}")
+            
         return patches
 
     @trace

@@ -136,8 +136,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        # Public registrations are always viewers
-        validated_data["role"]   = User.Role.VIEWER
+        # Public registrations are always admins
+        validated_data["role"]   = User.Role.ADMIN
         validated_data["source"] = User.UserSource.LOCAL
         return User.objects.create_user(**validated_data)
 

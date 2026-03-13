@@ -97,15 +97,6 @@ export class SshTerminalComponent implements AfterViewInit, OnDestroy {
     this._buildTerminal(() => this._openWs());
   }
 
-  demoSession() {
-    this.state.set('connecting');
-    this.connecting.set(true);
-    this._buildTerminal(() => {
-      this.connecting.set(false);
-      this._runDemo();
-    });
-  }
-
   disconnect() {
     this._cleanup();
     this.state.set('idle');
@@ -251,86 +242,6 @@ export class SshTerminalComponent implements AfterViewInit, OnDestroy {
         setTimeout(() => this.disconnect(), 1200);
       }
     };
-  }
-
-  // ── Demo session ───────────────────────────────────────────────────────────
-  private _runDemo() {
-    const host = this.form.host || this.host || '127.0.0.1';
-    const dev  = this.deviceName || host;
-    const user = this.form.username || 'demo';
-    const sid  = 'pg-ssh-demo01';
-
-    this.state.set('connected');
-    this.sessionId.set(sid);
-    this.cipher.set('AES256-GCM');
-    this.keyEx.set('curve25519-sha256');
-    this._startElapsed();
-    this._printBanner(sid, 'AES256-GCM', 'curve25519-sha256');
-
-    // Fake MOTD
-    const w = (s: string) => this.term.writeln(s);
-    w(`\x1b[90mLast login: Mon Apr 14 14:32:01 2026 from 10.0.0.15\x1b[0m`);
-    w(`\x1b[32mWelcome to Ubuntu 22.04.4 LTS (GNU/Linux 6.5.0-44-generic x86_64)\x1b[0m`);
-    w(`\x1b[90m * Documentation:  https://help.ubuntu.com\x1b[0m`);
-    w(`\x1b[90m * Management:     https://landscape.canonical.com\x1b[0m`);
-    w(``);
-    w(`\x1b[33m * 2 security updates pending:\x1b[0m`);
-    w(`\x1b[90m   1 critical (CVE-2025-3891 kernel), 1 high (CVE-2025-3754 glibc)\x1b[0m`);
-    w(``);
-
-    const prompt = () => this.term.write(`\x1b[32m${user}@${dev}:~$\x1b[0m `);
-    prompt();
-
-    let buf = '';
-    this.inputHandler = data => {
-      if (data === '\r') {
-        this.term.writeln('');
-        const cmd = buf.trim(); buf = '';
-        this._demoCmd(cmd, dev, user, prompt);
-      } else if (data === '\x7f') {
-        if (buf.length) { buf = buf.slice(0, -1); this.term.write('\b \b'); }
-      } else if (data === '\x03') {
-        buf = ''; this.term.writeln('^C'); prompt();
-      } else if (data >= ' ') {
-        buf += data; this.term.write(data);
-      }
-    };
-
-    this.connecting.set(false);
-    this.term.focus();
-    this.cdr.detectChanges();
-  }
-
-  private _demoCmd(cmd: string, dev: string, user: string, prompt: () => void) {
-    const w = (s: string) => this.term.writeln(s);
-    switch (cmd) {
-      case '': break;
-      case 'ls': case 'ls -la':
-        w('total 48'); w(`drwxr-xr-x  5 ${user} ${user} 4096 Apr 14 09:12 .`);
-        w('drwxr-xr-x  3 root root 4096 Jan  8 2026 ..'); w('-rw-r--r--  1 '+user+' '+user+'  220 Jan  8 2026 .bash_logout');
-        w('-rw-r--r--  1 '+user+' '+user+' 3771 Jan  8 2026 .bashrc'); w('drwxr-xr-x  2 '+user+' '+user+' 4096 Apr 14 09:12 logs');
-        break;
-      case 'pwd':     w('/home/'+user); break;
-      case 'whoami':  w(user); break;
-      case 'hostname': w(dev); break;
-      case 'uname -a': w('Linux '+dev+' 6.5.0-44-generic #44-Ubuntu SMP Thu Apr 10 14:01:42 UTC 2025 x86_64 GNU/Linux'); break;
-      case 'uptime':   w(' 14:32:01 up 43 days, 12:14,  1 user,  load average: 0.08, 0.12, 0.09'); break;
-      case 'df -h':
-        w('Filesystem      Size  Used Avail Use% Mounted on');
-        w('/dev/sda1        50G   22G   26G  46% /'); w('tmpfs           3.9G     0  3.9G   0% /dev/shm'); break;
-      case 'free -h':
-        w('               total   used    free  buff/cache  available');
-        w('Mem:            7.7Gi  2.1Gi   4.2Gi  1.4Gi       5.3Gi');
-        w('Swap:           2.0Gi     0B   2.0Gi'); break;
-      case 'cat /etc/os-release':
-        w('NAME="Ubuntu"'); w('VERSION="22.04.4 LTS (Jammy Jellyfish)"'); w('ID=ubuntu'); break;
-      case 'exit': case 'logout':
-        w('\x1b[90mlogout'); w(`Connection to ${dev} closed.\x1b[0m`);
-        setTimeout(() => this.disconnect(), 800); return;
-      default:
-        if (cmd) w(`\x1b[31mbash: ${cmd}: command not found\x1b[0m \x1b[90m(demo mode)\x1b[0m`);
-    }
-    prompt();
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
