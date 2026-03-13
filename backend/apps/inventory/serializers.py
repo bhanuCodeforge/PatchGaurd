@@ -50,7 +50,7 @@ class DeviceDetailSerializer(serializers.ModelSerializer):
             'compliance_rate', 'inventory_data', 'lane_config',
             'last_seen', 'last_scan', 'created_at',
             'compliance_summary', 'patch_stats', 'os_name',
-            'key_created_at', 'key_last_rotated_at',
+            'key_created_at', 'key_last_rotated_at', 'agent_api_key',
         ]
 
     def get_compliance_summary(self, obj):

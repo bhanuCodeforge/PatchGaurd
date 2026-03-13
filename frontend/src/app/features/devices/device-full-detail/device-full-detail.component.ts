@@ -11,6 +11,7 @@ import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
 import { Device } from '../../../core/models/types';
 import { WebsocketService } from '../../../core/services/websocket.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { SshTerminalComponent } from '../ssh-terminal/ssh-terminal.component';
 import { Subscription } from 'rxjs';
 
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
@@ -27,6 +28,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     LoadingSkeletonComponent,
     RelativeTimePipe,
     ConfirmDialogComponent,
+    SshTerminalComponent,
   ],
   templateUrl: './device-full-detail.component.html',
   styleUrl: './device-full-detail.component.scss',

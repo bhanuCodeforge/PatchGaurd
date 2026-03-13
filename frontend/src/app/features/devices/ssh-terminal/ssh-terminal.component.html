@@ -1,0 +1,227 @@
+<!-- ── IDLE STATE ──────────────────────────────────────────────────────────── -->
+@if (state() === 'idle') {
+<div class="ssh-idle">
+  <div class="ssh-idle-icon">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2" />
+      <line x1="8" y1="21" x2="16" y2="21" />
+      <line x1="12" y1="17" x2="12" y2="21" />
+    </svg>
+  </div>
+  <h3>No active SSH session</h3>
+  <p>
+    Connect to <span class="ssh-hostname">{{ deviceName || host || 'this device' }}</span> via an encrypted<br>
+    WebSocket SSH tunnel managed by PatchGuard.
+  </p>
+  <div class="ssh-idle-actions">
+    <button class="ssh-btn ssh-btn--primary" (click)="openDialog()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" />
+        <line x1="8" y1="21" x2="16" y2="21" />
+        <line x1="12" y1="17" x2="12" y2="21" />
+      </svg>
+      Connect via SSH
+    </button>
+    <button class="ssh-btn ssh-btn--ghost" (click)="demoSession()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      Demo session
+    </button>
+  </div>
+  <p class="ssh-idle-note">Requires Admin or Operator role &bull; Sessions are audit-logged &bull; TLS 1.3</p>
+</div>
+}
+
+<!-- ── CONNECTION DIALOG ───────────────────────────────────────────────────── -->
+@if (state() === 'dialog') {
+<div class="ssh-overlay" (click)="closeDialog()">
+  <div class="ssh-dialog" (click)="$event.stopPropagation()">
+    <div class="ssh-dialog-head">
+      <div class="ssh-dialog-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" />
+          <line x1="8" y1="21" x2="16" y2="21" />
+          <line x1="12" y1="17" x2="12" y2="21" />
+        </svg>
+        SSH &mdash; {{ deviceName || host }}
+      </div>
+      <button class="ssh-dialog-x" (click)="closeDialog()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Quick test helper -->
+    <!-- <div style="background:rgba(96,165,250,0.1); border:1px dashed rgba(96,165,250,0.3); padding:8px 12px; border-radius:8px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; color:#60a5fa; font-weight:500;">Debugging / Testing Helper</span>
+        <button class="ssh-btn ssh-btn--primary" style="padding:4px 10px; font-size:11px; height:24px;" (click)="fillTestKey()">Fill Test Key</button>
+      </div> -->
+
+    <!-- Info banner -->
+    <div class="ssh-info-banner">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="16" x2="12" y2="12" />
+        <line x1="12" y1="8" x2="12.01" y2="8" />
+      </svg>
+      <span>Connection is tunnelled through the PatchGuard server via WebSocket. Your credentials are never stored.
+        Session is logged to the audit trail.</span>
+    </div>
+
+    <!-- Host / Port row -->
+    <div class="ssh-field-row">
+      <div class="ssh-field ssh-field--flex3">
+        <label>Host</label>
+        <input type="text" [(ngModel)]="form.host" placeholder="10.0.1.50" autocomplete="off">
+      </div>
+      <div class="ssh-field ssh-field--flex1">
+        <label>Port</label>
+        <input type="number" [(ngModel)]="form.port" min="1" max="65535">
+      </div>
+    </div>
+
+    <!-- Username -->
+    <div class="ssh-field">
+      <label>Username</label>
+      <input type="text" [(ngModel)]="form.username" placeholder="jdoe" autocomplete="username">
+    </div>
+
+    <!-- Auth type tabs -->
+    <div class="ssh-field">
+      <label>Authentication</label>
+      <div class="ssh-auth-tabs">
+        <button [class.active]="form.authType === 'password'" (click)="form.authType = 'password'">Password</button>
+        <button [class.active]="form.authType === 'key'" (click)="form.authType = 'key'">SSH Key</button>
+        <button [class.active]="form.authType === 'agent'" (click)="form.authType = 'agent'">Agent forwarding</button>
+      </div>
+    </div>
+
+    @if (form.authType === 'password') {
+    <div class="ssh-field">
+      <label>Password</label>
+      <input type="password" [(ngModel)]="form.password" placeholder="Enter password" autocomplete="current-password">
+    </div>
+    }
+
+    @if (form.authType === 'key') {
+    <div class="ssh-field">
+      <label>Private key (PEM)</label>
+      <textarea [(ngModel)]="form.privateKey" rows="4" placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;..."></textarea>
+    </div>
+    }
+
+    @if (form.authType === 'agent') {
+    <div class="ssh-info-banner ssh-info-banner--muted">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+      <span>Agent forwarding will use your local SSH agent keys via the PatchGuard tunnel.</span>
+    </div>
+    }
+
+    <!-- Save config -->
+    <label class="ssh-checkbox">
+      <input type="checkbox" [(ngModel)]="form.saveConfig">
+      <span>Save session config <span class="ssh-muted">(credentials not saved)</span></span>
+    </label>
+
+    <!-- Footer -->
+    <div class="ssh-dialog-footer">
+      <button class="ssh-btn ssh-btn--cancel" (click)="closeDialog()">Cancel</button>
+      <button class="ssh-btn ssh-btn--primary"
+        [disabled]="!form.host || !form.username || (form.authType === 'password' && !form.password)"
+        (click)="connect()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" />
+          <line x1="8" y1="21" x2="16" y2="21" />
+          <line x1="12" y1="17" x2="12" y2="21" />
+        </svg>
+        Connect
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ── TERMINAL PANEL (connecting + connected) ────────────────────────────── -->
+@if (state() === 'connecting' || state() === 'connected') {
+<div class="ssh-panel" [class.ssh-panel--fullscreen]="isFullscreen()">
+
+  <!-- Status bar -->
+  <div class="ssh-statusbar">
+    <div class="ssh-status-left">
+      @if (state() === 'connecting') {
+      <span class="ssh-dot ssh-dot--spin"></span>
+      <span class="ssh-status-text">Connecting…</span>
+      } @else {
+      <span class="ssh-dot ssh-dot--live"></span>
+      <span class="ssh-status-text">Connected</span>
+      <span class="ssh-status-sep">·</span>
+      <span class="ssh-status-conn">{{ form.username }}&#64;{{ form.host }}:{{ form.port }}</span>
+      <span class="ssh-status-sep">·</span>
+      <span class="ssh-status-time">{{ elapsed() }}</span>
+      }
+    </div>
+    <div class="ssh-status-right">
+      @if (state() === 'connected') {
+      <button class="ssh-ctrl" (click)="popOut()" title="Pop out">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+          <polyline points="15 3 21 3 21 9" />
+          <line x1="10" y1="14" x2="21" y2="3" />
+        </svg>
+        Pop out
+      </button>
+      <button class="ssh-ctrl" (click)="toggleFullscreen()" title="Fullscreen">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 3 21 3 21 9" />
+          <polyline points="9 21 3 21 3 15" />
+          <line x1="21" y1="3" x2="14" y2="10" />
+          <line x1="3" y1="21" x2="10" y2="14" />
+        </svg>
+        Fullscreen
+      </button>
+      <button class="ssh-ctrl ssh-ctrl--danger" (click)="disconnect()" title="Disconnect">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+        Disconnect
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- xterm.js mount point -->
+  <div class="ssh-term-wrap">
+    <div #termEl class="ssh-term"></div>
+  </div>
+
+  <!-- Footer hints -->
+  @if (state() === 'connected') {
+  <div class="ssh-footer-bar">
+    <span>&#x2191; history</span>
+    <span class="ssh-kbd">Ctrl+C</span>
+    <span class="ssh-kbd">Ctrl+D</span>
+    <span class="ssh-kbd">Ctrl+Z</span>
+  </div>
+  }
+
+</div>
+}

@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 # Load .env from repo root (one level above realtime/)
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
-from routes import health, agents, events
+from routes import health, agents, events, ssh
 from ws_manager import manager
 from logging_utils import trace
 from streams_consumer import StreamsConsumer
@@ -169,6 +169,7 @@ app = FastAPI(title="PatchGuard Async Realtime Service", version="1.0", lifespan
 app.include_router(health.router)
 app.include_router(agents.router)
 app.include_router(events.router)
+app.include_router(ssh.router)
 
 if __name__ == "__main__":
     import uvicorn

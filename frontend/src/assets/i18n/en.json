@@ -338,7 +338,11 @@
     "u_performance": "Performance (Global Metrics)",
     "u_reboot_action": "Reboot",
     "u_view_full_details": "View Full Details →",
-    "u_optional": "Optional"
+    "u_optional": "Optional",
+    "u_api_key": "Agent API Key",
+    "u_copy_now": "Copy now",
+    "u_device_id": "Device ID",
+    "u_add_another": "Add another"
   },
   "MSG": {
     "m_reboot_confirm": "Are you sure you want to reboot {{hostname}}? This will interrupt all services running on this device.",
@@ -365,7 +369,8 @@
     "m_pwd_mismatch": "Passwords do not match.",
     "m_pwd_min": "Password must be at least 12 characters.",
     "m_pwd_updated": "Password updated. Please log in again.",
-    "m_notif_saved": "Notification preferences saved."
+    "m_notif_saved": "Notification preferences saved.",
+    "m_agent_config_hint": "Use this key to configure your local agent. This key is shown only once for security."
   },
   "ERROR": {
     "e_failed": "Authentication failed",

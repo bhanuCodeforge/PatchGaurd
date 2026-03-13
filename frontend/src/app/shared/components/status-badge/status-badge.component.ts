@@ -15,17 +15,17 @@ export class StatusBadgeComponent {
   @Input() dot = true;
 
   getBadgeClass(): string {
-    const v = this.value?.toLowerCase() || '';
+    const v = (this.value || '').toLowerCase();
     
-    // Environment Mapping
+    // Environment Mapping (Matches Design Vibrancy)
     if (this.type === 'env') {
-      if (v.includes('prod')) return 'badge-production';
-      if (v.includes('stag')) return 'badge-staging';
-      if (v.includes('dev')) return 'badge-development';
+      if (['production', 'prod'].some(s => v.includes(s))) return 'badge-production';
+      if (['staging', 'stag'].some(s => v.includes(s))) return 'badge-staging';
+      if (['development', 'dev'].some(s => v.includes(s))) return 'badge-development';
       return 'badge-gray';
     }
 
-    // Severity Mapping
+    // Severity Mapping (Patches/Deployments)
     if (this.type === 'severity') {
       if (v === 'critical') return 'badge-critical';
       if (v === 'high') return 'badge-high';
@@ -34,19 +34,19 @@ export class StatusBadgeComponent {
       return 'badge-gray';
     }
 
-    // Workflow Mapping
+    // Workflow Mapping (Approvals)
     if (this.type === 'workflow') {
-      if (v === 'approved') return 'badge-online';
-      if (v === 'rejected') return 'badge-critical';
-      if (v === 'reviewed') return 'badge-maintenance';
-      if (v === 'imported') return 'badge-gray';
+      if (['approved', 'ready', 'success'].includes(v)) return 'badge-online';
+      if (['rejected', 'failed', 'denied'].includes(v)) return 'badge-critical';
+      if (['reviewed', 'pending', 'waiting'].includes(v)) return 'badge-maintenance';
+      if (['imported', 'draft', 'new'].includes(v)) return 'badge-gray';
       return 'badge-gray';
     }
 
-    // Generic Status Mapping
-    if (v === 'online' || v === 'active' || v === 'connected' || v === 'success') return 'badge-online';
-    if (v === 'offline' || v === 'disconnected' || v === 'locked' || v === 'error') return 'badge-offline';
-    if (v === 'maintenance' || v === 'warning' || v === 'pending' || v === 'in_progress') return 'badge-maintenance';
+    // Generic Status Mapping (Fallback)
+    if (['online', 'active', 'connected', 'success', 'up'].includes(v)) return 'badge-online';
+    if (['offline', 'disconnected', 'locked', 'error', 'down'].includes(v)) return 'badge-offline';
+    if (['maintenance', 'warning', 'pending', 'in_progress', 'degraded'].includes(v)) return 'badge-maintenance';
     
     return 'badge-gray';
   }

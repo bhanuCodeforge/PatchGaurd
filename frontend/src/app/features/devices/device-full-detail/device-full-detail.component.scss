@@ -1331,3 +1331,19 @@
   color: var(--muted2);
   &:hover:not(:disabled) { background: rgba(148, 163, 184, 0.25); }
 }
+
+// ── SSH Terminal tab panel ────────────────────────────────────────────────────
+.dd-ssh-panel {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 280px);
+  min-height: 480px;
+  padding: 0 !important;
+
+  app-ssh-terminal {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+}

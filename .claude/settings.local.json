@@ -3,7 +3,8 @@
     "allow": [
       "Bash(DJANGO_SETTINGS_MODULE=config.settings.dev /d/PatchGaurd/.venv/Scripts/python.exe manage.py makemigrations accounts --name alter_auditlog_action_maxlength)",
       "Bash(python manage.py shell -c ':*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(find /d/PatchGaurd/backend/apps -name \"*.py\" -exec grep -l \"shell\\\\|terminal\\\\|console\\\\|ssh\" {} \\\\;)"
     ]
   }
 }
