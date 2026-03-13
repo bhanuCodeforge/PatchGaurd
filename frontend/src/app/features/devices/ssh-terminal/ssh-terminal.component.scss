@@ -127,6 +127,13 @@
     color: var(--text); font-size: 13px; outline: none;
     &:focus { border-color: var(--border-focus); }
     &::placeholder { color: var(--muted2); }
+    &:disabled, &.ssh-field--locked {
+      background: var(--bg-hover);
+      color: var(--muted);
+      cursor: not-allowed;
+      opacity: 0.75;
+      font-family: monospace;
+    }
   }
 
   textarea { resize: vertical; font-family: monospace; font-size: 12px; }

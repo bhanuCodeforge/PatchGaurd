@@ -68,7 +68,7 @@ export class SshTerminalComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     // Pre-fill from @Input + saved config
     const saved = this._loadSaved();
-    this.form.host     = saved?.host     ?? this.host;
+    this.form.host     = this.host || saved?.host || '';   // always prefer device IP
     this.form.port     = saved?.port     ?? this.port;
     this.form.username = saved?.username ?? '';
     this.form.authType = saved?.authType ?? 'password';
