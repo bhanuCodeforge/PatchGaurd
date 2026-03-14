@@ -83,44 +83,44 @@
 
       <!-- Admin: General Settings -->
       <div *ngIf="activeSection === 'general'" class="section">
-        <h3 class="section-title">General Settings</h3>
+        <h3 class="section-title">{{ 'UI.u_general_settings' | translate }}</h3>
         <div class="row g-3" style="max-width:500px">
           <div class="col-12">
-            <label class="form-label-sm">Organization Name</label>
+            <label class="form-label-sm">{{ 'UI.u_org_name' | translate }}</label>
             <input class="pg-input" [(ngModel)]="generalSettings.orgName" />
           </div>
           <div class="col-12">
-            <label class="form-label-sm">Session Timeout (minutes)</label>
+            <label class="form-label-sm">{{ 'UI.u_session_timeout' | translate }}</label>
             <input class="pg-input" type="number" [(ngModel)]="generalSettings.sessionTimeoutMin" min="5" max="480" />
           </div>
           <div class="col-12">
-            <label class="form-label-sm">Max Concurrent Deployments</label>
+            <label class="form-label-sm">{{ 'UI.u_max_concurrent_deploys' | translate }}</label>
             <input class="pg-input" type="number" [(ngModel)]="generalSettings.maxConcurrentDeployments" min="1" max="50" />
           </div>
           <div class="col-12 d-flex flex-column gap-2">
             <label class="d-flex align-items-center gap-2">
               <input type="checkbox" class="form-check-input" [(ngModel)]="generalSettings.patchApprovalRequired" />
-              <span class="text-muted small">Require approval for patches</span>
+              <span class="text-muted small">{{ 'UI.u_require_patch_approval' | translate }}</span>
             </label>
             <label class="d-flex align-items-center gap-2">
               <input type="checkbox" class="form-check-input" [(ngModel)]="generalSettings.deploymentApprovalRequired" />
-              <span class="text-muted small">Require approval for deployments</span>
+              <span class="text-muted small">{{ 'UI.u_require_deploy_approval' | translate }}</span>
             </label>
           </div>
           <div class="col-12">
-            <button class="btn btn-primary btn-sm" (click)="saveGeneralSettings()">Save</button>
+            <button class="btn btn-primary btn-sm" (click)="saveGeneralSettings()">{{ 'UI.u_save' | translate }}</button>
           </div>
         </div>
       </div>
 
       <!-- Admin: Vendor Feeds -->
       <div *ngIf="activeSection === 'vendor_feeds'" class="section">
-        <h3 class="section-title">Vendor Patch Feeds</h3>
+        <h3 class="section-title">{{ 'UI.u_vendor_feeds' | translate }}</h3>
         <div class="pref-list" style="max-width:600px">
           <div class="pref-row" *ngFor="let f of vendorFeeds">
             <div>
               <div class="pref-label">{{ f.name }}</div>
-              <div class="pref-desc text-muted small">{{ f.url }} &middot; every {{ f.interval }}m</div>
+              <div class="pref-desc text-muted small">{{ f.url }} &middot; {{ 'UI.u_every' | translate }} {{ f.interval }}m</div>
             </div>
             <label class="toggle">
               <input type="checkbox" [(ngModel)]="f.enabled" />
@@ -128,55 +128,55 @@
             </label>
           </div>
         </div>
-        <button class="btn btn-primary btn-sm mt-3" (click)="saveVendorFeeds()">Save Feed Config</button>
+        <button class="btn btn-primary btn-sm mt-3" (click)="saveVendorFeeds()">{{ 'UI.u_save' | translate }}</button>
       </div>
 
       <!-- Admin: Email / SMTP -->
       <div *ngIf="activeSection === 'email'" class="section">
-        <h3 class="section-title">Email / SMTP Configuration</h3>
+        <h3 class="section-title">{{ 'UI.u_smtp_config' | translate }}</h3>
         <div class="row g-3" style="max-width:500px">
           <div class="col-12">
-            <label class="form-label-sm">SMTP Host</label>
+            <label class="form-label-sm">{{ 'UI.u_smtp_host' | translate }}</label>
             <input class="pg-input" [(ngModel)]="emailSettings.smtpHost" placeholder="smtp.example.com" />
           </div>
           <div class="col-6">
-            <label class="form-label-sm">Port</label>
+            <label class="form-label-sm">{{ 'UI.u_port' | translate }}</label>
             <input class="pg-input" type="number" [(ngModel)]="emailSettings.smtpPort" />
           </div>
           <div class="col-6 d-flex align-items-end pb-1">
             <label class="d-flex align-items-center gap-2">
               <input type="checkbox" class="form-check-input" [(ngModel)]="emailSettings.useTls" />
-              <span class="text-muted small">Use TLS</span>
+              <span class="text-muted small">{{ 'UI.u_use_tls' | translate }}</span>
             </label>
           </div>
           <div class="col-12">
-            <label class="form-label-sm">Username</label>
+            <label class="form-label-sm">{{ 'UI.u_username' | translate }}</label>
             <input class="pg-input" [(ngModel)]="emailSettings.smtpUser" />
           </div>
           <div class="col-12">
-            <label class="form-label-sm">Password</label>
+            <label class="form-label-sm">{{ 'UI.u_password' | translate }}</label>
             <input class="pg-input" type="password" [(ngModel)]="emailSettings.smtpPassword" />
           </div>
           <div class="col-12">
-            <label class="form-label-sm">From Address</label>
+            <label class="form-label-sm">{{ 'UI.u_from_address' | translate }}</label>
             <input class="pg-input" type="email" [(ngModel)]="emailSettings.fromAddress" />
           </div>
           <div class="col-12 border-top border-secondary border-opacity-25 pt-3 mt-2">
-            <label class="form-label-sm">Test Recipient</label>
+            <label class="form-label-sm">{{ 'UI.u_test_recipient' | translate }}</label>
             <div class="d-flex gap-2">
               <input class="pg-input" type="email" [(ngModel)]="emailSettings.testRecipient" placeholder="test@example.com" />
-              <button class="btn btn-outline-secondary btn-sm text-nowrap" (click)="testEmail()">Send Test</button>
+              <button class="btn btn-outline-secondary btn-sm text-nowrap" (click)="testEmail()">{{ 'UI.u_send_test' | translate }}</button>
             </div>
           </div>
           <div class="col-12">
-            <button class="btn btn-primary btn-sm" (click)="saveEmailSettings()">Save SMTP</button>
+            <button class="btn btn-primary btn-sm" (click)="saveEmailSettings()">{{ 'UI.u_save' | translate }}</button>
           </div>
         </div>
       </div>
 
       <!-- Admin: Maintenance Windows -->
       <div *ngIf="activeSection === 'maintenance'" class="section">
-        <h3 class="section-title">Maintenance Windows</h3>
+        <h3 class="section-title">{{ 'UI.u_maintenance_windows' | translate }}</h3>
         <div class="pref-list" style="max-width:600px">
           <div class="pref-row" *ngFor="let w of maintenanceWindows">
             <div>
@@ -189,31 +189,31 @@
             </label>
           </div>
         </div>
-        <button class="btn btn-primary btn-sm mt-3" (click)="saveMaintenanceWindows()">Save Windows</button>
+        <button class="btn btn-primary btn-sm mt-3" (click)="saveMaintenanceWindows()">{{ 'UI.u_save' | translate }}</button>
       </div>
 
       <!-- Admin: Data Retention -->
       <div *ngIf="activeSection === 'retention'" class="section">
-        <h3 class="section-title">Data Retention Policy</h3>
+        <h3 class="section-title">{{ 'UI.u_retention_policy' | translate }}</h3>
         <div class="row g-3" style="max-width:500px">
           <div class="col-12">
-            <label class="form-label-sm">Audit Log Retention (days)</label>
+            <label class="form-label-sm">{{ 'UI.u_audit_log_days' | translate }}</label>
             <input class="pg-input" type="number" [(ngModel)]="retentionSettings.auditLogDays" min="30" max="3650" />
           </div>
           <div class="col-12">
-            <label class="form-label-sm">Deployment History (days)</label>
+            <label class="form-label-sm">{{ 'UI.u_deploy_history_days' | translate }}</label>
             <input class="pg-input" type="number" [(ngModel)]="retentionSettings.deploymentHistoryDays" min="30" max="3650" />
           </div>
           <div class="col-12">
-            <label class="form-label-sm">Scan Results (days)</label>
+            <label class="form-label-sm">{{ 'UI.u_scan_result_days' | translate }}</label>
             <input class="pg-input" type="number" [(ngModel)]="retentionSettings.scanResultDays" min="7" max="365" />
           </div>
           <div class="col-12">
-            <label class="form-label-sm">Metrics Retention (days)</label>
+            <label class="form-label-sm">{{ 'UI.u_metrics_days' | translate }}</label>
             <input class="pg-input" type="number" [(ngModel)]="retentionSettings.metricsRetentionDays" min="7" max="365" />
           </div>
           <div class="col-12">
-            <button class="btn btn-primary btn-sm" (click)="saveRetentionSettings()">Save Retention Policy</button>
+            <button class="btn btn-primary btn-sm" (click)="saveRetentionSettings()">{{ 'UI.u_save' | translate }}</button>
           </div>
         </div>
       </div>
@@ -222,12 +222,12 @@
       <div *ngIf="activeSection === 'saml'" class="section">
         <div class="saml-header">
           <div>
-            <h3 class="section-title">SAML / SSO Configuration</h3>
+            <h3 class="section-title">{{ 'UI.u_saml_config' | translate }}</h3>
             <p class="section-desc">Connect an Identity Provider (IdP) to enable Single Sign-On for your organisation.</p>
           </div>
           <button class="saml-add-btn" (click)="openSamlPanel()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add IdP
+            {{ 'UI.u_add_idp' | translate }}
           </button>
         </div>
 
@@ -254,8 +254,8 @@
               </div>
               <div class="saml-card-info">
                 <div class="saml-card-name">{{ cfg.name }}
-                  <span class="saml-active-badge" *ngIf="cfg.is_active">Active</span>
-                  <span class="saml-inactive-badge" *ngIf="!cfg.is_active">Disabled</span>
+                  <span class="saml-active-badge" *ngIf="cfg.is_active">{{ 'UI.u_active' | translate }}</span>
+                  <span class="saml-inactive-badge" *ngIf="!cfg.is_active">{{ 'UI.u_disabled' | translate }}</span>
                 </div>
                 <div class="saml-card-entity">{{ cfg.idp_entity_id }}</div>
               </div>
@@ -283,8 +283,8 @@
                 <span class="saml-role-badge" [class]="'role-' + cfg.default_role">{{ cfg.default_role }}</span>
               </div>
               <div class="saml-meta-item">
-                <span class="saml-meta-key">Auto-provision</span>
-                <span class="saml-bool" [class.yes]="cfg.auto_create_users">{{ cfg.auto_create_users ? 'Yes' : 'No' }}</span>
+                <span class="saml-meta-key">{{ 'UI.u_auto_provision' | translate }}</span>
+                <span class="saml-bool" [class.yes]="cfg.auto_create_users">{{ cfg.auto_create_users ? ('UI.u_yes' | translate) : ('UI.u_no' | translate) }}</span>
               </div>
             </div>
 
@@ -304,7 +304,7 @@
         <div class="saml-howto">
           <h4 class="howto-title">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Integration guide
+            {{ 'UI.u_integration_guide' | translate }}
           </h4>
           <ol class="howto-steps">
             <li>Create a SAML 2.0 application in your IdP (Okta, Azure AD, ADFS, etc.)</li>
@@ -336,8 +336,8 @@
 
     <div class="saml-panel-header">
       <div>
-        <h3>{{ samlEditTarget ? 'Edit IdP' : 'Add Identity Provider' }}</h3>
-        <p>Configure a SAML 2.0 IdP for Single Sign-On</p>
+        <h3>{{ (samlEditTarget ? 'UI.u_edit_idp' : 'UI.u_add_idp') | translate }}</h3>
+        <p>{{ 'MSG.m_saml_panel_desc' | translate }}</p>
       </div>
       <button class="saml-close-btn" (click)="samlPanelOpen = false">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -347,22 +347,22 @@
     <div class="saml-panel-body">
 
       <div class="saml-form-section">
-        <h4 class="saml-form-label">General</h4>
+        <h4 class="saml-form-label">{{ 'UI.u_general' | translate }}</h4>
         <div class="saml-field">
-          <label>Display name <span class="req">*</span></label>
-          <input [(ngModel)]="samlForm.name" placeholder="e.g. Okta Corporate" />
+          <label>{{ 'UI.u_display_name' | translate }} <span class="req">*</span></label>
+          <input [(ngModel)]="samlForm.name" [placeholder]="'UI.u_display_name' | translate" />
         </div>
         <div class="saml-field-row">
           <div class="saml-field">
-            <label>Default role</label>
+            <label>{{ 'UI.u_default_role' | translate }}</label>
             <select [(ngModel)]="samlForm.default_role">
-              <option value="viewer">Viewer</option>
-              <option value="operator">Operator</option>
-              <option value="admin">Admin</option>
+              <option value="viewer">{{ 'UI.u_viewer' | translate }}</option>
+              <option value="operator">{{ 'UI.u_operator' | translate }}</option>
+              <option value="admin">{{ 'UI.u_admin' | translate }}</option>
             </select>
           </div>
           <div class="saml-field saml-toggle-field">
-            <label>Auto-provision users</label>
+            <label>{{ 'UI.u_auto_provision' | translate }}</label>
             <div class="stgl" [class.on]="samlForm.auto_create_users" (click)="samlForm.auto_create_users = !samlForm.auto_create_users">
               <div class="stgl-thumb"></div>
             </div>
@@ -437,10 +437,10 @@
     </div><!-- /body -->
 
     <div class="saml-panel-footer">
-      <button class="saml-btn-cancel" (click)="samlPanelOpen = false">Cancel</button>
+      <button class="saml-btn-cancel" (click)="samlPanelOpen = false">{{ 'UI.u_cancel' | translate }}</button>
       <button class="saml-btn-save" [disabled]="samlSaving" (click)="saveSamlConfig()">
         <span class="spin" *ngIf="samlSaving"></span>
-        {{ samlSaving ? 'Saving…' : (samlEditTarget ? 'Save changes' : 'Create IdP') }}
+        {{ (samlSaving ? 'UI.u_saving' : (samlEditTarget ? 'UI.u_save_changes' : 'UI.u_create_idp')) | translate }}
       </button>
     </div>
 
@@ -450,9 +450,9 @@
 <!-- Delete SAML confirm -->
 <app-confirm-dialog
   [visible]="samlDeleteVisible"
-  title="Remove IdP"
-  [message]="'Remove ' + (samlDeleteTarget?.name ?? '') + '? Users who sign in via this IdP will fall back to local login.'"
-  confirmLabel="Remove"
+  [title]="'UI.u_remove_idp' | translate"
+  [message]="this.translate.instant('MSG.m_remove_idp_confirm', { name: (samlDeleteTarget?.name ?? '') })"
+  [confirmLabel]="'UI.u_remove' | translate"
   severity="danger"
   (confirm)="doDeleteSaml()"
   (cancel)="samlDeleteVisible = false"

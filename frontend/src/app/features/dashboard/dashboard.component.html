@@ -2,12 +2,15 @@
 
   <!-- Page Header -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="page-title mb-0">{{ 'UI.u_title' | translate }}</h2>
+    <div class="header-left">
+      <h2 class="page-title mb-0">{{ 'UI.u_title' | translate }}</h2>
+      <div class="live-status">
+        <span class="live-dot"></span>
+        <span class="text-secondary small">{{ 'UI.u_live' | translate }}</span>
+        <span class="ms-2 small text-muted">{{ 'UI.u_last_sync' | translate }}: {{ lastSync() }}</span>
+      </div>
+    </div>
     <div class="d-flex align-items-center gap-3">
-      <span class="d-flex align-items-center gap-1 text-success small fw-semibold">
-        <span class="live-dot"></span>Live
-      </span>
-      <span class="text-muted small">Last sync: 2 min ago</span>
       <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold"
         style="width:32px;height:32px;font-size:13px;">JD</div>
     </div>
@@ -157,16 +160,14 @@
     <div class="col-xl-4 col-12">
       <div class="pg-card h-100">
         <div class="pg-card-header p-3 border-bottom border-secondary border-opacity-25">
-          <span class="pg-card-title">
-            {{ 'UI.u_active_deployments' | translate }}
-            <span class="badge bg-primary ms-2 small">{{ activeDeployments().length }}</span>
-          </span>
-          <a routerLink="/deployments" class="pg-link small">View all &#x2192;</a>
+          <div class="card-label">{{ 'UI.u_active_deployments' | translate }}</div>
+          <a routerLink="/deployments" class="btn btn-xs btn-outline-secondary">{{ 'UI.u_view_all' | translate }}</a>
         </div>
         <div class="p-3">
           <app-loading-skeleton *ngIf="deployLoading()" variant="table" [rows]="[1,2]"></app-loading-skeleton>
-          <div *ngIf="!deployLoading() && activeDeployments().length === 0" class="text-center text-muted py-4 small">No
-            active deployments</div>
+          <div class="empty-state text-center py-4" *ngIf="!deployLoading() && activeDeployments().length === 0">
+            <div class="text-muted small">{{ 'UI.u_no_active_deployments' | translate }}</div>
+          </div>
           <div *ngFor="let d of activeDeployments()" class="deploy-item">
             <div class="deploy-row">
               <div class="deploy-icon">
@@ -232,7 +233,9 @@
                 <td class="text-muted small">{{ p.released_date | relativeTime }}</td>
               </tr>
               <tr *ngIf="criticalPatches().length === 0">
-                <td colspan="4" class="text-center text-muted py-3 small">No critical patches pending</td>
+                <td colspan="4" class="text-center text-muted py-3 small">
+                  <div class="text-muted small">{{ 'UI.u_no_critical_patches' | translate }}</div>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -242,44 +245,69 @@
   </div>
 
   <!-- System Health Overview -->
-  <div class="row g-3 mb-4">
-    <div class="col-12">
-      <div class="pg-card p-3 mt-3">
-        <h6 class="pg-card-title mb-3">System Health</h6>
-        <div class="row g-3">
-          <div class="col-md-3 col-sm-6">
+  <div class="row g-4 mb-4">
+    <div class="col-xl-8">
+      <div class="pg-card p-4 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div class="card-label">{{ 'UI.u_system_health' | translate }}</div>
+          <div class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+            {{ 'UI.u_healthy' | translate }}
+          </div>
+        </div>
+        
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-3">
             <div class="health-item">
-              <div class="health-dot health-dot--green"></div>
-              <div>
-                <div class="health-label">Django Backend</div>
-                <div class="health-val text-success small">Healthy</div>
+              <div class="health-icon bg-primary-subtle text-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+              </div>
+              <div class="health-info">
+                <div class="small text-muted">{{ 'UI.u_django_backend' | translate }}</div>
+                <div class="fw-bold">{{ 'UI.u_active' | translate }}</div>
               </div>
             </div>
           </div>
-          <div class="col-md-3 col-sm-6">
+          
+          <div class="col-md-6 col-lg-3">
             <div class="health-item">
-              <div class="health-dot health-dot--green"></div>
-              <div>
-                <div class="health-label">Realtime WebSocket</div>
-                <div class="health-val text-success small">Connected</div>
+              <div class="health-icon bg-info-subtle text-info">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6" y2="6"/><line x1="6" y1="18" x2="6" y2="18"/>
+                </svg>
+              </div>
+              <div class="health-info">
+                <div class="small text-muted">{{ 'UI.u_websocket' | translate }}</div>
+                <div class="fw-bold text-success">{{ 'UI.u_connected' | translate }}</div>
               </div>
             </div>
           </div>
-          <div class="col-md-3 col-sm-6">
+          
+          <div class="col-md-6 col-lg-3">
             <div class="health-item">
-              <div class="health-dot health-dot--green"></div>
-              <div>
-                <div class="health-label">Celery Workers</div>
-                <div class="health-val text-success small">Active</div>
+              <div class="health-icon bg-warning-subtle text-warning">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+              </div>
+              <div class="health-info">
+                <div class="small text-muted">{{ 'UI.u_celery' | translate }}</div>
+                <div class="fw-bold text-success">8 {{ 'UI.u_active' | translate }}</div>
               </div>
             </div>
           </div>
-          <div class="col-md-3 col-sm-6">
-            <div class="health-item">
-              <div class="health-dot health-dot--green"></div>
-              <div>
-                <div class="health-label">Redis Broker</div>
-                <div class="health-val text-success small">Connected</div>
+          
+          <div class="col-md-6 col-lg-3">
+            <div class="health-item border-0">
+              <div class="health-icon bg-danger-subtle text-danger">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                </svg>
+              </div>
+              <div class="health-info">
+                <div class="small text-muted">{{ 'UI.u_redis' | translate }}</div>
+                <div class="fw-bold text-success">{{ 'UI.u_active' | translate }}</div>
               </div>
             </div>
           </div>

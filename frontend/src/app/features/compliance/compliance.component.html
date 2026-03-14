@@ -2,8 +2,8 @@
 
   <!-- Tabs -->
   <div class="d-flex gap-2 mb-4">
-    <button class="btn btn-sm" [class.btn-primary]="activeTab === 'overview'" [class.btn-outline-secondary]="activeTab !== 'overview'" (click)="activeTab = 'overview'">Overview</button>
-    <button class="btn btn-sm" [class.btn-primary]="activeTab === 'sla'" [class.btn-outline-secondary]="activeTab !== 'sla'" (click)="activeTab = 'sla'; loadSlaBreaches()">SLA Violations</button>
+    <button class="btn btn-sm" [class.btn-primary]="activeTab === 'overview'" [class.btn-outline-secondary]="activeTab !== 'overview'" (click)="activeTab = 'overview'">{{ 'UI.u_overview' | translate }}</button>
+    <button class="btn btn-sm" [class.btn-primary]="activeTab === 'sla'" [class.btn-outline-secondary]="activeTab !== 'sla'" (click)="activeTab = 'sla'; loadSlaBreaches()">{{ 'UI.u_sla_violations' | translate }}</button>
   </div>
 
   <!-- OVERVIEW TAB -->
@@ -24,7 +24,7 @@
     <!-- Donut -->
     <div class="col-md-4 col-xl-3">
       <div class="pg-card p-4 text-center h-100">
-        <div class="card-label mb-3">Overall Compliance</div>
+        <div class="card-label mb-3">{{ 'UI.u_overall_compliance' | translate }}</div>
         <svg class="donut-svg mx-auto d-block" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r="38" fill="none" stroke="var(--border)" stroke-width="12"/>
           <circle cx="50" cy="50" r="38" fill="none" stroke="#22c55e" stroke-width="12"
@@ -38,7 +38,7 @@
     <!-- Severity Breakdown -->
     <div class="col-md-8 col-xl-9">
       <div class="pg-card p-4 h-100">
-        <div class="card-label mb-3">Patch Coverage by Severity</div>
+        <div class="card-label mb-3">{{ 'UI.u_patch_coverage_severity' | translate }}</div>
         <div class="sev-bars">
           <div class="sev-row" *ngFor="let s of sevData()">
             <div class="sev-label">{{ s.label }}</div>
@@ -55,41 +55,41 @@
   <!-- Device Table -->
   <div class="pg-card">
     <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
-      <h6 class="mb-0">Device Compliance</h6>
+      <h6 class="mb-0">{{ 'UI.u_device_compliance' | translate }}</h6>
       <div class="d-flex gap-2">
-        <button class="btn btn-sm btn-outline-secondary" (click)="exportComplianceCsv()" title="Export CSV">
+        <button class="btn btn-sm btn-outline-secondary" (click)="exportComplianceCsv()" [title]="'UI.u_export_csv' | translate">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          Export CSV
+          {{ 'UI.u_export_csv' | translate }}
         </button>
         <select class="pg-select" [(ngModel)]="osFilter" (ngModelChange)="loadDevices()">
-          <option value="">All OS</option>
+          <option value="">{{ 'UI.u_all_os' | translate }}</option>
           <option value="Linux">Linux</option>
           <option value="Windows">Windows</option>
           <option value="macOS">macOS</option>
         </select>
         <select class="pg-select" [(ngModel)]="compFilter" (ngModelChange)="filterTable()">
-          <option value="">All</option>
-          <option value="compliant">Compliant (≥90%)</option>
-          <option value="non_compliant">Non-Compliant</option>
+          <option value="">{{ 'UI.u_all' | translate }}</option>
+          <option value="compliant">{{ 'UI.u_compliant_90' | translate }}</option>
+          <option value="non_compliant">{{ 'UI.u_non_compliant_simple' | translate }}</option>
         </select>
       </div>
     </div>
 
     <app-loading-skeleton *ngIf="loading()" variant="table"></app-loading-skeleton>
-    <app-empty-state *ngIf="!loading() && rows().length === 0" icon="🛡️" title="No Data" description="No compliance data available."></app-empty-state>
+    <app-empty-state *ngIf="!loading() && rows().length === 0" icon="🛡️" [title]="'UI.u_no_data' | translate" [description]="'MSG.m_no_compliance_data' | translate"></app-empty-state>
 
     <div class="table-responsive" *ngIf="!loading() && rows().length > 0">
       <table class="table table-hover table-sm mb-0">
         <thead>
           <tr>
-            <th>Device</th>
-            <th>OS</th>
-            <th>Compliance</th>
-            <th class="text-center">Patched</th>
-            <th class="text-center">Missing</th>
-            <th>Last Scan</th>
+            <th>{{ 'UI.u_device' | translate }}</th>
+            <th>{{ 'UI.u_os' | translate }}</th>
+            <th>{{ 'UI.u_compliance' | translate }}</th>
+            <th class="text-center">{{ 'UI.u_patched' | translate }}</th>
+            <th class="text-center">{{ 'UI.u_missing_simple' | translate }}</th>
+            <th>{{ 'UI.u_last_scan' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -119,30 +119,30 @@
   <div *ngIf="activeTab === 'sla'">
     <div class="pg-card">
       <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
-        <h6 class="mb-0">SLA Breach Details</h6>
+        <h6 class="mb-0">{{ 'UI.u_sla_breach_details' | translate }}</h6>
         <button class="btn btn-sm btn-outline-secondary" (click)="exportSlaCsv()" [disabled]="slaBreaches().length === 0">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          Export CSV
+          {{ 'UI.u_export_csv' | translate }}
         </button>
       </div>
 
       <app-loading-skeleton *ngIf="slaLoading()" variant="table"></app-loading-skeleton>
-      <app-empty-state *ngIf="!slaLoading() && slaBreaches().length === 0" icon="✅" title="No SLA Breaches" description="All devices are within SLA targets."></app-empty-state>
+      <app-empty-state *ngIf="!slaLoading() && slaBreaches().length === 0" icon="✅" [title]="'UI.u_no_sla_breaches' | translate" [description]="'MSG.m_within_sla' | translate"></app-empty-state>
 
       <div class="table-responsive" *ngIf="!slaLoading() && slaBreaches().length > 0">
-        <div class="px-3 py-2 text-muted small border-bottom opacity-75">Device Summary</div>
+        <div class="px-3 py-2 text-muted small border-bottom opacity-75">{{ 'UI.u_device_summary' | translate }}</div>
         <table class="table table-hover table-sm mb-0">
           <thead>
             <tr>
-              <th>Device</th>
-              <th>OS</th>
-              <th>Compliance</th>
-              <th class="text-center">Critical Missing</th>
-              <th class="text-center">High Missing</th>
-              <th class="text-center">Days Overdue</th>
-              <th>Last Seen</th>
+              <th>{{ 'UI.u_device' | translate }}</th>
+              <th>{{ 'UI.u_os' | translate }}</th>
+              <th>{{ 'UI.u_compliance' | translate }}</th>
+              <th class="text-center">{{ 'UI.u_critical_missing' | translate }}</th>
+              <th class="text-center">{{ 'UI.u_high_missing' | translate }}</th>
+              <th class="text-center">{{ 'UI.u_days_overdue' | translate }}</th>
+              <th>{{ 'UI.u_last_seen' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -163,16 +163,16 @@
 
       <!-- Specific Item Breaches -->
       <div class="mt-4" *ngIf="!slaLoading() && slaItems().length > 0">
-        <div class="px-3 py-2 text-muted small border-bottom opacity-75">Individual Patch Breaches (>72h)</div>
+        <div class="px-3 py-2 text-muted small border-bottom opacity-75">{{ 'UI.u_patch_breaches_72h' | translate }}</div>
         <div class="table-responsive">
           <table class="table table-hover table-sm mb-0">
             <thead>
               <tr>
-                <th>Device</th>
-                <th>Patch Title</th>
-                <th>Severity</th>
-                <th>Released At</th>
-                <th>Action</th>
+                <th>{{ 'UI.u_device' | translate }}</th>
+                <th>{{ 'UI.u_patch_title' | translate }}</th>
+                <th>{{ 'UI.u_severity' | translate }}</th>
+                <th>{{ 'UI.u_released_at' | translate }}</th>
+                <th>{{ 'UI.u_action' | translate }}</th>
               </tr>
             </thead>
             <tbody>
@@ -184,7 +184,7 @@
                 </td>
                 <td class="text-muted small">{{ item.released_at | relativeTime }}</td>
                 <td>
-                  <a *ngIf="item.kb_article" [href]="item.kb_article" target="_blank" class="btn btn-xs btn-outline-info">KB</a>
+                  <a *ngIf="item.kb_article" [href]="item.kb_article" target="_blank" class="btn btn-xs btn-outline-info">{{ 'UI.u_kb' | translate }}</a>
                 </td>
               </tr>
             </tbody>

@@ -25,7 +25,7 @@
       </div>
       <div>
         <div class="dd-hostname">{{ d.hostname }}</div>
-        <div class="dd-sub">{{ d.ip_address }} / {{ d.mac_address || '—' }}</div>
+        <div class="dd-sub">{{ d.ip_address }} / {{ d.mac_address || ('UI.u_none' | translate) }}</div>
       </div>
     </div>
     <div class="dd-hero-right">
@@ -87,10 +87,10 @@
       <div class="dd-alert-banner">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <span class="dd-alert-text">
-          @if (alerts.critical_missing > 0) { <strong>{{ alerts.critical_missing }}</strong> critical patches missing. }
-          @if (alerts.failed_patches > 0) { <strong>{{ alerts.failed_patches }}</strong> failed patches. }
-          @if (alerts.pending_reboot > 0) { <strong>{{ alerts.pending_reboot }}</strong> pending reboot. }
-          @if (alerts.failed_deployments > 0) { <strong>{{ alerts.failed_deployments }}</strong> failed deployments. }
+          @if (alerts.critical_missing > 0) { <strong>{{ alerts.critical_missing }}</strong> {{ 'UI.u_critical_patches' | translate }} {{ 'UI.u_missing' | translate }}. }
+          @if (alerts.failed_patches > 0) { <strong>{{ alerts.failed_patches }}</strong> {{ 'UI.u_failed' | translate }} {{ 'UI.u_patches' | translate }}. }
+          @if (alerts.pending_reboot > 0) { <strong>{{ alerts.pending_reboot }}</strong> {{ 'UI.u_pending' | translate }} {{ 'UI.u_reboot' | translate }}. }
+          @if (alerts.failed_deployments > 0) { <strong>{{ alerts.failed_deployments }}</strong> {{ 'UI.u_failed' | translate }} {{ 'UI.u_deployments' | translate }}. }
         </span>
       </div>
     }
@@ -100,7 +100,7 @@
   <div class="dd-tabs">
     <button class="dd-tab" [class.active]="activeTab() === 'overview'" (click)="activeTab.set('overview')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      Overview
+      {{ 'UI.u_overview' | translate }}
     </button>
     <button class="dd-tab" [class.active]="activeTab() === 'patches'" (click)="activeTab.set('patches')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -109,7 +109,7 @@
     </button>
     <button class="dd-tab" [class.active]="activeTab() === 'system'" (click)="activeTab.set('system')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-      System Info
+      {{ 'UI.u_system_info_tab' | translate }}
     </button>
     <!-- Installed Apps moved into Security & Inventory slow-lane section -->
     <button class="dd-tab" [class.active]="activeTab() === 'deployments'" (click)="activeTab.set('deployments')">
@@ -118,11 +118,11 @@
     </button>
     <button class="dd-tab" [class.active]="activeTab() === 'activity'" (click)="activeTab.set('activity'); loadTimeline(d.id)">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      Timeline
+      {{ 'UI.u_timeline' | translate }}
     </button>
     <button class="dd-tab" [class.active]="activeTab() === 'inventory'" (click)="activeTab.set('inventory'); loadSlowLaneSummary(d.id)">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      Security &amp; Inventory
+      {{ 'UI.u_security_inventory' | translate }}
     </button>
     <button class="dd-tab" [class.active]="activeTab() === 'settings'" (click)="activeTab.set('settings')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -132,7 +132,7 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
       </svg>
-      SSH Terminal
+      {{ 'UI.u_ssh_terminal' | translate }}
     </button>
   </div>
 
@@ -150,7 +150,7 @@
         </div>
         <div class="dd-stat-body">
           <span class="dd-stat-num">{{ patchCounts().pending }}</span>
-          <span class="dd-stat-lbl">Available Patches</span>
+          <span class="dd-stat-lbl">{{ 'UI.u_available_patches' | translate }}</span>
         </div>
       </div>
       <div class="dd-stat-card stat-installed">
@@ -159,7 +159,7 @@
         </div>
         <div class="dd-stat-body">
           <span class="dd-stat-num">{{ patchCounts().installed }}</span>
-          <span class="dd-stat-lbl">Installed</span>
+          <span class="dd-stat-lbl">{{ 'UI.u_installed' | translate }}</span>
         </div>
       </div>
       <div class="dd-stat-card stat-failed">
@@ -168,7 +168,7 @@
         </div>
         <div class="dd-stat-body">
           <span class="dd-stat-num">{{ patchCounts().failed }}</span>
-          <span class="dd-stat-lbl">Failed</span>
+          <span class="dd-stat-lbl">{{ 'UI.u_failed' | translate }}</span>
         </div>
       </div>
       <div class="dd-stat-card stat-apps" (click)="selectInventoryTab(d.id)" style="cursor:pointer">
@@ -177,7 +177,7 @@
         </div>
         <div class="dd-stat-body">
           <span class="dd-stat-num">{{ installedApps().length }}</span>
-          <span class="dd-stat-lbl">Installed Apps</span>
+          <span class="dd-stat-lbl">{{ 'UI.u_installed_apps' | translate }}</span>
         </div>
       </div>
     </div>
@@ -233,7 +233,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         </div>
         <div class="dd-io-body">
-          <span class="dd-io-lbl">Disk I/O</span>
+          <span class="dd-io-lbl">{{ 'UI.u_disk_io' | translate }}</span>
           <span class="dd-io-val">
             <span class="io-read">&#8593; {{ formatRate(m.disk_read_bytes_sec) }}</span>
             <span class="io-write">&#8595; {{ formatRate(m.disk_write_bytes_sec) }}</span>
@@ -245,7 +245,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>
         </div>
         <div class="dd-io-body">
-          <span class="dd-io-lbl">Network</span>
+          <span class="dd-io-lbl">{{ 'UI.u_network_io' | translate }}</span>
           <span class="dd-io-val">
             <span class="io-read">&#8593; {{ formatRate(m.net_sent_bytes_sec) }}</span>
             <span class="io-write">&#8595; {{ formatRate(m.net_recv_bytes_sec) }}</span>
@@ -257,7 +257,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
         </div>
         <div class="dd-io-body">
-          <span class="dd-io-lbl">Processes</span>
+          <span class="dd-io-lbl">{{ 'UI.u_processes' | translate }}</span>
           <span class="dd-io-val dd-mono">{{ m.process_count || '—' }}</span>
         </div>
       </div>
@@ -283,31 +283,31 @@
         <span class="dd-spec-val">{{ d.agent_version || '—' }}</span>
       </div>
       <div class="dd-spec-cell">
-        <span class="dd-spec-lbl">CPU</span>
-        <span class="dd-spec-val">{{ d.metadata?.CPULogical || d.metadata?.cpu_count || '—' }} cores</span>
+        <span class="dd-spec-lbl">{{ 'UI.u_cpu' | translate }}</span>
+        <span class="dd-spec-val">{{ d.metadata?.CPULogical || d.metadata?.cpu_count || '—' }} {{ 'UI.u_cores' | translate }}</span>
       </div>
       <div class="dd-spec-cell">
-        <span class="dd-spec-lbl">RAM</span>
+        <span class="dd-spec-lbl">{{ 'UI.u_ram' | translate }}</span>
         <span class="dd-spec-val">{{ d.metadata?.RAM_GB ? d.metadata?.RAM_GB + ' GB' : formatBytes(d.metadata?.total_ram) }}</span>
       </div>
       <div class="dd-spec-cell">
-        <span class="dd-spec-lbl">Disk</span>
-        <span class="dd-spec-val">{{ d.metadata?.DiskFree_GB ? (d.metadata?.DiskFree_GB + ' GB free / ' + (d.metadata?.DiskUsed_GB + d.metadata?.DiskFree_GB) + ' GB') : formatBytes(d.metadata?.total_disk) }}</span>
+        <span class="dd-spec-lbl">{{ 'UI.u_disk' | translate }}</span>
+        <span class="dd-spec-val">{{ d.metadata?.DiskFree_GB ? (d.metadata?.DiskFree_GB + ' GB ' + ('UI.u_free' | translate).toLowerCase() + ' / ' + (d.metadata?.DiskUsed_GB + d.metadata?.DiskFree_GB) + ' GB') : formatBytes(d.metadata?.total_disk) }}</span>
       </div>
       <div class="dd-spec-cell">
-        <span class="dd-spec-lbl">Last Seen</span>
+        <span class="dd-spec-lbl">{{ 'UI.u_last_seen' | translate }}</span>
         <span class="dd-spec-val">{{ d.last_seen | relativeTime }}</span>
       </div>
       <div class="dd-spec-cell">
-        <span class="dd-spec-lbl">Last Scan</span>
-        <span class="dd-spec-val">{{ d.last_scan ? (d.last_scan | relativeTime) : 'Never' }}</span>
+        <span class="dd-spec-lbl">{{ 'UI.u_last_scan' | translate }}</span>
+        <span class="dd-spec-val">{{ d.last_scan ? (d.last_scan | relativeTime) : ('UI.u_never' | translate) }}</span>
       </div>
     </div>
 
     <!-- Recently updated patches -->
     <div class="dd-section-header">
-      <span>Recently Updated Patches</span>
-      <button class="dd-link-btn" (click)="activeTab.set('patches'); patchSubTab.set('recent')">View All →</button>
+      <span>{{ 'UI.u_recently_updated_patches' | translate }}</span>
+      <button class="dd-link-btn" (click)="activeTab.set('patches'); patchSubTab.set('recent')">{{ 'UI.u_view_all' | translate }} →</button>
     </div>
     <div class="dd-table-wrap">
       <table class="dd-table">
@@ -360,7 +360,7 @@
     <div class="dd-patch-summary">
       <div class="dd-psum-item item-pending" [class.psum-active]="patchSubTab() === 'available'" (click)="patchSubTab.set('available')">
         <span class="dd-psum-num">{{ patchCounts().pending }}</span>
-        <span class="dd-psum-lbl">Available</span>
+        <span class="dd-psum-lbl">{{ 'UI.u_available' | translate }}</span>
       </div>
       <div class="dd-psum-item item-installed" [class.psum-active]="patchSubTab() === 'installed'" (click)="patchSubTab.set('installed')">
         <span class="dd-psum-num">{{ patchCounts().installed }}</span>
@@ -372,7 +372,7 @@
       </div>
       <div class="dd-psum-item item-recent" [class.psum-active]="patchSubTab() === 'recent'" (click)="patchSubTab.set('recent')">
         <span class="dd-psum-num">{{ recentPatches().length }}</span>
-        <span class="dd-psum-lbl">Recent</span>
+        <span class="dd-psum-lbl">{{ 'UI.u_recent' | translate }}</span>
       </div>
     </div>
 
@@ -386,14 +386,14 @@
       <table class="dd-table">
         <thead>
           <tr>
-            <th>CVE / Patch</th>
-            <th>Title</th>
-            <th>Severity</th>
-            <th>CVSS</th>
-            <th>Vendor</th>
-            <th>Reboot</th>
-            <th>Released</th>
-            <th>Actions</th>
+            <th>{{ 'UI.u_cve_patch' | translate }}</th>
+            <th>{{ 'UI.u_title' | translate }}</th>
+            <th>{{ 'UI.u_severity' | translate }}</th>
+            <th>{{ 'UI.u_cvss' | translate }}</th>
+            <th>{{ 'UI.u_vendor' | translate }}</th>
+            <th>{{ 'UI.u_reboot' | translate }}</th>
+            <th>{{ 'UI.u_released' | translate }}</th>
+            <th>{{ 'UI.u_actions' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -426,9 +426,9 @@
             <td class="small">{{ p.patch?.vendor || '—' }}</td>
             <td>
               @if (p.patch?.requires_reboot) {
-                <span class="dd-reboot-badge">⟳ Yes</span>
+                <span class="dd-reboot-badge">⟳ {{ 'UI.u_yes' | translate }}</span>
               } @else {
-                <span class="text-muted small">No</span>
+                <span class="text-muted small">{{ 'UI.u_no' | translate }}</span>
               }
             </td>
             <td class="text-muted small">{{ p.patch?.released_at | relativeTime }}</td>
@@ -436,11 +436,11 @@
               <div class="dd-patch-actions">
                 <button class="dd-btn-lane dd-btn-fast" [disabled]="installingPatchId() === p.patch?.id"
                   (click)="installPatch(p.patch?.id, 'fast')" title="Install via Fast Lane">
-                  @if (installingPatchId() === p.patch?.id) { ⏳ } @else { ⚡ } Fast
+                  @if (installingPatchId() === p.patch?.id) { ⏳ } @else { ⚡ } {{ 'UI.u_fast' | translate }}
                 </button>
                 <button class="dd-btn-lane dd-btn-slow" [disabled]="installingPatchId() === p.patch?.id"
-                  (click)="installPatch(p.patch?.id, 'slow')" title="Install via Slow Lane (scheduled)">
-                  🕐 Slow
+                  (click)="installPatch(p.patch?.id, 'slow')" [title]="'u_tip_slow_scan' | translate">
+                  🕐 {{ 'UI.u_slow' | translate }}
                 </button>
               </div>
             </td>
@@ -448,7 +448,7 @@
           } @empty {
           <tr><td colspan="8" class="dd-empty">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            <div>All patches are installed — system is up to date!</div>
+            <div>{{ 'MSG.m_all_patched_success' | translate }}</div>
           </td></tr>
           }
         </tbody>
@@ -462,11 +462,11 @@
       <table class="dd-table">
         <thead>
           <tr>
-            <th>CVE / Patch</th>
-            <th>Title</th>
-            <th>Severity</th>
-            <th>Package</th>
-            <th>Installed At</th>
+            <th>{{ 'UI.u_cve_patch' | translate }}</th>
+            <th>{{ 'UI.u_title' | translate }}</th>
+            <th>{{ 'UI.u_severity' | translate }}</th>
+            <th>{{ 'UI.u_package' | translate }}</th>
+            <th>{{ 'UI.u_installed_at' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -496,12 +496,12 @@
       <table class="dd-table">
         <thead>
           <tr>
-            <th>CVE / Patch</th>
-            <th>Title</th>
-            <th>Severity</th>
-            <th>Error</th>
-            <th>Retries</th>
-            <th>Last Attempt</th>
+            <th>{{ 'UI.u_cve_patch' | translate }}</th>
+            <th>{{ 'UI.u_title' | translate }}</th>
+            <th>{{ 'UI.u_severity' | translate }}</th>
+            <th>{{ 'UI.u_error' | translate }}</th>
+            <th>{{ 'UI.u_retries' | translate }}</th>
+            <th>{{ 'UI.u_last_attempt' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -514,7 +514,7 @@
                 [class.sev-high]="p.patch?.severity === 'high'" [class.sev-medium]="p.patch?.severity === 'medium'"
                 [class.sev-low]="p.patch?.severity === 'low'">{{ p.patch?.severity }}</span>
             </td>
-            <td class="dd-error-msg small">{{ p.error_message || 'Unknown error' }}</td>
+            <td class="dd-error-msg small">{{ p.error_message || ('UI.u_unknown_error' | translate) }}</td>
             <td class="text-center">{{ p.retry_count || 0 }}</td>
             <td class="text-muted small">{{ p.last_attempt ? (p.last_attempt | relativeTime) : '—' }}</td>
           </tr>
@@ -581,10 +581,10 @@
 
     <!-- Hardware -->
     <div class="dd-inv-section">
-      <div class="dd-inv-section-title">Hardware</div>
+      <div class="dd-inv-section-title">{{ 'UI.u_hardware' | translate }}</div>
       <div class="dd-inv-grid">
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Manufacturer</span>
+          <span class="dd-inv-lbl">{{ 'UI.u_manufacturer' | translate }}</span>
           <span class="dd-inv-val">{{ si.manufacturer || d.metadata?.Manufacturer || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
@@ -596,8 +596,8 @@
           <span class="dd-inv-val dd-mono">{{ si.serial_number || d.metadata?.SerialNumber || d.metadata?.serial_number || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">CPU</span>
-          <span class="dd-inv-val" [title]="d.metadata?.CPU">{{ d.metadata?.CPU || si.cpu_model || (si.cpu_count ? si.cpu_count + ' cores' : '—') }}</span>
+          <span class="dd-inv-lbl">{{ 'UI.u_cpu' | translate }}</span>
+          <span class="dd-inv-val" [title]="d.metadata?.CPU">{{ d.metadata?.CPU || si.cpu_model || (si.cpu_count ? si.cpu_count + ' ' + ('UI.u_cores' | translate) : '—') }}</span>
         </div>
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">CPU Cores</span>
@@ -616,7 +616,7 @@
           <span class="dd-inv-val">{{ d.metadata?.Architecture || d.metadata?.OSArchitecture || si.architecture || si.os_arch || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">BIOS</span>
+          <span class="dd-inv-lbl">{{ 'UI.u_bios' | translate }}</span>
           <span class="dd-inv-val">{{ d.metadata?.BIOSVersion || '—' }} ({{ d.metadata?.BIOSDate || '—' }})</span>
         </div>
       </div>
@@ -624,7 +624,7 @@
 
     <!-- OS & Identity -->
     <div class="dd-inv-section">
-      <div class="dd-inv-section-title">Operating System</div>
+      <div class="dd-inv-section-title">{{ 'UI.u_operating_system' | translate }}</div>
       <div class="dd-inv-grid">
         <div class="dd-inv-cell">
           <span class="dd-inv-lbl">OS Name</span>
@@ -635,7 +635,7 @@
           <span class="dd-inv-val">{{ d.metadata?.OSVersion || si.os_version || '—' }} ({{ d.metadata?.OSBuild || '—' }})</span>
         </div>
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Install Date</span>
+          <span class="dd-inv-lbl">{{ 'UI.u_install_date' | translate }}</span>
           <span class="dd-inv-val">{{ d.metadata?.InstallDate || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
@@ -647,11 +647,11 @@
           <span class="dd-inv-val">{{ d.metadata?.UserName || si.last_login?.DisplayName || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Boot Time</span>
+          <span class="dd-inv-lbl">{{ 'UI.u_boot_time' | translate }}</span>
           <span class="dd-inv-val">{{ d.metadata?.LastBoot || d.metadata?.LastBootTime || si.boot_time || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Domain</span>
+          <span class="dd-inv-lbl">{{ 'UI.u_domain' | translate }}</span>
           <span class="dd-inv-val">{{ d.metadata?.Domain || si.domain || '—' }}</span>
         </div>
         <div class="dd-inv-cell">
@@ -683,10 +683,10 @@
 
     <!-- Network Interfaces -->
     <div class="dd-inv-section">
-      <div class="dd-inv-section-title">Network Interfaces</div>
+      <div class="dd-inv-section-title">{{ 'UI.u_network_interfaces' | translate }}</div>
       <div class="dd-inv-grid">
         <div class="dd-inv-cell">
-          <span class="dd-inv-lbl">Primary IP</span>
+          <span class="dd-inv-lbl">{{ 'UI.u_primary_ip' | translate }}</span>
           <span class="dd-inv-val dd-mono">{{ si.ip_address }}</span>
         </div>
         <div class="dd-inv-cell">
@@ -706,7 +706,7 @@
     <!-- Storage -->
     @if (si.storage?.length) {
     <div class="dd-inv-section">
-      <div class="dd-inv-section-title">Storage Volumes</div>
+      <div class="dd-inv-section-title">{{ 'UI.u_storage_volumes' | translate }}</div>
       <div class="dd-inv-grid">
         @for (disk of si.storage; track $index) {
         <div class="dd-inv-cell">
@@ -808,10 +808,10 @@
       <table class="dd-table">
         <thead>
           <tr>
-            <th>Deployment</th>
-            <th>Status</th>
-            <th>Started</th>
-            <th>Completed</th>
+            <th>{{ 'UI.u_deployment' | translate }}</th>
+            <th>{{ 'UI.u_status' | translate }}</th>
+            <th>{{ 'UI.u_started' | translate }}</th>
+            <th>{{ 'UI.u_completed' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -820,7 +820,7 @@
             <td><a [routerLink]="['/deployments', dl.deployment_id || dl.id]" class="dd-link">{{ dl.deployment_name || dl.name }}</a></td>
             <td><app-status-badge [value]="dl.status" [dot]="true"></app-status-badge></td>
             <td class="text-muted small">{{ dl.started_at | relativeTime }}</td>
-            <td class="text-muted small">{{ dl.completed_at ? (dl.completed_at | relativeTime) : 'Ongoing' }}</td>
+            <td class="text-muted small">{{ dl.completed_at ? (dl.completed_at | relativeTime) : ('UI.u_ongoing' | translate) }}</td>
           </tr>
           } @empty {
           <tr><td colspan="4" class="dd-empty">{{ 'UI.u_no_data' | translate }}</td></tr>
@@ -839,15 +839,15 @@
     <!-- Timeline filters -->
     <div class="dd-timeline-filters">
       <select class="dd-select" (change)="timelineFilter.set($any($event.target).value); loadTimeline(d.id, $any($event.target).value)">
-        <option value="">All Events</option>
-        <option value="scan_complete">Scans</option>
-        <option value="patch_install_success">Patch Installs</option>
-        <option value="patch_install_failed">Patch Failures</option>
-        <option value="deployment_start">Deployments</option>
-        <option value="reboot_requested">Reboots</option>
-        <option value="config_change">Config Changes</option>
-        <option value="key_rotated">Key Rotations</option>
-        <option value="error">Errors</option>
+        <option value="">{{ 'UI.u_all_events' | translate }}</option>
+        <option value="scan_complete">{{ 'UI.u_scans' | translate }}</option>
+        <option value="patch_install_success">{{ 'UI.u_patch_installs' | translate }}</option>
+        <option value="patch_install_failed">{{ 'UI.u_patch_failures' | translate }}</option>
+        <option value="deployment_start">{{ 'UI.u_deployments' | translate }}</option>
+        <option value="reboot_requested">{{ 'UI.u_reboots' | translate }}</option>
+        <option value="config_change">{{ 'UI.u_config_changes' | translate }}</option>
+        <option value="key_rotated">{{ 'UI.u_key_rotations' | translate }}</option>
+        <option value="error">{{ 'UI.u_errors' | translate }}</option>
       </select>
     </div>
     <div class="dd-table-wrap">
@@ -857,12 +857,12 @@
       <table class="dd-table">
         <thead>
           <tr>
-            <th>Timestamp</th>
-            <th>Event</th>
-            <th>Severity</th>
-            <th>Message</th>
-            <th>Lane</th>
-            <th>Source</th>
+            <th>{{ 'UI.u_timestamp' | translate }}</th>
+            <th>{{ 'UI.u_event' | translate }}</th>
+            <th>{{ 'UI.u_severity' | translate }}</th>
+            <th>{{ 'UI.u_message' | translate }}</th>
+            <th>{{ 'UI.u_lane' | translate }}</th>
+            <th>{{ 'UI.u_source' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -903,7 +903,7 @@
     <!-- Section picker chips -->
     <div class="dd-slow-chips">
       @if (d.os_family === 'windows') {
-        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'defender_status'" (click)="loadSlowSection('defender_status')">🛡️ Defender</button>
+        <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'defender_status'" (click)="loadSlowSection('defender_status')">🛡️ {{ 'UI.u_defender' | translate }}</button>
         <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'firewall'" (click)="loadSlowSection('firewall')">🔥 Firewall</button>
         <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'services'" (click)="loadSlowSection('services')">⚙️ Services</button>
         <button class="dd-slow-chip" [class.active]="slowActiveSection() === 'drivers'" (click)="loadSlowSection('drivers')">💻 Drivers</button>
@@ -961,7 +961,7 @@
     <!-- Last collection timestamp -->
     @if (slowLaneSummary(); as sl) {
     <div class="dd-slow-meta">
-      <span>Last collected: {{ sl.slow_lane_ts ? (sl.slow_lane_ts * 1000 | date:'medium') : 'Never' }}</span>
+      <span>{{ 'UI.u_last_collected' | translate }}: {{ sl.slow_lane_ts ? (sl.slow_lane_ts * 1000 | date:'medium') : ('UI.u_never' | translate) }}</span>
       @if (sl.collection_time_sec) {
         <span class="dd-slow-meta-sep">•</span>
         <span>Collection time: {{ sl.collection_time_sec | number:'1.1-1' }}s</span>
@@ -974,12 +974,12 @@
     <!-- Installed Apps (special-case: loaded via backend into installedApps()) -->
     @if (slowActiveSection() === 'apps') {
     <div class="dd-inv-section">
-      <div class="dd-inv-section-title">Installed Applications <span class="dd-slow-count">({{ installedApps().length }})</span></div>
+      <div class="dd-inv-section-title">{{ 'UI.u_installed_applications' | translate }} <span class="dd-slow-count">({{ installedApps().length }})</span></div>
 
       <div class="dd-app-toolbar">
         <div class="dd-search-box">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Search applications..." [value]="appSearch()" (input)="searchApps($any($event.target).value)">
+          <input type="text" [placeholder]="'UI.u_search_apps' | translate" [value]="appSearch()" (input)="searchApps($any($event.target).value)">
         </div>
         <span class="dd-app-count">{{ installedApps().length }} applications</span>
       </div>
@@ -991,11 +991,11 @@
         <table class="dd-table">
           <thead>
             <tr>
-              <th>Application</th>
-              <th>Version</th>
-              <th>Publisher</th>
-              <th>Install Date</th>
-              <th>Size</th>
+              <th>{{ 'UI.u_application' | translate }}</th>
+              <th>{{ 'UI.u_version' | translate }}</th>
+              <th>{{ 'UI.u_publisher' | translate }}</th>
+              <th>{{ 'UI.u_install_date' | translate }}</th>
+              <th>{{ 'UI.u_size' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -1148,8 +1148,8 @@
     <!-- Device Properties -->
     <div class="dd-settings-card">
       <div class="dd-section-header" style="margin-bottom: 16px">
-        <span>Device Properties</span>
-        <button class="dd-link-btn" (click)="toggleEdit()">{{ isEditing() ? 'Cancel' : 'Edit' }}</button>
+        <span>{{ 'UI.u_device_properties' | translate }}</span>
+        <button class="dd-link-btn" (click)="toggleEdit()">{{ isEditing() ? ('UI.u_cancel' | translate) : ('UI.u_edit' | translate) }}</button>
       </div>
       @if (isEditing()) {
       <div class="dd-settings-grid">
@@ -1164,7 +1164,7 @@
       </div>
       <button class="dd-btn-push" (click)="save()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-        Save Changes
+        {{ 'UI.u_save_changes_btn' | translate }}
       </button>
       }
     </div>
@@ -1173,7 +1173,7 @@
     <div class="dd-settings-card" style="margin-top: 16px">
       <div class="dd-settings-hint">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <span>Values will be pushed to the agent via WebSocket in real-time.</span>
+        <span>{{ 'MSG.m_agent_push_desc' | translate }}</span>
       </div>
       <div class="dd-settings-grid">
         <div class="dd-settings-group">
@@ -1200,8 +1200,8 @@
     @if (agentHealth(); as health) {
     <div class="dd-settings-card" style="margin-top: 16px">
       <div class="dd-section-header" style="margin-bottom: 16px">
-        <span>Agent Health</span>
-        <button class="dd-link-btn" (click)="loadAgentHealth(d.id)">Refresh</button>
+        <span>{{ 'UI.u_agent_health' | translate }}</span>
+        <button class="dd-link-btn" (click)="loadAgentHealth(d.id)">{{ 'UI.u_refresh' | translate }}</button>
       </div>
       <div class="dd-settings-grid">
         <div class="dd-settings-group">
@@ -1232,7 +1232,7 @@
     <!-- Lane Configuration -->
     <div class="dd-settings-card" style="margin-top: 16px">
       <div class="dd-section-header" style="margin-bottom: 16px">
-        <span>Lane Configuration</span>
+        <span>{{ 'UI.u_lane_configuration' | translate }}</span>
       </div>
       <div class="dd-settings-hint">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
@@ -1291,11 +1291,11 @@
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <button class="dd-btn-push" (click)="updateLaneConfig()">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-          Push Lane Config
+          {{ 'UI.u_push_lane_config' | translate }}
         </button>
         <button class="dd-btn-push" style="background:#475569" (click)="resetLaneConfig()">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          Reset Default
+          {{ 'UI.u_reset_default' | translate }}
         </button>
       </div>
     </div>
@@ -1309,7 +1309,7 @@
       <p class="dd-danger-desc">{{ 'UI.u_delete_device_desc' | translate }}</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <button class="dd-btn-delete" style="background:#b45309" (click)="decommissionDevice()">
-          Decommission Device
+          {{ 'UI.u_decommission_device' | translate }}
         </button>
         <button class="dd-btn-delete" (click)="deleteDevice()">
           {{ 'UI.u_delete_device_btn' | translate }}

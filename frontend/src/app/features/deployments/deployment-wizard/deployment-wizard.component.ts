@@ -36,30 +36,30 @@ export class DeploymentWizardComponent implements OnInit {
       value: 'immediate',
       label: 'UI.u_strategy_immediate',
       desc: 'UI.u_strategy_immediate_desc',
-      pros: ['Fastest completion time', 'Simple execution'],
-      cons: ['No rollback window', 'All devices at risk'],
+      pros: ['MSG.u_strategy_immediate_pro1', 'MSG.u_strategy_immediate_pro2'],
+      cons: ['MSG.u_strategy_immediate_con1', 'MSG.u_strategy_immediate_con2'],
     },
     {
       value: 'canary',
       label: 'UI.u_strategy_canary',
       desc: 'UI.u_strategy_canary_desc',
-      pros: ['Early failure detection', 'Controlled risk exposure'],
-      cons: ['Longer total time', 'Requires monitoring canary'],
+      pros: ['MSG.u_strategy_canary_pro1', 'MSG.u_strategy_canary_pro2'],
+      cons: ['MSG.u_strategy_canary_con1', 'MSG.u_strategy_canary_con2'],
     },
     {
       value: 'rolling',
       label: 'UI.u_strategy_rolling',
       desc: 'UI.u_strategy_rolling_desc',
-      pros: ['Steady, predictable pace', 'Per-wave failure checks'],
-      cons: ['Slower than immediate', 'No dedicated canary phase'],
+      pros: ['MSG.u_strategy_rolling_pro1', 'MSG.u_strategy_rolling_pro2'],
+      cons: ['MSG.u_strategy_rolling_con1', 'MSG.u_strategy_rolling_con2'],
     },
   ];
 
   maintenanceWindows = [
-    { label: 'Tonight 02:00–06:00 UTC', value: '02:00-06:00' },
-    { label: 'Tonight 22:00–02:00 UTC', value: '22:00-02:00' },
-    { label: 'This Weekend (Sat 00:00–06:00 UTC)', value: 'weekend' },
-    { label: 'No maintenance window', value: '' },
+    { label: 'MSG.u_mw_tonight_early', value: '02:00-06:00' },
+    { label: 'MSG.u_mw_tonight_late', value: '22:00-02:00' },
+    { label: 'MSG.u_mw_weekend', value: 'weekend' },
+    { label: 'MSG.u_mw_none', value: '' },
   ];
 
   form = {

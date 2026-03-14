@@ -40,12 +40,12 @@
         {{ s.label | translate }}
       </button>
       <div class="chip-divider"></div>
-      <button class="chip" *ngFor="let os of osOptions" [class.active]="activeOs === (os === 'All' ? '' : os)" (click)="setOs(os)">
-        {{ os }}
+      <button class="chip" *ngFor="let os of osOptions" [class.active]="activeOs === (os === 'All' ? '' : os.toLowerCase())" (click)="setOs(os)">
+        {{ (os === 'All' ? 'UI.u_all' : 'UI.u_os_' + os.toLowerCase()) | translate }}
       </button>
       <div class="chip-divider"></div>
       <button class="chip" *ngFor="let env of envOptions" [class.active]="activeEnv === (env === 'All' ? '' : env.toLowerCase())" (click)="setEnv(env)">
-        {{ env }}
+        {{ (env === 'All' ? 'UI.u_all' : 'UI.u_' + env.toLowerCase()) | translate }}
       </button>
     </div>
   </div>
@@ -114,7 +114,7 @@
             <td class="text-mono text-muted">{{ d.ip_address }}</td>
             <td>
               <span class="os-cell">
-                <span class="os-icon">{{ getOsIcon(d.os_family) }}</span> {{ d.os_family }}
+                <span class="os-icon">{{ getOsIcon(d.os_family) }}</span> {{ 'UI.u_os_' + (d.os_family?.toLowerCase() || 'unknown') | translate }}
               </span>
             </td>
             <td>
@@ -136,7 +136,7 @@
               <span *ngIf="(d.tags || []).length > 2" class="tag-more">+{{ d.tags.length - 2 }}</span>
             </td>
             <td (click)="$event.stopPropagation()">
-              <button class="btn btn-sm btn-outline-secondary installer-dl-btn" title="Download Agent Installer ({{ d.os_family }})" (click)="downloadInstaller(d, $event)">
+              <button class="btn btn-sm btn-outline-secondary installer-dl-btn" [title]="('UI.u_tip_download_agent' | translate) + ' (' + d.os_family + ')'" (click)="downloadInstaller(d, $event)">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               </button>
             </td>
@@ -221,17 +221,17 @@
     <div class="mb-3">
       <label class="form-label">{{ 'UI.u_os' | translate }}</label>
       <select class="form-select form-select-dark" [(ngModel)]="addForm.os_family">
-        <option value="linux">Linux</option>
-        <option value="windows">Windows</option>
-        <option value="macos">macOS</option>
+        <option value="linux">{{ 'UI.u_os_linux' | translate }}</option>
+        <option value="windows">{{ 'UI.u_os_windows' | translate }}</option>
+        <option value="macos">{{ 'UI.u_os_macos' | translate }}</option>
       </select>
     </div>
     <div class="mb-3">
       <label class="form-label">{{ 'UI.u_environment' | translate }}</label>
       <select class="form-select form-select-dark" [(ngModel)]="addForm.environment">
-        <option value="production">Production</option>
-        <option value="staging">Staging</option>
-        <option value="development">Development</option>
+        <option value="production">{{ 'UI.u_production' | translate }}</option>
+        <option value="staging">{{ 'UI.u_staging' | translate }}</option>
+        <option value="development">{{ 'UI.u_development' | translate }}</option>
       </select>
     </div>
     <div class="mb-3">
@@ -299,7 +299,7 @@
       <input class="form-control form-control-dark" [(ngModel)]="groupInput"
         [placeholder]="'UI.u_group_id' | translate"
         (keydown.enter)="bulkGroup()" />
-      <div class="form-text text-muted">All {{ selectedIds().size }} selected device(s) will be assigned to this group.</div>
+      <div class="form-text text-muted">{{ 'MSG.m_group_assign_desc' | translate:{count: selectedIds().size} }}</div>
     </div>
   </div>
   <div class="modal-footer-custom">

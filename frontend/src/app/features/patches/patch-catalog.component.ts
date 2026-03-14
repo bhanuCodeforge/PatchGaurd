@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PatchService } from '../../core/services/patch.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
@@ -34,6 +34,7 @@ export class PatchCatalogComponent implements OnInit {
   private auth = inject(AuthService);
   private deviceSvc = inject(DeviceService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   canWrite = computed(() => this.auth.isOperatorOrAbove());
 
@@ -190,13 +191,13 @@ export class PatchCatalogComponent implements OnInit {
   markReview(p: any) {
     this.patchSvc.reviewPatch(p.id).subscribe({
       next: () => {
-        this.ns.success('Reviewed', `Patch ${p.vendor_id} marked as reviewed.`);
+        this.ns.success(this.translate.instant('UI.u_reviewed'), `Patch ${p.vendor_id} marked as reviewed.`);
         this.loadPatches();
         this.loadStats();
       },
       error: (err: any) => {
         const msg = err?.error?.detail || err?.error?.error || 'Failed to mark patch as reviewed.';
-        this.ns.error('Error', msg);
+        this.ns.error(this.translate.instant('UI.u_error'), msg);
       },
     });
   }
@@ -245,7 +246,7 @@ export class PatchCatalogComponent implements OnInit {
         : this.patchSvc.rejectPatch(this.pendingPatch.id, reason);
     obs.subscribe({
       next: () => {
-        this.ns.success('Done', `Patch ${this.confirmAction}d successfully.`);
+        this.ns.success(this.translate.instant('UI.u_success'), `Patch ${this.confirmAction}d successfully.`);
         this.loadPatches();
         this.loadStats();
         if (this.selectedPatch()?.id === this.pendingPatch.id) {
@@ -255,7 +256,7 @@ export class PatchCatalogComponent implements OnInit {
       error: (err: any) => {
         const msg =
           err?.error?.detail || err?.error?.error || `Failed to ${this.confirmAction} patch.`;
-        this.ns.error('Error', msg);
+        this.ns.error(this.translate.instant('UI.u_error'), msg);
       },
     });
   }
@@ -264,12 +265,12 @@ export class PatchCatalogComponent implements OnInit {
     const ids = Array.from(this.selectedIds());
     this.patchSvc.bulkApprove(ids).subscribe({
       next: (res: any) => {
-        this.ns.success('Bulk Approved', res?.status || `${ids.length} patches approved.`);
+        this.ns.success(this.translate.instant('UI.u_success'), res?.status || `${ids.length} patches approved.`);
         this.loadPatches();
         this.loadStats();
         this.clearSelection();
       },
-      error: () => this.ns.error('Error', 'Bulk approve failed.'),
+      error: () => this.ns.error(this.translate.instant('UI.u_error'), 'Bulk approve failed.'),
     });
   }
 
@@ -282,29 +283,29 @@ export class PatchCatalogComponent implements OnInit {
     const ids = Array.from(this.selectedIds());
     const reason = this.bulkRejectReason.trim();
     if (!reason) {
-      this.ns.error('Required', 'A rejection reason is required.');
+      this.ns.error(this.translate.instant('UI.u_validation'), 'A rejection reason is required.');
       return;
     }
     this.bulkRejectVisible.set(false);
     this.patchSvc.bulkReject(ids, reason).subscribe({
       next: (res: any) => {
-        this.ns.success('Bulk Rejected', res?.status || `${ids.length} patches rejected.`);
+        this.ns.success(this.translate.instant('UI.u_success'), res?.status || `${ids.length} patches rejected.`);
         this.loadPatches();
         this.loadStats();
         this.clearSelection();
       },
-      error: () => this.ns.error('Error', 'Bulk reject failed.'),
+      error: () => this.ns.error(this.translate.instant('UI.u_error'), 'Bulk reject failed.'),
     });
   }
 
   triggerGlobalScan() {
     this.deviceSvc.triggerGlobalScan().subscribe({
       next: (res: any) => {
-        this.ns.success('Scan Triggered', res.status || 'Fleet-wide scan initiated.');
+        this.ns.success(this.translate.instant('UI.u_scan_triggered'), res.status || 'Fleet-wide scan initiated.');
         // Refresh list after a delay to catch early results
         setTimeout(() => this.loadPatches(), 3000);
       },
-      error: () => this.ns.error('Error', 'Failed to trigger fleet scan.'),
+      error: () => this.ns.error(this.translate.instant('UI.u_error'), 'Failed to trigger fleet scan.'),
     });
   }
 
@@ -319,7 +320,7 @@ export class PatchCatalogComponent implements OnInit {
 
     if (approvedIds.length === 0) {
       this.ns.warning(
-        'Action Required',
+        this.translate.instant('UI.u_action_required'),
         'Only approved patches can be deployed. Please approve your selection first.',
       );
       return;
@@ -398,14 +399,14 @@ export class PatchCatalogComponent implements OnInit {
     }
     this.patchSvc.createPatch(this.newPatch).subscribe({
       next: () => {
-        this.ns.success('Created', 'Patch added successfully.');
+        this.ns.success(this.translate.instant('UI.u_success'), 'Patch added successfully.');
         this.addPatchVisible.set(false);
         this.loadPatches();
         this.loadStats();
       },
       error: (err: any) => {
         const msg = err?.error?.detail || err?.error?.vendor_id?.[0] || JSON.stringify(err?.error) || 'Failed to create patch.';
-        this.ns.error('Error', msg);
+        this.ns.error(this.translate.instant('UI.u_error'), msg);
       },
     });
   }

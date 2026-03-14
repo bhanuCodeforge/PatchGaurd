@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { debounceTime, Subject, Subscription } from 'rxjs';
 import { DeviceService } from '../../../core/services/device.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -34,6 +34,7 @@ export class DeviceListComponent implements OnInit, OnDestroy {
   private deviceSvc = inject(DeviceService);
   private ns = inject(NotificationService);
   private ws = inject(WebsocketService);
+  private translate = inject(TranslateService);
   private wsSub?: Subscription;
   Math = Math;
 
@@ -241,7 +242,10 @@ export class DeviceListComponent implements OnInit, OnDestroy {
   bulkScan() {
     const ids = Array.from(this.selectedIds());
     ids.forEach((id) => this.deviceSvc.scanTarget(id).subscribe());
-    this.ns.success('Scan Triggered', `Scan initiated for ${ids.length} device(s).`);
+    this.ns.success(
+      this.translate.instant('UI.u_success'),
+      `${this.translate.instant('UI.u_scan_now')} ${this.translate.instant('UI.u_started').toLowerCase()} ${this.translate.instant('UI.u_for')} ${ids.length} ${this.translate.instant('UI.u_devices_count').toLowerCase()}.`
+    );
     this.clearSelection();
   }
 
@@ -309,7 +313,7 @@ export class DeviceListComponent implements OnInit, OnDestroy {
 
   copyToClipboard(text: string) {
     navigator.clipboard.writeText(text).then(() => {
-      this.ns.success('Copied', 'API key copied to clipboard.');
+      this.ns.success(this.translate.instant('UI.u_success'), this.translate.instant('UI.u_api_key') + ' ' + this.translate.instant('UI.u_saved').toLowerCase());
     });
   }
 
@@ -319,37 +323,37 @@ export class DeviceListComponent implements OnInit, OnDestroy {
       .map((t) => t.trim())
       .filter(Boolean);
     if (!tags.length) {
-      this.ns.error('Error', 'Enter at least one tag.');
+      this.ns.error(this.translate.instant('UI.u_failed'), this.translate.instant('UI.u_tag') + ' ' + this.translate.instant('UI.u_missing').toLowerCase());
       return;
     }
     const ids = Array.from(this.selectedIds());
     this.deviceSvc.bulkTag(ids, tags, 'add').subscribe({
       next: () => {
-        this.ns.success('Tags Applied', `Tags added to ${ids.length} device(s).`);
+        this.ns.success(this.translate.instant('UI.u_success'), `Tags added to ${ids.length} device(s).`);
         this.showTagModal.set(false);
         this.tagInput = '';
         this.clearSelection();
         this.loadDevices();
       },
-      error: () => this.ns.error('Error', 'Bulk tag failed.'),
+      error: () => this.ns.error(this.translate.instant('UI.u_failed'), 'Bulk tag failed.'),
     });
   }
 
   bulkGroup() {
     const groupId = this.groupInput.trim();
     if (!groupId) {
-      this.ns.error('Error', 'Enter a group ID.');
+      this.ns.error(this.translate.instant('UI.u_failed'), this.translate.instant('UI.u_group_id') + ' ' + this.translate.instant('UI.u_missing').toLowerCase());
       return;
     }
     const ids = Array.from(this.selectedIds());
     this.deviceSvc.bulkGroup(ids, groupId).subscribe({
       next: () => {
-        this.ns.success('Group Assigned', `${ids.length} device(s) added to group.`);
+        this.ns.success(this.translate.instant('UI.u_success'), `${ids.length} device(s) added to group.`);
         this.showGroupModal.set(false);
         this.groupInput = '';
         this.clearSelection();
       },
-      error: () => this.ns.error('Error', 'Bulk group assignment failed.'),
+      error: () => this.ns.error(this.translate.instant('UI.u_failed'), 'Bulk group assignment failed.'),
     });
   }
 
@@ -364,9 +368,9 @@ export class DeviceListComponent implements OnInit, OnDestroy {
         a.download = `patchguard-agent-${os}-${device.hostname}.zip`;
         a.click();
         URL.revokeObjectURL(url);
-        this.ns.success('Download Started', `Agent installer for ${device.hostname} (${os})`);
+        this.ns.success(this.translate.instant('UI.u_success'), `Agent installer for ${device.hostname} (${os})`);
       },
-      error: () => this.ns.error('Download Failed', 'Could not download the agent installer.'),
+      error: () => this.ns.error(this.translate.instant('UI.u_failed'), 'Could not download the agent installer.'),
     });
   }
 }

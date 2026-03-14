@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../core/auth/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { SettingsService } from '../../../core/services/settings.service';
@@ -21,6 +21,7 @@ export class SettingsComponent implements OnInit {
   private ns = inject(NotificationService);
   private settingsSvc = inject(SettingsService);
   private userSvc = inject(UserService);
+  public translate = inject(TranslateService);
 
   activeSection = 'profile';
   isAdmin = this.auth.currentUser()?.role === 'admin';
@@ -32,12 +33,12 @@ export class SettingsComponent implements OnInit {
     { id: 'system', label: 'UI.u_system_info_tab', icon: 'ℹ️' },
     ...(this.auth.currentUser()?.role === 'admin'
       ? [
-          { id: 'general',      label: 'General',           icon: '⚙️' },
-          { id: 'vendor_feeds', label: 'Vendor Feeds',       icon: '📡' },
-          { id: 'email',        label: 'Email / SMTP',       icon: '✉️' },
-          { id: 'saml',         label: 'SAML / SSO',         icon: '🔐' },
-          { id: 'maintenance',  label: 'Maintenance Windows',icon: '🔧' },
-          { id: 'retention',    label: 'Data Retention',     icon: '🗃️' },
+          { id: 'general',      label: 'UI.u_general_settings',   icon: '⚙️' },
+          { id: 'vendor_feeds', label: 'UI.u_vendor_feeds',      icon: '📡' },
+          { id: 'email',        label: 'UI.u_smtp_config',       icon: '✉️' },
+          { id: 'saml',         label: 'UI.u_saml_config',       icon: '🔐' },
+          { id: 'maintenance',  label: 'UI.u_maintenance_windows',icon: '🔧' },
+          { id: 'retention',    label: 'UI.u_retention_policy',   icon: '🗃️' },
         ]
       : []),
   ];
@@ -155,7 +156,7 @@ export class SettingsComponent implements OnInit {
   }
 
   saveProfile() {
-    this.ns.success('UI.u_saved', 'MSG.m_profile_updated');
+    this.ns.success(this.translate.instant('UI.u_saved'), this.translate.instant('MSG.m_profile_updated'));
   }
 
   changePassword() {
@@ -171,29 +172,29 @@ export class SettingsComponent implements OnInit {
       this.ns.error('UI.u_validation', 'MSG.m_pwd_min');
       return;
     }
-    this.ns.success('UI.u_changed', 'MSG.m_pwd_updated');
+    this.ns.success(this.translate.instant('UI.u_changed'), this.translate.instant('MSG.m_pwd_updated'));
     this.auth.logout();
   }
 
   saveNotifPrefs() {
-    this.ns.success('UI.u_saved', 'MSG.m_notif_saved');
+    this.ns.success(this.translate.instant('UI.u_saved'), this.translate.instant('MSG.m_notif_saved'));
   }
 
   saveGeneralSettings() {
     this.settingsSvc.updateSetting('GENERAL_POLICY', { data: this.generalSettings, value: 'updated' }).subscribe({
-      next: () => this.ns.success('UI.u_saved', 'General settings saved'),
-      error: () => this.ns.error('Error', 'Failed to save general settings')
+      next: () => this.ns.success(this.translate.instant('UI.u_saved'), 'General settings saved'),
+      error: () => this.ns.error(this.translate.instant('UI.u_error'), 'Failed to save general settings')
     });
   }
 
   saveVendorFeeds() {
-    this.ns.success('UI.u_saved', 'Vendor feed configuration saved');
+    this.ns.success(this.translate.instant('UI.u_saved'), 'Vendor feed configuration saved');
   }
 
   saveEmailSettings() {
     this.settingsSvc.updateSetting('SMTP_CONFIG', { data: this.emailSettings, value: 'updated' }).subscribe({
-      next: () => this.ns.success('UI.u_saved', 'Email/SMTP settings saved'),
-      error: () => this.ns.error('Error', 'Failed to save email settings')
+      next: () => this.ns.success(this.translate.instant('UI.u_saved'), 'Email/SMTP settings saved'),
+      error: () => this.ns.error(this.translate.instant('UI.u_error'), 'Failed to save email settings')
     });
   }
 
@@ -202,17 +203,17 @@ export class SettingsComponent implements OnInit {
       this.ns.error('UI.u_validation', 'Enter a test recipient email');
       return;
     }
-    this.ns.success('UI.u_sent', 'Test email queued');
+    this.ns.success(this.translate.instant('UI.u_sent'), 'Test email queued');
   }
 
   saveMaintenanceWindows() {
-    this.ns.success('UI.u_saved', 'Maintenance windows saved');
+    this.ns.success(this.translate.instant('UI.u_saved'), 'Maintenance windows saved');
   }
 
   saveRetentionSettings() {
     this.settingsSvc.updateSetting('RETENTION_POLICY', { data: this.retentionSettings, value: 'updated' }).subscribe({
-      next: () => this.ns.success('UI.u_saved', 'Data retention policy saved'),
-      error: () => this.ns.error('Error', 'Failed to save retention settings')
+      next: () => this.ns.success(this.translate.instant('UI.u_saved'), 'Data retention policy saved'),
+      error: () => this.ns.error(this.translate.instant('UI.u_error'), 'Failed to save retention settings')
     });
   }
 
@@ -298,7 +299,7 @@ export class SettingsComponent implements OnInit {
 
   copySamlUrl(id: string) {
     navigator.clipboard.writeText(`${this.origin}/api/v1/saml/${id}/metadata/`);
-    this.ns.success('Copied', 'SP metadata URL copied to clipboard.');
+    this.ns.success(this.translate.instant('UI.u_success'), 'SP metadata URL copied to clipboard.');
   }
 
   private _blankSaml() {

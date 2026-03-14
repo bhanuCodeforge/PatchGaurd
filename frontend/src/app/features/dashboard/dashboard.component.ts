@@ -51,6 +51,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return Math.round(((s.online_devices ?? 0) / (s.total_devices || 1)) * 100);
   });
 
+  lastSync = signal('2 min ago'); // Mock for now, should come from stats()
+
   osBars = [
     { icon: '\u{1F427}', name: 'Linux',   count: 0, pct: 0, color: 'bg-primary' },
     { icon: '\u{1F5A5}', name: 'Windows', count: 0, pct: 0, color: 'bg-info' },

@@ -2,7 +2,7 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DeviceService } from '../../../core/services/device.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
@@ -18,6 +18,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 export class GroupListComponent implements OnInit {
   private deviceSvc = inject(DeviceService);
   private ns = inject(NotificationService);
+  private translate = inject(TranslateService);
 
   loading = signal(true);
   groups = signal<any[]>([]);
@@ -76,18 +77,18 @@ export class GroupListComponent implements OnInit {
     const payload = {
       name: this.newGroupName,
       description: this.newGroupDesc,
-      is_dynamic: this.isDynamic,
+      is_dynamic: !!this.isDynamic,
       dynamic_rules: dynamicRules
     };
 
     this.deviceSvc.createGroup(payload).subscribe({
       next: () => {
-        this.ns.success('Success', `Group ${this.newGroupName} created.`);
+        this.ns.success(this.translate.instant('UI.u_success'), this.translate.instant('MSG.m_group_created_success', { name: this.newGroupName }));
         this.resetForm();
         this.showModal = false;
         this.loadGroups();
       },
-      error: () => this.ns.error('Error', 'Failed to create group.')
+      error: () => this.ns.error(this.translate.instant('UI.u_error'), this.translate.instant('MSG.m_group_create_failed'))
     });
   }
 
@@ -100,10 +101,10 @@ export class GroupListComponent implements OnInit {
   }
 
   deleteGroup(id: string, name: string) {
-    if (!confirm(`Are you sure you want to delete ${name}?`)) return;
+    if (!confirm(this.translate.instant('MSG.m_delete_group_confirm', { name }))) return;
     this.deviceSvc.deleteGroup(id).subscribe({
       next: () => {
-        this.ns.success('Deleted', 'Group removed.');
+        this.ns.success(this.translate.instant('UI.u_deleted'), this.translate.instant('MSG.m_group_deleted_success'));
         this.loadGroups();
       }
     });
